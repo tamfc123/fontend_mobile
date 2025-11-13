@@ -1,0 +1,37 @@
+import 'package:dio/dio.dart';
+import 'package:mobile/core/constants/api_config.dart';
+import 'package:mobile/utils/token_helper.dart';
+
+class ApiClient {
+  final Dio _dio;
+  Dio get dio => _dio;
+  ApiClient() : _dio = Dio() {
+    _dio.options = BaseOptions(
+      baseUrl: ApiConfig.baseUrl,
+      connectTimeout: Duration(seconds: 10),
+      receiveTimeout: Duration(seconds: 10),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await TokenHelper.getToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+
+        onError: (DioException e, handler) {
+          if (e.response?.statusCode == 401) {
+            print("Lỗi 401: Token hết hạn hoặc không hợp lệ.");
+            // Xử lý khi token hết hạn hoặc không hợp lệ
+            // Ví dụ: chuyển hướng người dùng đến trang đăng nhập
+          }
+          return handler.next(e);
+        },
+      ),
+    );
+  }
+}
