@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/data/datasources/schedule_data_source.dart';
 import 'package:mobile/data/models/class_schedule_model.dart';
-import 'package:mobile/services/admin/schedule_service.dart';
-import 'package:mobile/widgets/admin/comfirm_delete_dialog.dart';
-import 'package:mobile/widgets/admin/schedule_add_edit_dialog.dart';
+import 'package:mobile/services/admin/admin_room_service.dart';
+import 'package:mobile/services/admin/admin_schedule_service.dart';
+import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+import 'package:mobile/widgets/admin/schedule_form_dialog.dart';
 import 'package:mobile/widgets/admin/schedule_filter_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:intl/intl.dart';
 
 class ManageScheduleScreen extends StatefulWidget {
   const ManageScheduleScreen({super.key});
@@ -19,7 +22,6 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
   final CalendarController _calendarController = CalendarController();
   ClassScheduleModel? _selectedSchedule;
 
-  // MÀU CHỦ ĐẠO (ĐỒNG NHẤT)
   static const Color primaryBlue = Colors.blue;
   static const Color backgroundBlue = Color(0xFFF3F8FF);
   static const Color surfaceBlue = Color(0xFFE3F2FD);
@@ -28,11 +30,21 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ScheduleService>().fetchSchedules();
+      _loadData();
     });
   }
 
-  void _openFormDialog({ClassScheduleModel? schedule}) {
+  void _loadData() {
+    context.read<AdminScheduleService>().fetchSchedules();
+    context.read<AdminRoomService>().fetchAllActiveRooms();
+  }
+
+  Future<void> _navigateToAddScreen() async {
+    await context.push('/admin/schedules/bulk-create');
+    _loadData();
+  }
+
+  void _openEditDialog(ClassScheduleModel schedule) {
     showDialog(
       context: context,
       builder: (_) => ScheduleFormDialog(schedule: schedule),
@@ -49,7 +61,12 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                 'Bạn có chắc muốn xóa thời khóa biểu lớp "${schedule.className}"?',
             itemName: schedule.className,
             onConfirm: () async {
-              await context.read<ScheduleService>().deleteSchedule(schedule.id);
+              await context.read<AdminScheduleService>().deleteSchedule(
+                schedule.id,
+              );
+              setState(() {
+                _selectedSchedule = null;
+              });
             },
           ),
     );
@@ -68,10 +85,15 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final scheduleService = context.watch<ScheduleService>();
+  Widget build(BuildContext buildContext) {
+    final scheduleService = context.watch<AdminScheduleService>();
     final schedules = scheduleService.schedules;
-    final isLoading = scheduleService.isLoading;
+    final roomService = context.watch<AdminRoomService>();
+    final rooms = roomService.allActiveRooms;
+    final isLoading =
+        scheduleService.isLoading || (roomService.isLoading && rooms.isEmpty);
+
+    final dataSource = ScheduleDataSource(schedules, rooms);
 
     return Scaffold(
       backgroundColor: backgroundBlue,
@@ -83,9 +105,8 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // === HEADER + FILTER + NÚT THÊM (KHÔNG CÓ BACK) ===
+                // === HEADER ===
                 Container(
-                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -99,12 +120,10 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                   ),
                   child: Column(
                     children: [
-                      // HEADER ROW
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                         child: Row(
                           children: [
-                            // ICON + TIÊU ĐỀ
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -118,7 +137,6 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                               ),
                             ),
                             const SizedBox(width: 16),
-
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,9 +162,8 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                               ),
                             ),
 
-                            // NÚT THÊM
                             ElevatedButton.icon(
-                              onPressed: () => _openFormDialog(),
+                              onPressed: _navigateToAddScreen,
                               icon: const Icon(Icons.add, size: 20),
                               label: const Text(
                                 'Thêm Lịch học',
@@ -158,7 +175,6 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryBlue,
                                 foregroundColor: Colors.white,
-                                elevation: 0,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 22,
                                   vertical: 16,
@@ -171,53 +187,16 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                           ],
                         ),
                       ),
-
-                      // FILTER BAR + STATS
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                        child: Column(
-                          children: [
-                            const ScheduleFilterBar(),
-                            const SizedBox(height: 16),
-                            if (schedules.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: primaryBlue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.calendar_today_rounded,
-                                      color: primaryBlue,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Tổng số lịch học: ${schedules.length}',
-                                      style: TextStyle(
-                                        color: primaryBlue,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(24, 0, 24, 20),
+                        child: ScheduleFilterBar(),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // === NÚT TUẦN + CALENDAR + DETAIL PANEL ===
+                // === CALENDAR ===
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -233,7 +212,6 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                     ),
                     child: Column(
                       children: [
-                        // NÚT TUẦN
                         Padding(
                           padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                           child: Row(
@@ -245,23 +223,9 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                                   Icons.arrow_back_ios_new,
                                   size: 16,
                                 ),
-                                label: const Text(
-                                  'Tuần trước',
-                                  style: TextStyle(fontSize: 14),
-                                ),
+                                label: const Text('Tuần trước'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: primaryBlue,
-                                  side: BorderSide(
-                                    color: primaryBlue,
-                                    width: 1.5,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -271,147 +235,62 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                                   Icons.arrow_forward_ios,
                                   size: 16,
                                 ),
-                                label: const Text(
-                                  'Tuần sau',
-                                  style: TextStyle(fontSize: 14),
-                                ),
+                                label: const Text('Tuần sau'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: primaryBlue,
-                                  side: BorderSide(
-                                    color: primaryBlue,
-                                    width: 1.5,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-
-                        // CALENDAR + DETAIL
                         Expanded(
                           child:
-                              isLoading
+                              isLoading && schedules.isEmpty
                                   ? const Center(
-                                    child: CircularProgressIndicator(
-                                      color: primaryBlue,
-                                    ),
+                                    child: CircularProgressIndicator(),
                                   )
-                                  : schedules.isEmpty
-                                  ? _buildEmptyState()
                                   : Row(
                                     children: [
-                                      // CALENDAR
                                       Expanded(
-                                        flex: 2,
-                                        child: ClipRRect(
-                                          borderRadius: const BorderRadius.only(
-                                            bottomLeft: Radius.circular(16),
-                                            topLeft: Radius.circular(0),
-                                          ),
-                                          child: SfCalendar(
-                                            controller: _calendarController,
-                                            view: CalendarView.week,
-                                            firstDayOfWeek: 1,
-                                            dataSource: ScheduleDataSource(
-                                              schedules,
-                                            ),
-                                            onTap: (details) {
-                                              if (details
-                                                      .appointments
-                                                      ?.isNotEmpty ??
-                                                  false) {
-                                                final appointment =
-                                                    details.appointments!.first
-                                                        as Appointment;
-                                                final schedule =
-                                                    appointment.id
-                                                        as ClassScheduleModel;
+                                        flex: 3,
+                                        child: SfCalendar(
+                                          controller: _calendarController,
+                                          view: CalendarView.timelineWeek,
+                                          firstDayOfWeek: 1,
+                                          dataSource: dataSource,
+                                          // ✅ FIX: Sửa logic onTap để lấy đúng Model từ Appointment
+                                          onTap: (details) {
+                                            if (details
+                                                    .appointments
+                                                    ?.isNotEmpty ??
+                                                false) {
+                                              // Lấy Appointment wrapper ra trước
+                                              final Appointment appointment =
+                                                  details.appointments!.first;
+                                              // Sau đó lấy model gốc từ thuộc tính id của Appointment
+                                              if (appointment.id
+                                                  is ClassScheduleModel) {
                                                 setState(
                                                   () =>
                                                       _selectedSchedule =
-                                                          schedule,
+                                                          appointment.id
+                                                              as ClassScheduleModel,
                                                 );
                                               }
-                                            },
-                                            timeSlotViewSettings:
-                                                const TimeSlotViewSettings(
-                                                  startHour: 7,
-                                                  endHour: 24,
-                                                  timeInterval: Duration(
-                                                    minutes: 60,
-                                                  ),
-                                                  timeFormat: 'HH:mm',
-                                                  timeTextStyle: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-                                            headerStyle: CalendarHeaderStyle(
-                                              backgroundColor: surfaceBlue,
-                                              textStyle: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF1E3A8A),
-                                              ),
-                                            ),
-                                            todayHighlightColor: primaryBlue,
-                                            selectionDecoration: BoxDecoration(
-                                              color: primaryBlue.withOpacity(
-                                                0.2,
-                                              ),
-                                              border: Border.all(
-                                                color: primaryBlue,
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            appointmentTextStyle:
-                                                const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                            appointmentBuilder: (
-                                              context,
-                                              details,
-                                            ) {
-                                              final appointment =
-                                                  details.appointments.first;
-                                              return Container(
-                                                decoration: BoxDecoration(
-                                                  color: primaryBlue
-                                                      .withOpacity(0.8),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                padding: const EdgeInsets.all(
-                                                  6,
-                                                ),
-                                                child: Text(
-                                                  appointment.subject,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
+                                            } else {
+                                              setState(
+                                                () => _selectedSchedule = null,
                                               );
-                                            },
-                                          ),
+                                            }
+                                          },
+                                          timeSlotViewSettings:
+                                              const TimeSlotViewSettings(
+                                                startHour: 7,
+                                                endHour: 22,
+                                                timeFormat: 'HH:mm',
+                                              ),
                                         ),
                                       ),
-
-                                      // DETAIL PANEL
                                       Container(
                                         width: 1,
                                         color: Colors.grey.shade300,
@@ -420,130 +299,15 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
                                         flex: 1,
                                         child:
                                             _selectedSchedule == null
-                                                ? Center(
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.touch_app,
-                                                        size: 48,
-                                                        color:
-                                                            Colors
-                                                                .grey
-                                                                .shade400,
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 12,
-                                                      ),
-                                                      Text(
-                                                        'Chọn một lịch học để xem chi tiết',
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors
-                                                                  .grey
-                                                                  .shade600,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ],
+                                                ? const Center(
+                                                  child: Text(
+                                                    'Chọn lịch để xem chi tiết',
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                    ),
                                                   ),
                                                 )
-                                                : Padding(
-                                                  padding: const EdgeInsets.all(
-                                                    20,
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        'Lớp: ${_selectedSchedule!.className}',
-                                                        style: const TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Color(
-                                                            0xFF1E3A8A,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 12,
-                                                      ),
-                                                      _buildDetailRow(
-                                                        Icons.room,
-                                                        'Phòng:',
-                                                        _selectedSchedule!
-                                                                .room ??
-                                                            'Chưa có',
-                                                      ),
-                                                      _buildDetailRow(
-                                                        Icons.person,
-                                                        'Giảng viên:',
-                                                        _selectedSchedule!
-                                                                .teacherName ??
-                                                            'Chưa có',
-                                                      ),
-                                                      _buildDetailRow(
-                                                        Icons.access_time,
-                                                        'Thời gian:',
-                                                        '${_selectedSchedule!.startTime} - ${_selectedSchedule!.endTime}',
-                                                      ),
-                                                      _buildDetailRow(
-                                                        Icons.date_range,
-                                                        'Từ:',
-                                                        _formatDate(
-                                                          _selectedSchedule!
-                                                              .startDate,
-                                                        ),
-                                                      ),
-                                                      _buildDetailRow(
-                                                        Icons.date_range,
-                                                        'Đến:',
-                                                        _formatDate(
-                                                          _selectedSchedule!
-                                                              .endDate,
-                                                        ),
-                                                      ),
-                                                      const Spacer(),
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .end,
-                                                        children: [
-                                                          _buildActionButton(
-                                                            Icons.edit,
-                                                            Colors
-                                                                .orange
-                                                                .shade600,
-                                                            'Sửa',
-                                                            () => _openFormDialog(
-                                                              schedule:
-                                                                  _selectedSchedule,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 12,
-                                                          ),
-                                                          _buildActionButton(
-                                                            Icons.delete,
-                                                            Colors.redAccent,
-                                                            'Xóa',
-                                                            () => _confirmDelete(
-                                                              _selectedSchedule!,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                : _buildDetailPanel(),
                                       ),
                                     ],
                                   ),
@@ -560,29 +324,60 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
+  Widget _buildDetailPanel() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.calendar_month_outlined,
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Chưa có lịch học nào',
-            style: TextStyle(
+          Text(
+            'Lớp: ${_selectedSchedule!.className}',
+            style: const TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E3A8A),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Nhấn "Thêm Lịch học" để bắt đầu',
-            style: TextStyle(color: Colors.grey),
+          const SizedBox(height: 20),
+          _buildDetailRow(
+            Icons.room,
+            'Phòng:',
+            _selectedSchedule!.roomName ?? 'Chưa có',
+          ),
+          _buildDetailRow(
+            Icons.person,
+            'Giảng viên:',
+            _selectedSchedule!.teacherName ?? 'Chưa có',
+          ),
+          _buildDetailRow(
+            Icons.access_time,
+            'Thời gian:',
+            '${_selectedSchedule!.startTime} - ${_selectedSchedule!.endTime}',
+          ),
+          _buildDetailRow(
+            Icons.date_range,
+            'Ngày:',
+            DateFormat('dd/MM/yyyy').format(_selectedSchedule!.startDate),
+          ),
+
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _buildActionButton(
+                Icons.edit,
+                Colors.orange.shade600,
+                'Sửa',
+                () => _openEditDialog(_selectedSchedule!),
+              ),
+              const SizedBox(width: 12),
+              _buildActionButton(
+                Icons.delete,
+                Colors.redAccent,
+                'Xóa',
+                () => _confirmDelete(_selectedSchedule!),
+              ),
+            ],
           ),
         ],
       ),
@@ -591,26 +386,14 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: primaryBlue),
-          const SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
-                children: [
-                  TextSpan(
-                    text: '$label ',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  TextSpan(text: value),
-                ],
-              ),
-            ),
-          ),
+          Icon(icon, size: 20, color: primaryBlue),
+          const SizedBox(width: 10),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(width: 6),
+          Expanded(child: Text(value, overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -625,19 +408,8 @@ class _ManageScheduleScreenState extends State<ManageScheduleScreen> {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 18, color: color),
-      label: Text(
-        label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: color, width: 1.5),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+      label: Text(label, style: TextStyle(color: color)),
+      style: OutlinedButton.styleFrom(side: BorderSide(color: color)),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }

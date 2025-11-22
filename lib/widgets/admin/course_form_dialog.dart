@@ -14,7 +14,6 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _durationController;
-  late TextEditingController _priceController;
   late TextEditingController _rewardCoinsController;
   int _requiredLevel = 1; // mặc định cấp độ 1
 
@@ -44,7 +43,6 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     _nameController.dispose();
     _descriptionController.dispose();
     _durationController.dispose();
-    _priceController.dispose();
     _rewardCoinsController.dispose();
     super.dispose();
   }
@@ -57,11 +55,6 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     if (_durationController.text.trim().isEmpty ||
         int.tryParse(_durationController.text.trim()) == null) {
       _showError("Thời lượng phải là số nguyên");
-      return;
-    }
-    if (_priceController.text.trim().isEmpty ||
-        double.tryParse(_priceController.text.trim()) == null) {
-      _showError("Giá phải là số");
       return;
     }
     if (_rewardCoinsController.text.trim().isEmpty ||

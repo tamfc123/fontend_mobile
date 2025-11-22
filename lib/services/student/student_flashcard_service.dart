@@ -22,12 +22,8 @@ class StudentFlashcardService extends ChangeNotifier {
   bool _isRecording = false;
   bool get isRecording => _isRecording;
 
-  // ✅ (Thay đổi #1)
-  // Dùng Map để lưu kết quả cho từng thẻ
-  final Map<int, PronunciationResultModel> _sessionResults = {};
+  final Map<String, PronunciationResultModel> _sessionResults = {};
 
-  // "lastResult" bây giờ sẽ là một getter thông minh:
-  // Nó sẽ tìm kết quả của thẻ HIỆN TẠI trong Map
   PronunciationResultModel? get lastResult {
     if (currentCard == null) return null;
     return _sessionResults[currentCard!.vocabularyId];
@@ -69,32 +65,27 @@ class StudentFlashcardService extends ChangeNotifier {
     _isRecorderInitialized = true;
     final tempDir = await getTemporaryDirectory();
     _audioPath = '${tempDir.path}/$_audioPath';
-    print("======== RECORDER ĐÃ KHỞI TẠO (record) ========");
   }
 
-  // 1. Tải danh sách flashcard
-  Future<void> fetchFlashcards(int lessonId) async {
+  Future<void> fetchFlashcards(String lessonId) async {
     _status = FlashcardStatus.loading;
     _error = null;
     _currentIndex = 0;
-    _sessionResults.clear(); // Xóa tất cả kết quả cũ khi tải
+    _sessionResults.clear();
 
     notifyListeners();
     try {
       _session = await _repository.getFlashcards(lessonId);
       if (_session != null) {
         for (var card in _session!.flashcards) {
-          // Nếu card này có JSON kết quả cũ
           if (card.lastPronunciationJson != null &&
               card.lastPronunciationJson!.isNotEmpty) {
             try {
-              // 1. Decode JSON string
               var decodedJson = jsonDecode(card.lastPronunciationJson!);
               _sessionResults[card.vocabularyId] =
                   PronunciationResultModel.fromJson(decodedJson);
             } catch (e) {
-              print("Lỗi parse JSON kết quả cũ: $e");
-              // Bỏ qua nếu lỗi, để trống
+              debugPrint("Lỗi parse JSON kết quả cũ: $e");
             }
           }
         }
@@ -109,10 +100,8 @@ class StudentFlashcardService extends ChangeNotifier {
     }
   }
 
-  // 2. Chuyển thẻ (dùng cho PageView)
   void onPageChanged(int index) {
     _currentIndex = index;
-    // ĐÃ XÓA dòng _lastResult = null
     notifyListeners();
   }
 
@@ -131,7 +120,7 @@ class StudentFlashcardService extends ChangeNotifier {
   }
 
   // ✅ HÀM BẮT ĐẦU/DỪNG THU ÂM
-  Future<int?> toggleRecording() async {
+  Future<PronunciationResultModel?> toggleRecording() async {
     if (!_isRecorderInitialized || _isAssessing) return null;
 
     if (_isRecording) {
@@ -139,15 +128,9 @@ class StudentFlashcardService extends ChangeNotifier {
       await _recorder.stop();
       _isRecording = false;
       notifyListeners();
-
-      // Tự động gửi đi chấm điểm
       return await assessPronunciation();
     } else {
-      // Bắt đầu thu âm
-
-      // ✅ (Thay đổi #3)
       if (currentCard != null) {
-        // Xóa kết quả cũ của TỪ NÀY ra khỏi Map
         _sessionResults.remove(currentCard!.vocabularyId);
       }
 
@@ -160,6 +143,9 @@ class StudentFlashcardService extends ChangeNotifier {
           sampleRate: 16000,
           numChannels: 1,
         );
+        final tempDir = await getTemporaryDirectory();
+        _audioPath =
+            '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.wav';
         await _recorder.start(config, path: _audioPath);
       } catch (e) {
         print("Lỗi bắt đầu thu âm: $e");
@@ -172,7 +158,7 @@ class StudentFlashcardService extends ChangeNotifier {
   }
 
   // ✅ HÀM MỚI: Gửi đi chấm điểm
-  Future<int?> assessPronunciation() async {
+  Future<PronunciationResultModel?> assessPronunciation() async {
     final file = File(_audioPath);
     if (currentCard == null ||
         _isAssessing ||
@@ -190,13 +176,9 @@ class StudentFlashcardService extends ChangeNotifier {
     try {
       final vocabId = currentCard!.vocabularyId;
       final result = await _repository.assessPronunciation(vocabId, _audioPath);
-
-      // ✅ (Thay đổi #4)
-      // Lưu kết quả lại VÀO MAP
       _sessionResults[vocabId] = result;
-
       currentCard!.currentStrength = result.newStrength;
-      return result.newStreak;
+      return result;
     } catch (e) {
       ToastHelper.showError("Lỗi chấm điểm: $e");
       return null;
@@ -206,7 +188,6 @@ class StudentFlashcardService extends ChangeNotifier {
     }
   }
 
-  // 5. Reset service khi rời màn hình
   void clear() {
     _session = null;
     _currentIndex = 0;
@@ -215,8 +196,6 @@ class StudentFlashcardService extends ChangeNotifier {
     if (_isRecording) {
       _recorder.stop();
     }
-
-    // ✅ (Thay đổi #5)
     _sessionResults.clear();
   }
 
@@ -224,7 +203,7 @@ class StudentFlashcardService extends ChangeNotifier {
   void dispose() {
     _audioPlayer.dispose();
     _recorder.dispose();
-    clear();
+    // clear();
     super.dispose();
   }
 }

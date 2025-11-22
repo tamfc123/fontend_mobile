@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/data/models/user_model.dart'; // Import UserModel
-import 'package:mobile/services/admin/user_service.dart';
+import 'package:mobile/services/admin/admin_user_service.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -70,7 +70,7 @@ class _AdminEditUserScreenState extends State<AdminEditUserScreen> {
 
     try {
       // 4. Gọi Service Update
-      final success = await context.read<UserService>().updateUser(
+      final success = await context.read<AdminUserService>().updateUser(
         widget.user.id, // ID của user cần sửa
         userData, // Dữ liệu mới
       );

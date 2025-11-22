@@ -1,7 +1,6 @@
-// Model này đại diện cho 1 câu trả lời của sinh viên
 class StudentAnswerInputModel {
-  final int questionId;
-  final int? selectedOptionId; // Dùng cho trắc nghiệm
+  final String questionId;
+  final String? selectedOptionId; // Dùng cho trắc nghiệm
   final String? answerText; // Dùng cho bài viết/điền từ
 
   StudentAnswerInputModel({
@@ -10,7 +9,6 @@ class StudentAnswerInputModel {
     this.answerText,
   });
 
-  /// Chuyển đổi model này sang JSON để gửi cho API
   Map<String, dynamic> toJson() {
     return {
       'questionId': questionId,

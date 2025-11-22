@@ -1,5 +1,3 @@
-// file: services/student/student_lesson_service.dart
-
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/lesson_model.dart';
 import 'package:mobile/domain/repositories/student_lesson_repository.dart';
@@ -9,18 +7,15 @@ class StudentLessonService extends ChangeNotifier {
   final StudentLessonRepository _lessonRepository;
   StudentLessonService(this._lessonRepository);
 
-  // KEY: moduleId → VALUE: dữ liệu riêng
-  final Map<int, List<LessonModel>> _lessonsMap = {};
-  final Map<int, bool> _isLoadingMap = {};
-  final Map<int, String?> _errorMap = {};
+  final Map<String, List<LessonModel>> _lessonsMap = {};
+  final Map<String, bool> _isLoadingMap = {};
+  final Map<String, String?> _errorMap = {};
 
-  // Lấy dữ liệu theo moduleId
-  List<LessonModel> getLessons(int moduleId) => _lessonsMap[moduleId] ?? [];
-  bool isLoading(int moduleId) => _isLoadingMap[moduleId] ?? false;
-  String? error(int moduleId) => _errorMap[moduleId];
+  List<LessonModel> getLessons(String moduleId) => _lessonsMap[moduleId] ?? [];
+  bool isLoading(String moduleId) => _isLoadingMap[moduleId] ?? false;
+  String? error(String moduleId) => _errorMap[moduleId];
 
-  Future<void> fetchLessons(int moduleId) async {
-    // Nếu đang tải → bỏ qua
+  Future<void> fetchLessons(String moduleId) async {
     if (_isLoadingMap[moduleId] == true) return;
 
     _isLoadingMap[moduleId] = true;
@@ -40,7 +35,6 @@ class StudentLessonService extends ChangeNotifier {
     }
   }
 
-  // Xóa toàn bộ khi rời màn hình
   void clear() {
     _lessonsMap.clear();
     _isLoadingMap.clear();

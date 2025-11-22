@@ -3,17 +3,18 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill_extensions/flutter_quill_extensions.dart'; // ← CHO IMAGE EMBED
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile/data/models/lesson_model.dart';
 import 'package:mobile/domain/repositories/upload_repository.dart';
+import 'package:mobile/services/admin/admin_lesson_service.dart';
 import 'package:provider/provider.dart';
 
 class LessonFormDialog extends StatefulWidget {
-  final LessonModel? lesson;
-  final int moduleId;
+  final String? lessonId; // là null nếu THÊM, có giá trị nếu SỬA
+  final String moduleId;
 
-  const LessonFormDialog({super.key, this.lesson, required this.moduleId});
+  const LessonFormDialog({super.key, this.lessonId, required this.moduleId});
 
   @override
   State<LessonFormDialog> createState() => _LessonFormDialogState();
@@ -21,28 +22,76 @@ class LessonFormDialog extends StatefulWidget {
 
 class _LessonFormDialogState extends State<LessonFormDialog> {
   final _formKey = GlobalKey<FormState>();
+
+  bool _isLoading = false;
+  LessonModel? _fullLessonData;
+
   late TextEditingController _titleController;
+  late TextEditingController _orderController; // ✅ Thêm controller cho Order
   late QuillController _quillController;
+
   final FocusNode _editorFocusNode = FocusNode();
   final ScrollController _editorScrollController = ScrollController();
-  bool _isUploading = false;
+  bool _isUploading = false; // (State upload ảnh của bạn đã đúng)
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.lesson?.title ?? '');
-    _initializeQuillController();
+
+    // Khởi tạo controller rỗng
+    _titleController = TextEditingController();
+    _orderController = TextEditingController(); // Khởi tạo
+    _initializeQuillController(); // Gọi hàm của bạn
+
+    // ✅ 3. LOGIC TẢI DỮ LIỆU KHI SỬA
+    if (widget.lessonId != null) {
+      _loadLessonData();
+    }
+  }
+
+  // ✅ 4. HÀM TẢI DỮ LIỆU MỚI
+  Future<void> _loadLessonData() async {
+    setState(() => _isLoading = true);
+    try {
+      final lesson = await context.read<AdminLessonService>().fetchLessonById(
+        widget.lessonId!,
+      );
+
+      // Gán dữ liệu vào state
+      _fullLessonData = lesson;
+
+      // Gán dữ liệu vào controllers
+      _titleController.text = lesson.title;
+      _orderController.text = lesson.order.toString();
+
+      // Gán nội dung cho Quill (lấy từ code cũ của bạn)
+      if (lesson.content != null && lesson.content!.isNotEmpty) {
+        try {
+          final jsonContent = jsonDecode(lesson.content!);
+          _quillController.document = Document.fromJson(jsonContent);
+        } catch (e) {
+          debugPrint('Load content error: $e');
+        }
+      }
+    } catch (e) {
+      // Nếu lỗi, đóng dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _initializeQuillController() {
+    // (Toàn bộ logic config Quill của bạn giữ nguyên - Rất tốt)
     _quillController = QuillController.basic(
       config: QuillControllerConfig(
-        // Xử lý paste ảnh từ clipboard
         clipboardConfig: QuillClipboardConfig(
           enableExternalRichPaste: true,
           onImagePaste: (imageBytes) async {
-            // Trên web, nếu trả về null thì Quill có thể chèn blob:// URL
-            // Thay vì trả về null, cố gắng upload bytes và trả về URL mạng
             try {
               final filename =
                   'pasted_${DateTime.now().millisecondsSinceEpoch}.png';
@@ -55,20 +104,12 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
         ),
       ),
     );
-
-    if (widget.lesson != null && (widget.lesson!.content ?? '').isNotEmpty) {
-      try {
-        final jsonContent = jsonDecode(widget.lesson!.content!);
-        _quillController.document = Document.fromJson(jsonContent);
-      } catch (e) {
-        debugPrint('Load content error: $e');
-      }
-    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _orderController.dispose(); // ✅ dispose
     _quillController.dispose();
     _editorFocusNode.dispose();
     _editorScrollController.dispose();
@@ -78,13 +119,16 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       if (_isUploading) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đang tải ảnh lên, vui lòng đợi...')),
-        );
-        return; // NGĂN NGƯỜI DÙNG ĐÓNG DIALOG
+        _showError('Đang tải ảnh lên, vui lòng đợi...');
+        return;
       }
       final title = _titleController.text;
-      final order = widget.lesson?.order ?? 0;
+      // ✅ 5. SỬA LẠI LOGIC LẤY ORDER
+      final order =
+          int.tryParse(_orderController.text) ??
+          _fullLessonData?.order ?? // Lấy order cũ (nếu đang sửa)
+          0; // Mặc định là 0 (nếu đang thêm)
+
       final jsonContent = jsonEncode(
         _quillController.document.toDelta().toJson(),
       );
@@ -93,12 +137,14 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
         moduleId: widget.moduleId,
         title: title,
         order: order,
-        content: jsonContent,
+        // (Nếu Content rỗng, gửi '[]' để DB biết là đã lưu)
+        content: _quillController.document.isEmpty() ? '[]' : jsonContent,
       );
       Navigator.of(context).pop(result);
     }
   }
 
+  // (Các hàm _uploadBytesAndGetUrl, _onImageInsert, _showError, _insertImage của bạn giữ nguyên)
   Future<String?> _uploadBytesAndGetUrl(
     Uint8List bytes,
     String filename,
@@ -146,19 +192,16 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
   }
 
   void _insertImage(String imageUrl) {
-    // imageUrl ở đây là: https://res.cloudinary.com/... (từ API)
     final index = _quillController.selection.baseOffset;
     final length = _quillController.selection.extentOffset - index;
     final safeIndex = (index >= 0) ? index : _quillController.document.length;
 
-    // DÙNG replaceText → CHUẨN VÀ KÍCH HOẠT REBUILD
     _quillController.replaceText(
       safeIndex,
       length,
       BlockEmbed.image(imageUrl),
       null,
     );
-
     _quillController.updateSelection(
       TextSelection.collapsed(offset: safeIndex + 1),
       ChangeSource.local,
@@ -168,152 +211,176 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // ✅ 6. SỬA LẠI CHECK
       title: Text(
-        widget.lesson == null ? 'Tạo Bài học mới' : 'Cập nhật Bài học',
+        widget.lessonId == null ? 'Tạo Bài học mới' : 'Cập nhật Bài học',
       ),
       content: SizedBox(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.7,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Tiêu đề
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Tên Bài học',
-                  border: OutlineInputBorder(),
-                ),
-                validator:
-                    (value) =>
-                        (value == null || value.isEmpty)
-                            ? 'Vui lòng nhập tên bài học'
-                            : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Quill Editor + Toolbar
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Stack(
+        // ✅ 7. THÊM CHECK LOADING
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Column(
-                        children: [
-                          // Toolbar – THEO EXAMPLE
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  QuillSimpleToolbar(
-                                    controller: _quillController,
-                                    config: QuillSimpleToolbarConfig(
-                                      // Không dùng nút embed mặc định (mặc định sẽ chèn blob:// trên web)
-                                      // Thay vào đó dùng custom button bên dưới để upload trước rồi insert URL
-                                      embedButtons: [],
-                                      showClipboardPaste: true,
-                                      customButtons: [
-                                        QuillToolbarCustomButtonOptions(
-                                          icon: const Icon(
-                                            Icons.image,
-                                            size: 20,
-                                          ),
-                                          onPressed: () async {
-                                            final url = await _onImageInsert(
-                                              context,
-                                            );
-                                            if (url != null) _insertImage(url);
-                                          },
-                                        ),
-                                      ],
-                                      buttonOptions:
-                                          const QuillSimpleToolbarButtonOptions(
-                                            base:
-                                                QuillToolbarBaseButtonOptions(),
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // Editor – THEO EXAMPLE
-                          Expanded(
-                            child: QuillEditor(
-                              focusNode: _editorFocusNode,
-                              scrollController: _editorScrollController,
-                              controller: _quillController,
-                              config: QuillEditorConfig(
-                                placeholder: 'Bắt đầu viết nội dung...',
-                                padding: const EdgeInsets.all(8),
-
-                                embedBuilders: [
-                                  // Image embed – THEO EXAMPLE
-                                  ...FlutterQuillEmbeds.editorBuilders(
-                                    imageEmbedConfig: QuillEditorImageEmbedConfig(
-                                      imageProviderBuilder: (
-                                        context,
-                                        imageUrl,
-                                      ) {
-                                        // Nếu là asset, dùng AssetImage; còn lại NetworkImage
-                                        if (imageUrl.startsWith('assets/')) {
-                                          return AssetImage(imageUrl);
-                                        }
-                                        return null; // Sẽ dùng NetworkImage mặc định
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                      // Tiêu đề
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tên Bài học',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator:
+                            (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'Vui lòng nhập tên bài học'
+                                    : null,
                       ),
+                      const SizedBox(height: 16),
 
-                      // Loading overlay
-                      if (_isUploading)
-                        Container(
-                          alignment: Alignment.center,
-                          color: Colors.white.withOpacity(0.7),
-                          child: const Column(
-                            mainAxisSize: MainAxisSize.min,
+                      // ✅ 8. THÊM LẠI Ô NHẬP ORDER
+                      TextFormField(
+                        controller: _orderController,
+                        decoration: const InputDecoration(
+                          labelText: 'Thứ tự (Order)',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập thứ tự';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Vui lòng nhập số';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Quill Editor + Toolbar (Code của bạn giữ nguyên)
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Stack(
                             children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 12),
-                              Text(
-                                'Đang tải ảnh...',
-                                style: TextStyle(fontSize: 14),
+                              Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          QuillSimpleToolbar(
+                                            controller: _quillController,
+                                            config: QuillSimpleToolbarConfig(
+                                              embedButtons: [],
+                                              showClipboardPaste: true,
+                                              showAlignmentButtons: true,
+                                              customButtons: [
+                                                QuillToolbarCustomButtonOptions(
+                                                  icon: const Icon(
+                                                    Icons.image,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed: () async {
+                                                    final url =
+                                                        await _onImageInsert(
+                                                          context,
+                                                        );
+                                                    if (url != null)
+                                                      _insertImage(url);
+                                                  },
+                                                ),
+                                              ],
+                                              buttonOptions:
+                                                  const QuillSimpleToolbarButtonOptions(
+                                                    base:
+                                                        QuillToolbarBaseButtonOptions(),
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: QuillEditor(
+                                      focusNode: _editorFocusNode,
+                                      scrollController: _editorScrollController,
+                                      controller: _quillController,
+                                      config: QuillEditorConfig(
+                                        placeholder: 'Bắt đầu viết nội dung...',
+                                        padding: const EdgeInsets.all(8),
+                                        embedBuilders: [
+                                          ...FlutterQuillEmbeds.editorBuilders(
+                                            imageEmbedConfig:
+                                                QuillEditorImageEmbedConfig(
+                                                  imageProviderBuilder: (
+                                                    context,
+                                                    imageUrl,
+                                                  ) {
+                                                    if (imageUrl.startsWith(
+                                                      'assets/',
+                                                    )) {
+                                                      return AssetImage(
+                                                        imageUrl,
+                                                      );
+                                                    }
+                                                    return null;
+                                                  },
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              if (_isUploading)
+                                Container(
+                                  alignment: Alignment.center,
+                                  color: Colors.white.withOpacity(0.7),
+                                  child: const Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'Đang tải ảnh...',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
       ),
       actions: [
         TextButton(
@@ -322,7 +389,8 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: Text(widget.lesson == null ? 'Tạo mới' : 'Cập nhật'),
+          // ✅ 9. SỬA LẠI CHECK
+          child: Text(widget.lessonId == null ? 'Tạo mới' : 'Cập nhật'),
         ),
       ],
     );

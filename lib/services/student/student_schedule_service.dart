@@ -11,23 +11,31 @@ class StudentScheduleService extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  int _selectedDay = 0;
+
+  // --- Getters ---
   List<StudentScheduleModel> get schedules => _schedules;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int get selectedDay => _selectedDay;
 
   Future<void> fetchSchedules({int? dayOfWeek}) async {
     _isLoading = true;
     _error = null;
+    if (dayOfWeek != null) {
+      _selectedDay = dayOfWeek;
+    }
+    int? apiDayOfWeek = (_selectedDay == 0) ? null : _selectedDay;
     notifyListeners();
 
     try {
-      // 5. GỌI REPOSITORY
       _schedules = await _scheduleRepository.getStudentSchedules(
-        dayOfWeek: dayOfWeek,
+        dayOfWeek: apiDayOfWeek,
       );
     } catch (e) {
       _error =
           'Không thể tải lịch học: ${e.toString().replaceFirst('Exception: ', '')}';
+      debugPrint(_error);
       ToastHelper.showError(_error!);
       _schedules = [];
     } finally {

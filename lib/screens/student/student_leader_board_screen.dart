@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/services/student/leaderboard_service.dart';
+import 'package:mobile/services/student/student_leaderboard_service.dart';
 import 'package:mobile/data/models/leaderboard_model.dart'; // Import model thật
 import 'package:provider/provider.dart';
 
@@ -18,15 +18,10 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
     // Tải dữ liệu thật ngay khi vào màn hình
     Future.microtask(() {
       // Tải lần đầu (dùng metric 'xp' mặc định từ service)
-      context.read<LeaderboardService>().fetchLeaderboard();
+      context.read<StudentLeaderboardService>().fetchLeaderboard();
     });
   }
 
-  // ❌ XÓA mock data: _mockLeaderboard
-  // ❌ XÓA mock data: _currentUser
-  // ❌ XÓA state: _selectedPeriod, _selectedMetric (Service sẽ quản lý)
-
-  // Level configuration (Giữ nguyên)
   Map<String, dynamic> _getLevelConfig(int level) {
     switch (level) {
       case 1:
@@ -78,7 +73,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     // 1. Lắng nghe service
-    final service = context.watch<LeaderboardService>();
+    final service = context.watch<StudentLeaderboardService>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -189,7 +184,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
   }
 
   // Widget hiển thị nội dung chính (loading, error, data)
-  Widget _buildContentBody(LeaderboardService service) {
+  Widget _buildContentBody(StudentLeaderboardService service) {
     if (service.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }

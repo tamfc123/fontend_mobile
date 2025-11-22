@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/services/admin/schedule_service.dart';
+import 'package:mobile/services/admin/admin_schedule_service.dart';
 import 'package:provider/provider.dart';
 
 class ScheduleFilterBar extends StatefulWidget {
@@ -37,7 +37,7 @@ class _ScheduleFilterBarState extends State<ScheduleFilterBar> {
       _selectedDayOfWeek = null;
     });
 
-    final service = context.read<ScheduleService>();
+    final service = context.read<AdminScheduleService>();
     service.updateSearchTeacher('');
     service.updateFilterDay(null);
   }
@@ -80,8 +80,9 @@ class _ScheduleFilterBarState extends State<ScheduleFilterBar> {
               fillColor: Colors.white,
             ),
             onChanged:
-                (val) =>
-                    context.read<ScheduleService>().updateSearchTeacher(val),
+                (val) => context
+                    .read<AdminScheduleService>()
+                    .updateSearchTeacher(val),
           ),
         ),
         const SizedBox(height: 12),
@@ -113,7 +114,7 @@ class _ScheduleFilterBarState extends State<ScheduleFilterBar> {
                   ),
                   onSelected: (_) {
                     setState(() => _selectedDayOfWeek = value);
-                    context.read<ScheduleService>().updateFilterDay(value);
+                    context.read<AdminScheduleService>().updateFilterDay(value);
                   },
                 );
               }).toList(),

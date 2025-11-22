@@ -41,7 +41,7 @@ class TeacherScheduleDataSource extends CalendarDataSource {
               startTime: startDate,
               endTime: endDate,
               subject:
-                  "${schedule.className}\nPhòng: ${schedule.room ?? 'N/A'}\nGV: ${schedule.teacherName ?? ''}\nGiờ: ${schedule.startTime} - ${schedule.endTime}",
+                  "${schedule.className}\nPhòng: ${schedule.roomName ?? 'N/A'}\nGV: ${schedule.teacherName ?? ''}\nGiờ: ${schedule.startTime} - ${schedule.endTime}",
               color: Colors.blue.shade300,
               id: schedule,
             ),

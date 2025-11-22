@@ -5,6 +5,7 @@ import 'package:flutter/services.dart'; // Cho Clipboard
 import 'package:intl/intl.dart'; // 👈 THÊM: Để format ngày
 import 'package:mobile/data/models/media_file_model.dart'; // 👈 THÊM: Model media
 import 'package:mobile/services/teacher/teacher_media_service.dart';
+import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -78,32 +79,21 @@ class _TeacherMediaScreenState extends State<TeacherMediaScreen> {
   // Hàm copy (từ code cũ)
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
-    ToastHelper.showSucess('Đã sao chép link!');
+    ToastHelper.showSuccess('Đã sao chép link!');
   }
 
-  // Hàm xóa (từ code cũ)
-  void _confirmDelete(BuildContext context, MediaFileModel file) {
+  void _confirmDelete(MediaFileModel file) {
     showDialog(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: const Text('Xác nhận xóa'),
-            content: Text(
-              'Bạn có chắc muốn xóa file "${file.fileName}" không?',
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Hủy'),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-              TextButton(
-                child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-                onPressed: () {
-                  context.read<TeacherMediaService>().deleteMediaFile(file.id);
-                  Navigator.of(ctx).pop();
-                },
-              ),
-            ],
+          (_) => ConfirmDeleteDialog(
+            title: 'Xác nhận xóa',
+            content: 'Bạn có chắc muốn xóa file "${file.fileName}"?',
+            onConfirm: () async {
+              await context.read<TeacherMediaService>().deleteMediaFile(
+                file.id,
+              );
+            },
           ),
     );
   }
@@ -488,7 +478,7 @@ class _TeacherMediaScreenState extends State<TeacherMediaScreen> {
                           Icons.delete,
                           Colors.redAccent,
                           'Xóa file',
-                          () => _confirmDelete(context, file),
+                          () => _confirmDelete(file),
                         ),
                       ],
                     ),

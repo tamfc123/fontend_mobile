@@ -2,7 +2,7 @@
 
 // Khớp với LessonInfoDTO
 class LessonInfoModel {
-  final int id;
+  final String id;
   final String title;
   final int totalWords;
   final int completedWords;
@@ -26,7 +26,7 @@ class LessonInfoModel {
 
 // Khớp với ModuleDetailsDTO
 class ModuleDetailsModel {
-  final int moduleId;
+  final String moduleId;
   final String moduleName;
   final List<LessonInfoModel> lessons;
 

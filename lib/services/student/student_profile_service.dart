@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/user_model.dart';
-import 'package:mobile/domain/repositories/profile_repository.dart';
+import 'package:mobile/domain/repositories/student_profile_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
 
 class StudentProfileService extends ChangeNotifier {
-  final ProfileRepository _profileRepository;
+  final StudentProfileRepository _profileRepository;
 
   StudentProfileService(this._profileRepository);
 
@@ -17,14 +17,12 @@ class StudentProfileService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  /// Lấy thông tin profile
   Future<void> loadProfile() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 6. GỌI REPOSITORY
       _profile = await _profileRepository.getProfile();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
@@ -35,7 +33,6 @@ class StudentProfileService extends ChangeNotifier {
     }
   }
 
-  /// Cập nhật thông tin cá nhân
   Future<bool> updateProfile({
     String? name,
     String? phone,
@@ -46,7 +43,6 @@ class StudentProfileService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 7. GỌI REPOSITORY (Repo trả về UserModel, code sạch hơn)
       final updatedProfile = await _profileRepository.updateProfile(
         name: name,
         phone: phone,
@@ -54,7 +50,7 @@ class StudentProfileService extends ChangeNotifier {
       );
 
       _profile = updatedProfile;
-      ToastHelper.showSucess('Cập nhật thành công'); // Thêm toast
+      ToastHelper.showSuccess('Cập nhật thành công');
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
@@ -66,19 +62,17 @@ class StudentProfileService extends ChangeNotifier {
     }
   }
 
-  /// Cập nhật avatar
   Future<void> updateAvatar(File file) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 8. GỌI REPOSITORY
       final avatarUrl = await _profileRepository.updateAvatar(file);
       if (_profile != null && avatarUrl != null) {
         _profile = _profile!.copyWith(avatarUrl: avatarUrl);
       }
-      ToastHelper.showSucess('Cập nhật ảnh đại diện thành công'); // Thêm toast
+      ToastHelper.showSuccess('Cập nhật ảnh đại diện thành công');
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       ToastHelper.showError(_error!);
@@ -97,12 +91,11 @@ class StudentProfileService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 9. GỌI REPOSITORY
       await _profileRepository.changePassword(
         currentPassword: currentPassword,
         newPassword: newPassword,
       );
-      ToastHelper.showSucess('Đổi mật khẩu thành công'); // Thêm toast
+      ToastHelper.showSuccess('Đổi mật khẩu thành công');
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       ToastHelper.showError(_error!);
@@ -113,10 +106,8 @@ class StudentProfileService extends ChangeNotifier {
   }
 
   void updateLocalStreak(int newStreak) {
-    // 1. Nếu profile chưa tải thì không làm gì
     if (_profile == null) return;
 
-    // 2. Chỉ cập nhật và thông báo nếu giá trị mới khác
     if (_profile!.currentStreak != newStreak) {
       _profile = _profile!.copyWith(currentStreak: newStreak);
       notifyListeners();

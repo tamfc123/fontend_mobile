@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Dùng để format ngày
-import 'package:just_audio/just_audio.dart'; // ✅ 1. THÊM IMPORT NÀY
+import 'package:intl/intl.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:mobile/data/models/student_quiz_review_model.dart';
-import 'package:mobile/services/student/student_quiz_service.dart'; // Sửa path nếu cần
+import 'package:mobile/services/student/student_quiz_service.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizReviewScreen extends StatefulWidget {
-  final int classId;
-  final int quizId;
+  final String classId;
+  final String quizId;
 
   const StudentQuizReviewScreen({
     super.key,
@@ -69,6 +69,7 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
           }
           // 2. Trạng thái Lỗi
           if (service.reviewError != null) {
+            debugPrint('Lỗi: ${service.reviewError}');
             return Center(child: Text('Lỗi: ${service.reviewError}'));
           }
           // 3. Trạng thái chưa có dữ liệu
@@ -97,10 +98,6 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     );
   }
 
-  // --- Các Widget con để xây dựng UI ---
-
-  /// Widget hiển thị phần Header (Điểm số, Tên quiz)
-  /// (HÀM NÀY GIỮ NGUYÊN - KHÔNG CẦN SỬA)
   Widget _buildReviewHeader(StudentQuizReviewModel review) {
     // ... (Toàn bộ code cũ của bạn giữ nguyên)
     final scoreFormatted = NumberFormat("0.#").format(review.score);
@@ -195,8 +192,6 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     );
   }
 
-  // ✅ 4. WIDGET NÀY ĐÃ ĐƯỢC CẬP NHẬT
-  /// Widget hiển thị 1 thẻ câu hỏi (Giống màn hình Làm bài)
   Widget _buildQuestionCard(
     StudentQuestionReviewModel question,
     int questionNumber,
@@ -229,7 +224,6 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    // ✅ Hiển thị màu Đỏ/Xanh dựa trên kết quả
                     color:
                         question.isCorrect
                             ? const Color(0xFF059669)
@@ -262,16 +256,14 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
             ),
           ),
 
-          // ✅ 5. PHẦN NỘI DUNG (ĐÃ CẬP NHẬT)
+          // Phần nội dung câu trả lời
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hiển thị nút nghe (nếu có)
                 _buildAudioPlayer(question),
 
-                // Hiển thị câu trả lời dựa trên loại
                 if (question.questionType == 'MULTIPLE_CHOICE')
                   ...question.options.asMap().entries.map((entry) {
                     final optIndex = entry.key;
@@ -279,12 +271,14 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
                     return _buildOptionTile(
                       option: option,
                       optionIndex: optIndex,
-                      selectedOptionId: question.selectedOptionId,
+                      // ✅ FIX LỖI: selectedOptionId có thể là String (Guid) hoặc int,
+                      // nhưng Model nên parse thành String để an toàn.
+                      // Ở đây ta truyền vào widget dưới dạng String?
+                      selectedOptionId: question.selectedOptionId?.toString(),
                     );
                   })
                 else if (question.questionType == 'FILL_IN_THE_BLANK' ||
                     question.questionType == 'DICTATION')
-                  // Hiển thị UI cho bài Viết
                   _buildWritingReview(question)
                 else
                   Text(
@@ -406,18 +400,17 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     );
   }
 
-  /// Widget cho mỗi LỰA CHỌN (Option) - (Giữ nguyên, không cần sửa)
   Widget _buildOptionTile({
     required StudentOptionReviewModel option,
     required int optionIndex,
-    required int? selectedOptionId,
+    required String? selectedOptionId, // 👈 ĐỔI TỪ int? SANG String?
   }) {
-    final optionLabel = String.fromCharCode(65 + optionIndex); // A, B, C, D
+    final optionLabel = String.fromCharCode(65 + optionIndex);
 
-    // --- Logic xác định trạng thái của lựa chọn ---
-    bool isCorrect = option.isCorrect; // Đây có phải là đáp án đúng?
-    bool isSelected =
-        option.optionId == selectedOptionId; // SV có chọn đáp án này?
+    // --- Logic xác định trạng thái ---
+    bool isCorrect = option.isCorrect;
+    // 👈 So sánh String ID thay vì int
+    bool isSelected = option.optionId.toString() == selectedOptionId;
 
     Color borderColor;
     Color backgroundColor;
@@ -425,25 +418,24 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     Color labelColor;
 
     if (isCorrect) {
-      // 1. Đây là đáp án ĐÚNG
-      borderColor = const Color(0xFF10B981); // Xanh lá đậm
-      backgroundColor = const Color(0xFFF0FDF4); // Xanh lá nhạt
+      // Đáp án ĐÚNG
+      borderColor = const Color(0xFF10B981);
+      backgroundColor = const Color(0xFFF0FDF4);
       labelColor = const Color(0xFF059669);
       trailingIcon = const Icon(Icons.check_circle, color: Color(0xFF10B981));
     } else if (isSelected) {
-      // 2. Đây là đáp án SV chọn (và nó SAI)
-      borderColor = const Color(0xFFEF4444); // Đỏ đậm
-      backgroundColor = const Color(0xFFFEF2F2); // Đỏ nhạt
+      // Đáp án SV chọn (SAI)
+      borderColor = const Color(0xFFEF4444);
+      backgroundColor = const Color(0xFFFEF2F2);
       labelColor = const Color(0xFFDC2626);
       trailingIcon = const Icon(Icons.cancel, color: Color(0xFFEF4444));
     } else {
-      // 3. Đây là đáp án sai (và SV không chọn)
-      borderColor = const Color(0xFFE5E7EB); // Xám
+      // Đáp án khác
+      borderColor = const Color(0xFFE5E7EB);
       backgroundColor = const Color(0xFFFAFBFC);
       labelColor = const Color(0xFFD1D5DB);
       trailingIcon = null;
     }
-    // --- Hết logic ---
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

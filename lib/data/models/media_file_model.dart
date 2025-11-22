@@ -1,5 +1,5 @@
 class MediaFileModel {
-  final int id;
+  final String id;
   final String fileName;
   final String url;
   final String publicId;
@@ -15,7 +15,7 @@ class MediaFileModel {
 
   factory MediaFileModel.fromJson(Map<String, dynamic> json) {
     return MediaFileModel(
-      id: json['id'] as int,
+      id: json['id'] as String,
       fileName: json['fileName'] as String,
       url: json['url'] as String,
       publicId: json['publicId'] as String,

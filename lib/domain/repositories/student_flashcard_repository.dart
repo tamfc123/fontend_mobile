@@ -10,7 +10,7 @@ class StudentFlashcardRepository {
   StudentFlashcardRepository(this._apiClient);
 
   // 1. Lấy danh sách Flashcard
-  Future<FlashcardSessionModel> getFlashcards(int lessonId) async {
+  Future<FlashcardSessionModel> getFlashcards(String lessonId) async {
     try {
       final response = await _apiClient.dio.get(
         ApiConfig.studentLessonFlashcards(lessonId),
@@ -22,11 +22,10 @@ class StudentFlashcardRepository {
   }
 
   Future<PronunciationResultModel> assessPronunciation(
-    int vocabularyId,
+    String vocabularyId,
     String audioPath,
   ) async {
     try {
-      // 1. Tạo FormData
       String fileName = audioPath.split('/').last;
       FormData formData = FormData.fromMap({
         'vocabularyId': vocabularyId,
@@ -36,18 +35,13 @@ class StudentFlashcardRepository {
         ),
       });
 
-      // 2. Gửi POST
       final response = await _apiClient.dio.post(
-        ApiConfig.studentAssessPronunciation, // Endpoint mới
+        ApiConfig.studentAssessPronunciation,
         data: formData,
       );
-      print("======== RAW JSON TỪ BACKEND ========");
-      print(response.data);
 
-      // 3. Parse kết quả
       return PronunciationResultModel.fromJson(response.data);
     } on DioException catch (e) {
-      print(e);
       throw Exception(e.response?.data['message'] ?? 'Lỗi gửi file âm thanh');
     }
   }

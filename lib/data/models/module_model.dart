@@ -1,6 +1,6 @@
 class ModuleModel {
-  final int id;
-  final int courseId; // ✅ THAY ĐỔI: Dùng courseId
+  final String id;
+  final String courseId; // ✅ THAY ĐỔI: Dùng courseId
   final String title;
   final String? description;
   final int order; // ✅ THAY ĐỔI: Dùng order
@@ -36,7 +36,7 @@ class ModuleModel {
 }
 
 class ModuleCreateModel {
-  final int courseId;
+  final String courseId;
   final String title;
   final String? description;
 

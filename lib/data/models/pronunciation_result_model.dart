@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ✅ TẠO CLASS MỚI NÀY
 class WordResultModel {
   final String word;
   final double accuracyScore;
@@ -13,7 +12,6 @@ class WordResultModel {
   });
 
   factory WordResultModel.fromJson(Map<String, dynamic> json) {
-    // Lấy danh sách phoneme con (thêm ? để an toàn)
     var phonemesList = json['phonemeResults'] as List? ?? [];
     List<PhonemeResultModel> phonemes =
         phonemesList.map((p) => PhonemeResultModel.fromJson(p)).toList();
@@ -26,18 +24,16 @@ class WordResultModel {
   }
 }
 
-// ✅ CẬP NHẬT CLASS NÀY
 class PronunciationResultModel {
   final double accuracyScore;
-  final double fluencyScore; // Giữ nguyên
-  final double completenessScore; // Giữ nguyên
+  final double fluencyScore;
+  final double completenessScore;
   final String phoneticWord;
   final int newStrength;
   final int newStreak;
-
-  // 👇 THAY ĐỔI DÒNG NÀY
-  final List<WordResultModel>
-  wordResults; // <-- Đổi từ List<PhonemeResultModel>
+  final int expGained;
+  final int coinsGained;
+  final List<WordResultModel> wordResults;
 
   PronunciationResultModel({
     required this.accuracyScore,
@@ -45,32 +41,31 @@ class PronunciationResultModel {
     required this.completenessScore,
     required this.phoneticWord,
     required this.newStrength,
-    required this.wordResults, // <-- Sửa ở đây
+    required this.wordResults,
     required this.newStreak,
+    required this.expGained,
+    required this.coinsGained,
   });
 
   factory PronunciationResultModel.fromJson(Map<String, dynamic> json) {
-    // 👇 THAY ĐỔI KHỐI NÀY
-    // Lấy danh sách từ (thêm ? để an toàn)
     var wordList = json['wordResults'] as List? ?? [];
     List<WordResultModel> words =
         wordList.map((w) => WordResultModel.fromJson(w)).toList();
-    // KẾT THÚC THAY ĐỔI
 
     return PronunciationResultModel(
-      // Thêm ? để an toàn, phòng khi API không trả về
       accuracyScore: (json['accuracyScore'] as num? ?? 0.0).toDouble(),
       fluencyScore: (json['fluencyScore'] as num? ?? 0.0).toDouble(),
       completenessScore: (json['completenessScore'] as num? ?? 0.0).toDouble(),
       phoneticWord: json['phoneticWord'] ?? '',
       newStrength: json['newStrength'] as int? ?? 0,
-      wordResults: words, // <-- Sửa ở đây
+      wordResults: words,
       newStreak: (json['newStreak'] as int?) ?? 0,
+      expGained: json['expGained'] as int? ?? 0,
+      coinsGained: json['coinsGained'] as int? ?? 0,
     );
   }
 }
 
-// ✅ GIỮ NGUYÊN CLASS NÀY (Chỉ thêm ? để an toàn hơn)
 class PhonemeResultModel {
   final String phoneme;
   final double accuracyScore;
@@ -84,17 +79,26 @@ class PhonemeResultModel {
 
   factory PhonemeResultModel.fromJson(Map<String, dynamic> json) {
     return PhonemeResultModel(
-      phoneme: json['phoneme'] ?? '', // Thêm ?? ''
-      accuracyScore:
-          (json['accuracyScore'] as num? ?? 0.0).toDouble(), // Thêm ?
-      errorType: json['errorType'] ?? 'None', // Thêm ?? 'None'
+      phoneme: json['phoneme'] ?? '',
+      accuracyScore: (json['accuracyScore'] as num? ?? 0.0).toDouble(),
+      errorType: json['errorType'] ?? 'None',
     );
   }
 
-  // Helper để lấy màu dựa trên lỗi
   Color get color {
-    if (errorType == 'None') return Colors.green.shade700;
+    // 1. Nếu API báo lỗi cụ thể -> Màu lỗi
     if (errorType == 'Mispronunciation') return Colors.orange.shade700;
-    return Colors.red.shade700; // Omission, Insertion...
+    if (errorType == 'Omission' || errorType == 'Insertion')
+      return Colors.red.shade700;
+
+    // 2. Nếu API báo "None" (Không lỗi), phải check tiếp ĐIỂM SỐ
+    // Azure có thể trả về None nhưng điểm thấp (phát âm chưa chuẩn hẳn)
+    if (accuracyScore >= 80) {
+      return Colors.green.shade700; // Tốt (Xanh)
+    } else if (accuracyScore >= 60) {
+      return Colors.orange.shade700; // Tạm được (Cam)
+    } else {
+      return Colors.red.shade700; // Tệ (Đỏ)
+    }
   }
 }

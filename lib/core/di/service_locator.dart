@@ -1,15 +1,17 @@
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/api/api_client.dart';
+import 'package:mobile/domain/repositories/admin_dashboard_repository.dart';
 import 'package:mobile/domain/repositories/admin_lesson_repository.dart';
+import 'package:mobile/domain/repositories/admin_quiz_repository.dart';
 import 'package:mobile/domain/repositories/admin_vocabulary_repository.dart';
 import 'package:mobile/domain/repositories/auth_repository.dart';
-import 'package:mobile/domain/repositories/class_repository.dart';
-import 'package:mobile/domain/repositories/course_repository.dart';
-import 'package:mobile/domain/repositories/leaderboard_repository.dart';
-import 'package:mobile/domain/repositories/profile_repository.dart';
-import 'package:mobile/domain/repositories/quiz_repository.dart';
-import 'package:mobile/domain/repositories/room_repository.dart';
-import 'package:mobile/domain/repositories/schedule_repository.dart';
+import 'package:mobile/domain/repositories/admin_class_repository.dart';
+import 'package:mobile/domain/repositories/admin_course_repository.dart';
+import 'package:mobile/domain/repositories/student_leaderboard_repository.dart';
+import 'package:mobile/domain/repositories/student_profile_repository.dart';
+import 'package:mobile/domain/repositories/teaacher_dashboard_repository.dart';
+import 'package:mobile/domain/repositories/admin_room_repository.dart';
+import 'package:mobile/domain/repositories/admin_schedule_repository.dart';
 import 'package:mobile/domain/repositories/student_class_repository.dart';
 import 'package:mobile/domain/repositories/student_course_repository.dart';
 import 'package:mobile/domain/repositories/student_flashcard_repository.dart';
@@ -18,15 +20,17 @@ import 'package:mobile/domain/repositories/student_lesson_repository.dart';
 import 'package:mobile/domain/repositories/student_module_repository.dart';
 import 'package:mobile/domain/repositories/student_quiz_repository.dart';
 import 'package:mobile/domain/repositories/student_schedule_repository.dart';
-import 'package:mobile/domain/repositories/module_repository.dart';
+import 'package:mobile/domain/repositories/admin_module_repository.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_lesson_repository.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_level_repository.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_module_repository.dart';
 import 'package:mobile/domain/repositories/teacher_class_repository.dart';
 import 'package:mobile/domain/repositories/teacher_schedule_repository.dart';
 import 'package:mobile/domain/repositories/upload_repository.dart';
-import 'package:mobile/domain/repositories/user_repository.dart';
+import 'package:mobile/domain/repositories/admin_user_repository.dart';
 import 'package:mobile/services/auth/auth_service.dart';
+import 'package:mobile/services/student/student_class_service.dart';
+import 'package:mobile/services/student/student_course_class_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -34,11 +38,13 @@ void setupLocator() {
   getIt.registerLazySingleton(() => ApiClient());
 
   getIt.registerLazySingleton(() => AuthRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => UserRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => CourseRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => ClassRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => RoomRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => ScheduleRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminUserRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminCourseRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminClassRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminRoomRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => AdminScheduleRepository(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton(() => AdminLessonRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(
     () => AdminVocabularyRepository(getIt<ApiClient>()),
@@ -48,8 +54,10 @@ void setupLocator() {
   getIt.registerLazySingleton(
     () => TeacherScheduleRepository(getIt<ApiClient>()),
   );
-  getIt.registerLazySingleton(() => ModuleRepository(getIt<ApiClient>()));
-
+  getIt.registerLazySingleton(() => AdminModuleRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => TeaacherDashboardRepository(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton(
     () => StudentScheduleRepository(getIt<ApiClient>()),
   );
@@ -60,9 +68,11 @@ void setupLocator() {
     () => StudentCourseRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton(() => StudentClassRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => ProfileRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => StudentProfileRepository(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton(() => UploadRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => QuizRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AdminQuizRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => StudentQuizRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(
     () => StudentLessonRepository(getIt<ApiClient>()),
@@ -71,11 +81,10 @@ void setupLocator() {
     () => StudentVocabularyLevelRepository(getIt<ApiClient>()),
   );
 
-  // ✅ ĐĂNG KÝ REPOSITORY MỚI (MODULE)
   getIt.registerLazySingleton(
     () => StudentVocabularyModuleRepository(getIt<ApiClient>()),
   );
-  // ✅ ĐĂNG KÝ REPOSITORY MỚI (LESSON)
+
   getIt.registerLazySingleton(
     () => StudentVocabularyLessonRepository(getIt<ApiClient>()),
   );
@@ -86,9 +95,21 @@ void setupLocator() {
 
   getIt.registerLazySingleton(() => StudentGradeRepository(getIt<ApiClient>()));
 
-  getIt.registerLazySingleton(() => LeaderboardRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => StudentLeaderboardRepository(getIt<ApiClient>()),
+  );
   // Đăng ký AuthService dùng AuthRepository
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => AdminDashboardRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<StudentCourseClassService>(
+    () => StudentCourseClassService(getIt<StudentCourseRepository>()),
+  );
+
+  getIt.registerFactory<StudentClassService>(
+    () => StudentClassService(getIt<StudentClassRepository>()),
   );
 }

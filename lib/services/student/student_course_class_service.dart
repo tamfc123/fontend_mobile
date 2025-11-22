@@ -4,8 +4,10 @@ import 'package:mobile/domain/repositories/student_course_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
 
 class StudentCourseClassService extends ChangeNotifier {
-  final StudentCourseRepository _studentCourseRepository;
-  StudentCourseClassService(this._studentCourseRepository);
+  final StudentCourseRepository _courseRepository;
+
+  // Inject Repository
+  StudentCourseClassService(this._courseRepository);
 
   List<StudentClassModel> _classes = [];
   bool _isLoading = false;
@@ -16,42 +18,28 @@ class StudentCourseClassService extends ChangeNotifier {
   String? get error => _error;
 
   /// Lấy danh sách lớp theo courseId
-  Future<void> fetchClasses(int courseId) async {
+  Future<void> fetchClasses(String courseId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 6. GỌI REPOSITORY
-      // Repository đã trả về List<StudentClassModel> đã map
-      final data = await _studentCourseRepository.getClassesByCourse(courseId);
-
-      // ✅ Sửa lỗi logic: Gán trực tiếp, không cần map lại
+      // Gọi repository (đã được cập nhật API mới bên trong)
+      final data = await _courseRepository.getClassesByCourse(courseId);
       _classes = data;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
-      ToastHelper.showError(_error!); // Thêm toast
+      debugPrint(_error);
+      ToastHelper.showError(_error!);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Tham gia lớp
-  Future<bool> joinClass(int classId) async {
-    try {
-      // 7. GỌI REPOSITORY
-      await _studentCourseRepository.joinClass(classId);
-
-      _classes.removeWhere((c) => c.classId == classId);
-      notifyListeners();
-      ToastHelper.showSucess('Tham gia lớp thành công'); // Thêm toast
-      return true;
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-      ToastHelper.showError(_error!); // Thêm toast
-      notifyListeners();
-      return false;
-    }
+  void clear() {
+    _classes = [];
+    _error = null;
+    notifyListeners();
   }
 }

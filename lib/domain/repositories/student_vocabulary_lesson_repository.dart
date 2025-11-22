@@ -8,14 +8,12 @@ class StudentVocabularyLessonRepository {
   final ApiClient _apiClient;
   StudentVocabularyLessonRepository(this._apiClient);
 
-  // GET: Lấy danh sách Lesson của 1 Module
-  Future<ModuleDetailsModel> getModuleLessons(int moduleId) async {
+  Future<ModuleDetailsModel> getModuleLessons(String moduleId) async {
     try {
       final response = await _apiClient.dio.get(
-        ApiConfig.studentModuleLessons(moduleId), // Dùng config mới
+        ApiConfig.studentModuleLessons(moduleId),
       );
-      print("======== RAW JSON TỪ BACKEND ========");
-      print(response.data);
+
       return ModuleDetailsModel.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi tải bài học');

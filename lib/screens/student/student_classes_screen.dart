@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/data/models/student_class_model.dart';
 import 'package:mobile/services/student/student_class_service.dart';
-import 'package:mobile/utils/color_helper.dart';
 import 'package:mobile/widgets/student/classStudent/class_card.dart';
 import 'package:provider/provider.dart';
 
@@ -9,17 +9,20 @@ class StudentClassesScreen extends StatefulWidget {
   const StudentClassesScreen({super.key});
 
   @override
-  State<StudentClassesScreen> createState() =>
-      _StudentCourseClassesScreenState();
+  State<StudentClassesScreen> createState() => _StudentClassesScreenState();
 }
 
-class _StudentCourseClassesScreenState extends State<StudentClassesScreen> {
+class _StudentClassesScreenState extends State<StudentClassesScreen> {
+  // Palette màu
+  static const Color primaryBlue = Color(0xFF3B82F6);
+  static const Color textDark = Color(0xFF1E293B); // Màu đen xám (Black/Slate)
+  static const Color bgLight = Color(0xFFF8FAFC);
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      final service = context.read<StudentClassService>();
-      service.loadJoinedClasses();
+      context.read<StudentClassService>().loadJoinedClasses();
     });
   }
 
@@ -28,270 +31,150 @@ class _StudentCourseClassesScreenState extends State<StudentClassesScreen> {
     final service = context.watch<StudentClassService>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-
-      // Modern AppBar
+      backgroundColor: bgLight,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1F2937),
-        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true, // ✅ Căn giữa tiêu đề
         title: const Text(
           "Lớp học của tôi",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {
-              // TODO: Implement search
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tính năng tìm kiếm đang phát triển'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: textDark, // ✅ Chữ màu đen (Slate 800)
           ),
-        ],
+        ),
+        actions: [], // ✅ Đã bỏ nút dấu +
       ),
-
       body: Builder(
         builder: (context) {
-          // Loading state
           if (service.isLoading) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.blue.shade600),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Đang tải lớp học...',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
-                ],
-              ),
+            return const Center(
+              child: CircularProgressIndicator(color: primaryBlue),
             );
           }
 
-          // Error state
           if (service.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 64,
-                    color: Colors.red.shade300,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Có lỗi xảy ra",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      service.error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      service.loadJoinedClasses();
-                    },
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Thử lại'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorState(service);
           }
 
-          // Empty state
           if (service.joinedClasses.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.class_outlined,
-                    size: 80,
-                    color: Colors.grey.shade300,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Chưa tham gia lớp nào",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Hãy tham gia lớp học để bắt đầu",
-                    style: TextStyle(color: Colors.grey.shade500),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Navigate to courses
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Chuyển đến danh sách khóa học'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Khám phá khóa học'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState(context);
           }
 
-          // Classes list
           return RefreshIndicator(
             onRefresh: () async {
               await service.loadJoinedClasses();
             },
-            color: Colors.blue.shade600,
+            color: primaryBlue,
             child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
               slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-                // Section header
+                // 1. Header Thống kê (Dashboard Style)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Danh sách lớp',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
+                    padding: const EdgeInsets.all(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        const Spacer(),
-                        Text(
-                          '${service.joinedClasses.length} lớp',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryBlue.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.school_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${service.joinedClasses.length}',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Lớp đang tham gia',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
-                // Classes list
+                // ✅ 2. Tiêu đề danh sách (Bổ sung theo yêu cầu)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 12),
+                    child: Text(
+                      "Danh sách lớp học",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: textDark,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 3. Danh sách lớp (Animated List)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final classModel = service.joinedClasses[index];
-                      // Assume level from course or default to 1
-                      final colorHelper = ColorHelper();
-                      final levelConfig = colorHelper.getLevelConfig(1);
 
-                      return ClassCard(
-                        classModel: classModel,
-                        levelConfig: levelConfig,
-                        onLeave: () async {
-                          // Show confirmation dialog
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  title: const Text('Xác nhận rời lớp'),
-                                  content: Text(
-                                    'Bạn có chắc muốn rời khỏi lớp "${classModel.className}"?\n\nBạn sẽ không thể truy cập tài liệu và bài học của lớp này nữa.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.pop(context, false),
-                                      child: const Text('Hủy'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed:
-                                          () => Navigator.pop(context, true),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      child: const Text('Rời lớp'),
-                                    ),
-                                  ],
-                                ),
-                          );
-
-                          if (confirmed == true) {
-                            await service.leaveClass(classModel.classId);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text('Đã rời lớp thành công'),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        onTap:
-                            () => context.go(
-                              '/student/student-class/module-class',
-                              extra: classModel,
-                            ),
+                      return _AnimatedListItem(
+                        index: index,
+                        child: ClassCard(
+                          classModel: classModel,
+                          levelConfig: const {},
+                          onTap:
+                              () => context.push(
+                                '/student/student-class/module-class',
+                                extra: classModel,
+                              ),
+                          onLeave:
+                              () => _confirmLeaveClass(
+                                context,
+                                service,
+                                classModel,
+                              ),
+                        ),
                       );
                     }, childCount: service.joinedClasses.length),
                   ),
@@ -301,6 +184,231 @@ class _StudentCourseClassesScreenState extends State<StudentClassesScreen> {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _confirmLeaveClass(
+    BuildContext context,
+    StudentClassService service,
+    StudentClassModel classModel,
+  ) async {
+    return showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red.shade400,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Rời lớp học?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Bạn có chắc muốn rời khỏi lớp "${classModel.className}"?\nMọi tiến độ học tập trong lớp này sẽ bị ẩn.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            foregroundColor: Colors.grey.shade700,
+                          ),
+                          child: const Text(
+                            'Hủy',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await service.leaveClass(classModel.classId);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade500,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Rời lớp',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primaryBlue.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.class_outlined,
+              size: 64,
+              color: primaryBlue,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "Chưa tham gia lớp nào",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Hãy đăng ký khóa học để bắt đầu hành trình",
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => context.go('/student/courses'),
+            icon: const Icon(Icons.explore_rounded),
+            label: const Text('Khám phá Khóa học'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 4,
+              shadowColor: primaryBlue.withOpacity(0.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(StudentClassService service) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 64,
+            color: Colors.red.shade300,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Có lỗi xảy ra",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              service.error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => service.loadJoinedClasses(),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Thử lại'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Animation Widget (Staggered List Animation)
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
+  const _AnimatedListItem({required this.index, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+        );
+      },
+      child: child,
     );
   }
 }

@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart'; // ✅ 1. THÊM IMPORT NÀY
+import 'package:just_audio/just_audio.dart';
 import 'package:mobile/data/models/student_quiz_take_model.dart';
-// ✅ 2. THÊM IMPORT CHO MODEL NỘP BÀI
 import 'package:mobile/data/models/student_submission_model.dart';
 import 'package:mobile/services/student/student_quiz_service.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizTakingScreen extends StatefulWidget {
-  final int classId;
-  final int quizId;
+  final String classId;
+  final String quizId;
   final String quizTitle;
 
   const StudentQuizTakingScreen({
@@ -27,9 +26,9 @@ class StudentQuizTakingScreen extends StatefulWidget {
 class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   // ✅ 3. THAY ĐỔI STATE ĐỂ HỖ TRỢ CẢ 2 LOẠI CÂU TRẢ LỜI
   // State cho Trắc nghiệm (Multiple Choice)
-  final Map<int, int> _selectedOptionAnswers = {};
+  final Map<String, String> _selectedOptionAnswers = {};
   // State cho Điền từ (Fill in the blank)
-  final Map<int, TextEditingController> _textAnswers = {};
+  final Map<String, TextEditingController> _textAnswers = {};
 
   // State cho bộ đếm thời gian
   Timer? _timer;
@@ -38,13 +37,20 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   // State
   bool _isSubmitting = false;
 
-  // ✅ Thêm audio player cho bài Nghe
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final Map<String, AudioPlayer> _audioPlayers = {};
 
   @override
   void initState() {
     super.initState();
     _fetchDataAndStartTimer();
+  }
+
+  void _stopAllOtherPlayers(String currentQuestionId) {
+    _audioPlayers.forEach((id, player) {
+      if (id != currentQuestionId && player.playing) {
+        player.stop();
+      }
+    });
   }
 
   void _fetchDataAndStartTimer() async {
@@ -53,12 +59,9 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
       widget.classId,
       widget.quizId,
     );
-
-    // 2. Sau khi tải xong
     if (mounted) {
       final quiz = context.read<StudentQuizService>().currentQuiz;
       if (quiz != null) {
-        // ✅ 4. KHỞI TẠO CÁC TEXT CONTROLLER CHO BÀI VIẾT
         for (var question in quiz.questions) {
           if (question.questionType == 'FILL_IN_THE_BLANK' ||
               question.questionType == 'DICTATION') {
@@ -66,7 +69,6 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
           }
         }
 
-        // 3. Khởi tạo thời gian và bắt đầu timer
         setState(() {
           _remainingSeconds = quiz.timeLimitMinutes * 60;
         });
@@ -91,16 +93,13 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    _audioPlayer.dispose(); // ✅ Dọn dẹp audio player
-
-    // ✅ Dọn dẹp tất cả các TextEditingController
+    _audioPlayers.forEach((_, player) => player.dispose());
     for (var controller in _textAnswers.values) {
       controller.dispose();
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // Kiểm tra mounted trước khi read
         context.read<StudentQuizService>().clearQuizDetail();
       }
     });
@@ -138,7 +137,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
         for (var question in quiz.questions) {
           // Lấy câu trả lời dựa trên loại câu hỏi
           if (question.questionType == 'MULTIPLE_CHOICE') {
-            final int? selectedId = _selectedOptionAnswers[question.id];
+            final String? selectedId = _selectedOptionAnswers[question.id];
             answersToSend.add(
               StudentAnswerInputModel(
                 questionId: question.id,
@@ -357,39 +356,96 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
     );
   }
 
-  // ✅ 8. THÊM WIDGET MỚI CHO NÚT AUDIO
   Widget _buildAudioPlayer(StudentQuestionModel question) {
-    // Không hiển thị gì nếu không có audio
     if (question.audioUrl == null || question.audioUrl!.isEmpty) {
       return const SizedBox.shrink();
     }
+    final AudioPlayer questionPlayer = _audioPlayers.putIfAbsent(
+      question.id,
+      () => AudioPlayer(),
+    );
 
-    // (Đây là 1 trình phát audio đơn giản, bạn có thể nâng cấp sau)
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(
-              Icons.play_circle_fill_rounded,
-              color: Colors.purple,
+      child: StreamBuilder<PlayerState>(
+        stream: questionPlayer.playerStateStream, // Lắng nghe trạng thái
+        builder: (context, snapshot) {
+          final playerState = snapshot.data;
+          final processingState = playerState?.processingState;
+          final playing = playerState?.playing ?? false;
+
+          Widget icon;
+          VoidCallback onPressed;
+
+          if (processingState == ProcessingState.loading ||
+              processingState == ProcessingState.buffering) {
+            // Đang tải
+            icon = const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.purple,
+              ),
+            );
+            onPressed = () {};
+          } else if (playing) {
+            // Đang chơi -> Hiện nút Pause
+            icon = const Icon(
+              Icons.pause_circle_filled,
               size: 40,
-            ),
-            onPressed: () async {
+              color: Colors.purple,
+            );
+            onPressed = questionPlayer.pause;
+          } else {
+            // Đang dừng -> Hiện nút Play
+            icon = const Icon(
+              Icons.play_circle_filled,
+              size: 40,
+              color: Colors.purple,
+            );
+            onPressed = () async {
+              // Dừng các câu khác trước khi phát câu này
+              _stopAllOtherPlayers(question.id);
+
               try {
-                await _audioPlayer.setUrl(question.audioUrl!);
-                _audioPlayer.play();
+                // Set URL và Play
+                await questionPlayer.setUrl(question.audioUrl!);
+                questionPlayer.play();
               } catch (e) {
-                // Xử lý lỗi
+                print("Lỗi audio: $e");
               }
-            },
-          ),
-          const Text(
-            "Phát file nghe",
-            style: TextStyle(color: Colors.purple, fontWeight: FontWeight.w500),
-          ),
-        ],
+            };
+          }
+
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.purple.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.purple.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min, // Chỉ chiếm chiều rộng cần thiết
+              children: [
+                IconButton(
+                  icon: icon,
+                  onPressed: onPressed,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Nghe bài",
+                  style: TextStyle(
+                    color: Colors.purple,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -437,10 +493,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ✅ HIỂN THỊ NÚT AUDIO (NẾU LÀ BÀI NGHE)
                 _buildAudioPlayer(question),
-
-                // ✅ HIỂN THỊ LOẠI CÂU HỎI ĐÚNG
                 if (question.questionType == 'MULTIPLE_CHOICE')
                   ...question.options.asMap().entries.map((entry) {
                     final optIndex = entry.key;
@@ -462,9 +515,8 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
     );
   }
 
-  // ✅ 10. THÊM WIDGET MỚI CHO BÀI VIẾT (ĐIỀN TỪ)
+  // 10. THÊM WIDGET MỚI CHO BÀI VIẾT (ĐIỀN TỪ)
   Widget _buildTextFieldInput(StudentQuestionModel question) {
-    // Lấy controller đã được khởi tạo từ state
     final controller = _textAnswers[question.id];
 
     if (controller == null) {
@@ -498,7 +550,6 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: () {
-          // 👈 SỬA: Cập nhật state _selectedOptionAnswers
           setState(() {
             _selectedOptionAnswers[question.id] = option.id;
           });
@@ -548,7 +599,6 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
 
   // (Widget nút Submit giữ nguyên)
   Widget _buildSubmitButton() {
-    // ... (Code cũ của bạn giữ nguyên)
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
@@ -619,7 +669,8 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   }
 
   Future<void> _showResultDialog(Map<String, dynamic> result) async {
-    // ... (Code cũ của bạn giữ nguyên)
+    final int xpGained = result['xpGained'] as int? ?? 0;
+    final int coinsGained = result['coinsGained'] as int? ?? 0;
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -639,6 +690,22 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
                   'Số câu đúng: ${result['correctCount']} / ${result['totalQuestions']}',
                 ),
                 Text('Điểm số: ${result['score']} / 10'),
+                const Divider(height: 20), // Thêm đường phân cách
+                // ✅ HIỂN THỊ XP VÀ COIN
+                Text(
+                  '✨ Kinh nghiệm (XP) cộng thêm: +$xpGained',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                Text(
+                  '💰 Coin nhận được: +$coinsGained',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
+                ),
               ],
             ),
             actions: [

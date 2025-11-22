@@ -1,12 +1,12 @@
 class ApiConfig {
   static const String baseUrl =
-      'https://interactive-gathering-incl-shoot.trycloudflare.com/api';
+      'https://xbox-lib-conversion-jack.trycloudflare.com/api';
 
   // upload
   static const String upload = "/upload";
   static const String uploadAudio = "/upload-audio";
   static const String teacherGetMyMedia = "/my-media"; // GET
-  static String teacherDeleteMedia(int id) => "/delete-media/$id"; // DELETE
+  static String teacherDeleteMedia(String id) => "/delete-media/$id"; // DELETE
 
   // auth
   static const String authLogin = "/auth/login";
@@ -21,54 +21,79 @@ class ApiConfig {
   static const String profileChangePassword = "/profile/change-password";
 
   // --- ADMIN: USERS ---
-  static const String users = "/users"; // Dùng cho (getAll, getPaged)
-  static String userById(String id) => "/users/$id"; // Dùng cho (update/delete)
+  static const String users = "/users";
+  static String userById(String id) => "/users/$id";
   static String userToggleStatus(String id) => "/users/$id/toggle-status";
   static String usersByRole(String role) => "/users/role/$role";
   static const String adminCreateUser = "/users/create-user";
 
   // --- ADMIN: COURSES ---
-  static const String courses = "/courses"; // Dùng cho (getAll, create)
-  static String courseById(int id) => "/courses/$id";
+  static const String courses = "/courses";
+  static String courseById(String id) => "/courses/$id";
+  static const String adminGetAllCourses = "/courses/all-active";
 
   // --- ADMIN: CLASSES ---
-  static const String classes = "/classes"; // Dùng cho (getAll, create)
-  static String classById(int id) => "/classes/$id";
+  static const String classes = "/classes";
+  static String classById(String id) => "/classes/$id";
+  static const String adminGetAllActiveClasses = "/classes/all-active";
+
+  // ✅ --- ADMIN: QUIZZES (MỚI) ---
+  // Backend: api/admin/courses/{courseId}/quizzes
+  static String adminCourseQuizzes(String courseId) =>
+      "/admin/courses/$courseId/quizzes";
+  // Backend: api/admin/courses/{courseId}/quizzes/{quizId}
+  static String adminCourseQuizById(String courseId, String quizId) =>
+      "/admin/courses/$courseId/quizzes/$quizId";
+  // Backend: api/admin/courses/{courseId}/quizzes/questions/{questionId} (Xóa câu hỏi lẻ)
+  static String adminDeleteQuestion(String courseId, String questionId) =>
+      "/admin/courses/$courseId/quizzes/questions/$questionId";
+
+  // ADMIN DASHBOARD STATS
+  static const String adminDashboardStats = "/admin/dashboard-stats";
+  static const String adminNewUsersChart = "/admin/new-users-chart";
+  static const String adminQuizSkillDistribution =
+      "/admin/quiz-skill-distribution";
+  static const String adminRecentTeachers = "/admin/recent-teachers";
+  static const String adminTopStudents = "/admin/top-students";
 
   // --- ADMIN: ROOMS ---
   static const String adminRooms = "/admin/rooms"; // Dùng cho (GET all, CREATE)
-  static String adminRoomById(int id) => "/admin/rooms/$id";
+  static String adminRoomById(String id) => "/admin/rooms/$id";
+  static const String adminGetAllActiveRooms = "/admin/rooms/all-active";
 
   // --- ADMIN: SCHEDULES ---
   static const String adminSchedules =
       "/admin/schedules"; // Dùng cho (GET all, CREATE)
-  static String adminScheduleById(int id) => "/admin/schedules/$id";
+  static String adminScheduleById(String id) => "/admin/schedules/$id";
 
   // --- ADMIN MODULE ---
   static const String adminModules = '$baseUrl/admin/modules';
-  static String adminModuleById(int id) => '$baseUrl/admin/modules/$id';
+  static String adminModuleById(String id) => '$baseUrl/admin/modules/$id';
 
   // --- ADMIN LESSON
   static const String adminLessons = '$baseUrl/admin/lessons';
-  static String adminLessonById(int id) => '$baseUrl/admin/lessons/$id';
+  static String adminLessonById(String id) => '$baseUrl/admin/lessons/$id';
 
   // Không thêm /api vì baseUrl đã có /api
   static const String uploadContentImage = '$baseUrl/upload-content-image';
 
   // --- ADMIN VOCABULARY
   static const String adminVocabularies = '$baseUrl/admin/vocabularies';
-  static String adminVocabularyById(int id) =>
+  static String adminVocabularyById(String id) =>
       '$baseUrl/admin/vocabularies/$id';
+
+  // --- TEACHER: DASHBOARD ---
+  static const String teacherDashboardSummary = '/teacher/dashboard/summary';
 
   // --- TEACHER: CLASSES ---
   static const String teacherClasses = "/teacher/classes"; // Dùng cho (GET all)
-  static String teacherClassById(int id) => "/teacher/classes/$id";
-  static String getStudentsInClass(int classId) =>
+  static String teacherClassById(String id) => "/teacher/classes/$id";
+  static String getStudentsInClass(String classId) =>
       "/teacher/classes/$classId/students";
 
   // --- TEACHER: SCHEDULES ---
   static const String teacherSchedules = "/teacher/schedules";
-  static String teacherScheduleById(int id) => "/teacher/schedules/$id";
+  static String teacherScheduleById(String id) => "/teacher/schedules/$id";
 
   // --- STUDENT: SCHEDULES ---
   static const String studentSchedules = "/student/schedules";
@@ -84,40 +109,30 @@ class ApiConfig {
 
   // --- STUDENT: COURSES ---
   static const String studentAvailableCourses = "/studentcourses/courses";
-  static String studentClassesByCourse(int courseId) =>
+  static String studentClassesByCourse(String courseId) =>
       "/studentcourses/$courseId/classes";
-  static String studentJoinClass(int classId) =>
+  static String studentJoinClass(String classId) =>
       "/student/classes/join/$classId";
 
   // --- STUDENT: CLASSES (JOINED) ---
   static const String studentJoinedClasses = "/student/classes";
-  static String studentLeaveClass(int classId) =>
+  static String studentLeaveClass(String classId) =>
       "/student/classes/leave/$classId";
 
-  // GET /api/teacher/classes/{classId}/quizzes
-  // POST /api/teacher/classes/{classId}/quizzes
-  static String teacherQuizzes(int classId) =>
-      '/teacher/classes/$classId/quizzes';
-
-  // GET /api/teacher/classes/{classId}/quizzes/{quizId}
-  // DELETE /api/teacher/classes/{classId}/quizzes/{quizId}
-  static String teacherQuizById(int classId, int quizId) =>
-      '/teacher/classes/$classId/quizzes/$quizId';
-
   // GET: Lấy danh sách quiz của 1 lớp
-  static String getStudentQuizList(int classId) =>
+  static String getStudentQuizList(String classId) =>
       '/student/classes/$classId/quizzes';
 
   // GET: Lấy chi tiết 1 quiz để làm bài
-  static String getQuizForTaking(int classId, int quizId) =>
+  static String getQuizForTaking(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/take';
 
   // POST: Nộp bài
-  static String submitQuiz(int classId, int quizId) =>
+  static String submitQuiz(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/submit';
 
   // GET: Lấy kết quả bài đã nộp
-  static String getQuizResult(int classId, int quizId) =>
+  static String getQuizResult(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/result';
 
   static const String uploadRawFile = '$baseUrl/upload';
@@ -127,17 +142,17 @@ class ApiConfig {
       '$baseUrl/student/vocabulary-levels';
 
   // GET: /api/student/vocabulary-levels/{levelId}/topics
-  static String studentVocabularyModules(int levelId) {
+  static String studentVocabularyModules(String levelId) {
     return '/student/vocabulary-levels/$levelId/topics';
   }
 
   // ✅ THÊM CÁI NÀY:
-  static String studentModuleLessons(int moduleId) {
+  static String studentModuleLessons(String moduleId) {
     return '/student/vocabulary-modules/$moduleId/lessons';
   }
 
   // GET: /student/vocabulary-lessons/{lessonId}/flashcards
-  static String studentLessonFlashcards(int lessonId) {
+  static String studentLessonFlashcards(String lessonId) {
     return '/student/vocabulary-lessons/$lessonId/flashcards';
   }
 

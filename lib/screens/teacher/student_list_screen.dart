@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/models/student_in_class_model.dart';
 import 'package:mobile/services/teacher/teacher_class_service.dart';
-import 'package:mobile/widgets/avatar_widget.dart';
+import 'package:mobile/shared_widgets/avatar_widget.dart';
 import 'package:provider/provider.dart';
 
 // Enum cho sort sinh viên (tương tự ManageTeacherClassScreen)
 enum SortOptionStudent { nameAsc, nameDesc, expAsc, expDesc }
 
 class StudentListScreen extends StatefulWidget {
-  final int classId;
+  final String classId;
   final String className;
 
   const StudentListScreen({
@@ -114,7 +114,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final service = context.read<TeacherClassService>();
+    final service = context.read<TeacherAdminClassService>();
 
     return Scaffold(
       backgroundColor: backgroundBlue,

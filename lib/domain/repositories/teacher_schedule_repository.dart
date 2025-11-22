@@ -7,7 +7,6 @@ class TeacherScheduleRepository {
   final ApiClient _apiClient;
   TeacherScheduleRepository(this._apiClient);
 
-  // Lấy lịch dạy của giáo viên (có filter)
   Future<List<TeacherScheduleModel>> getTeacherSchedules({
     int? dayOfWeek,
   }) async {
@@ -25,33 +24,6 @@ class TeacherScheduleRepository {
           .toList();
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi khi tải lịch dạy');
-    }
-  }
-
-  // Tạo lịch giảng dạy
-  Future<void> createTeacherSchedule(Map<String, dynamic> json) async {
-    try {
-      await _apiClient.dio.post(ApiConfig.teacherSchedules, data: json);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Tạo lịch thất bại');
-    }
-  }
-
-  // Cập nhật lịch giảng dạy
-  Future<void> updateTeacherSchedule(int id, Map<String, dynamic> json) async {
-    try {
-      await _apiClient.dio.put(ApiConfig.teacherScheduleById(id), data: json);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Cập nhật thất bại');
-    }
-  }
-
-  // Xoá lịch giảng dạy
-  Future<void> deleteTeacherSchedule(int id) async {
-    try {
-      await _apiClient.dio.delete(ApiConfig.teacherScheduleById(id));
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Xoá lịch thất bại');
     }
   }
 }

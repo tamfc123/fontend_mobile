@@ -1,30 +1,45 @@
-// file: domain/repositories/admin_vocabulary_repository.dart
 import 'package:dio/dio.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
-// 1. Import model (đã tạo)
 import 'package:mobile/data/models/vocabulary_model.dart';
+import 'package:mobile/data/models/paged_result_model.dart';
 
 class AdminVocabularyRepository {
   final ApiClient _apiClient;
   AdminVocabularyRepository(this._apiClient);
 
-  // GET: Lấy tất cả Từ vựng của 1 Lesson
-  Future<List<VocabularyModel>> getVocabulariesByLesson(int lessonId) async {
+  // ✅ 2. SỬA HÀM GET: Lấy Từ vựng phân trang
+  Future<PagedResultModel<VocabularyModel>> getPaginatedVocabularies({
+    required String lessonId,
+    int pageNumber = 1,
+    int pageSize = 5,
+    String? searchQuery,
+  }) async {
     try {
+      final queryParameters = {
+        'lessonId': lessonId.toString(),
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+      };
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        queryParameters['searchQuery'] = searchQuery;
+      }
+
       final response = await _apiClient.dio.get(
-        ApiConfig.adminVocabularies, // Gọi API đã tạo
-        queryParameters: {'lessonId': lessonId.toString()},
+        ApiConfig.adminVocabularies,
+        queryParameters: queryParameters,
       );
-      return (response.data as List)
-          .map((e) => VocabularyModel.fromJson(e))
-          .toList();
+
+      return PagedResultModel.fromJson(
+        response.data,
+        (json) => VocabularyModel.fromJson(json),
+      );
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi tải từ vựng');
     }
   }
 
-  // POST: Tạo Từ vựng mới
   Future<void> createVocabulary(VocabularyModifyModel vocab) async {
     try {
       await _apiClient.dio.post(
@@ -36,8 +51,7 @@ class AdminVocabularyRepository {
     }
   }
 
-  // PUT: Cập nhật Từ vựng
-  Future<void> updateVocabulary(int id, VocabularyModifyModel vocab) async {
+  Future<void> updateVocabulary(String id, VocabularyModifyModel vocab) async {
     try {
       await _apiClient.dio.put(
         ApiConfig.adminVocabularyById(id),
@@ -48,10 +62,15 @@ class AdminVocabularyRepository {
     }
   }
 
-  // DELETE: Xóa Từ vựng
-  Future<void> deleteVocabulary(int id) async {
+  Future<void> deleteVocabulary(String id) async {
     try {
-      await _apiClient.dio.delete(ApiConfig.adminVocabularyById(id));
+      final response = await _apiClient.dio.delete(
+        ApiConfig.adminVocabularyById(id),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception(response.data?['message'] ?? 'Lỗi không xác định');
+      }
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi xóa từ vựng');
     }

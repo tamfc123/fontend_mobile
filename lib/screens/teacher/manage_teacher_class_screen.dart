@@ -1,17 +1,24 @@
-import 'dart:async'; // 🔹 Thêm import này cho Timer (debouncer)
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/models/teacher_class_model.dart';
 import 'package:mobile/services/teacher/teacher_class_service.dart';
+import 'package:mobile/shared_widgets/admin/base_admin_table.dart';
+import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
+import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
+import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
+import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
 import 'package:mobile/widgets/teacher/teacher_class_add_edit_dialog.dart';
 import 'package:provider/provider.dart';
 
-// Thêm enum để map với ClassSortType của service
+// (Enum SortOption giữ nguyên)
 enum SortOption {
   courseNameAsc,
   courseNameDesc,
   studentCountAsc,
   studentCountDesc,
+  nameAsc, // 👈 Thêm
+  nameDesc, // 👈 Thêm
 }
 
 class ManageTeacherClassScreen extends StatefulWidget {
@@ -25,11 +32,9 @@ class ManageTeacherClassScreen extends StatefulWidget {
 class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
   late TextEditingController _searchController;
   SortOption? _selectedSort;
-
-  // 🔹 Thêm debouncer
   Timer? _debounce;
 
-  // MÀU CHỦ ĐẠO (ĐỒNG NHẤT)
+  // MÀU CHỦ ĐẠO
   static const Color primaryBlue = Colors.blue;
   static const Color backgroundBlue = Color(0xFFF3F8FF);
   static const Color surfaceBlue = Color(0xFFE3F2FD);
@@ -38,59 +43,55 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-
-    // 🔹 Lắng nghe sự kiện gõ phím để search
     _searchController.addListener(_onSearchChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final classService = context.read<TeacherClassService>();
-      // 🔹 Lấy trạng thái sort/search hiện tại từ service
-      _selectedSort = _mapServiceSortToUiSort(classService.currentSortType);
-      _searchController.text = classService.currentSearch ?? '';
+      final AdminClassService = context.read<TeacherAdminClassService>();
+      _selectedSort = _mapServiceSortToUiSort(
+        AdminClassService.currentSortType,
+      );
+      _searchController.text = AdminClassService.currentSearch ?? '';
 
-      // Gọi fetch lần đầu
-      classService.fetchTeacherClasses();
+      AdminClassService.fetchTeacherClasses();
     });
   }
 
   @override
   void dispose() {
-    _debounce?.cancel(); // Hủy timer
-    _searchController.removeListener(_onSearchChanged); // Hủy listener
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  // 🔹 Hàm xử lý search (debouncer)
+  // (Các hàm _onSearchChanged, _showFormDialog, _onSortChanged, _mapServiceSortToUiSort giữ nguyên)
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
-        context.read<TeacherClassService>().applySearch(_searchController.text);
+        context.read<TeacherAdminClassService>().applySearch(
+          _searchController.text,
+        );
       }
     });
   }
 
-  // 🔹 Hàm xử lý dialog
   void _showFormDialog({TeacherClassModel? classModel}) {
-    // Cập nhật kiểu
-    final classService = context.read<TeacherClassService>();
+    final AdminClassService = context.read<TeacherAdminClassService>();
     showDialog(
       context: context,
       builder:
           (_) => ChangeNotifierProvider.value(
-            value: classService,
+            value: AdminClassService,
             child: TeacherClassFormDialog(classModel: classModel),
           ),
     );
   }
 
-  // 🔹 [CẬP NHẬT] Hàm xử lý sort
   void _onSortChanged(SortOption? option) {
     setState(() => _selectedSort = option);
-    final classService = context.read<TeacherClassService>();
+    final AdminClassService = context.read<TeacherAdminClassService>();
     if (option != null) {
-      // Ánh xạ từ UI Enum sang Service Enum
       ClassSortType serviceSortType;
       switch (option) {
         case SortOption.courseNameAsc:
@@ -105,13 +106,18 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
         case SortOption.studentCountDesc:
           serviceSortType = ClassSortType.studentCountDesc;
           break;
+        // ✅ Thêm 2 case cho 'name'
+        case SortOption.nameAsc:
+          serviceSortType = ClassSortType.nameAsc;
+          break;
+        case SortOption.nameDesc:
+          serviceSortType = ClassSortType.nameDesc;
+          break;
       }
-      // Gọi hàm applySort mới của service
-      classService.applySort(serviceSortType);
+      AdminClassService.applySort(serviceSortType);
     }
   }
 
-  // 🔹 Helper để map ngược từ Service Sort sang UI Sort (cho initState)
   SortOption? _mapServiceSortToUiSort(ClassSortType? serviceSort) {
     if (serviceSort == null) return null;
     switch (serviceSort) {
@@ -123,17 +129,40 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
         return SortOption.studentCountAsc;
       case ClassSortType.studentCountDesc:
         return SortOption.studentCountDesc;
+      // ✅ Thêm 2 case cho 'name'
+      case ClassSortType.nameAsc:
+        return SortOption.nameAsc;
+      case ClassSortType.nameDesc:
+        return SortOption.nameDesc;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final classService = context.watch<TeacherClassService>();
+    final AdminClassService = context.watch<TeacherAdminClassService>();
+    final classes = AdminClassService.classes;
+    final isLoading = AdminClassService.isLoading;
 
-    // 🔹 [CẬP NHẬT] Dùng trực tiếp 'classes' từ service
-    //    Vì nó đã được lọc và sắp xếp bởi backend
-    final classes = classService.classes;
-    final isLoading = classService.isLoading;
+    // ✅ 3. XÂY DỰNG BODYCONTENT
+    Widget bodyContent;
+    if (isLoading && classes.isEmpty) {
+      bodyContent = const Center(
+        child: CircularProgressIndicator(color: primaryBlue),
+      );
+    } else if (classes.isEmpty) {
+      bodyContent = _buildEmptyStateWidget(
+        AdminClassService.currentSearchQuery,
+      ); // 👈 Sửa
+    } else {
+      bodyContent = LayoutBuilder(
+        builder:
+            (context, constraints) => _buildResponsiveTableWidget(
+              context,
+              classes,
+              constraints.maxWidth,
+            ), // 👈 Sửa
+      );
+    }
 
     return Scaffold(
       backgroundColor: backgroundBlue,
@@ -145,7 +174,8 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // === HEADER + TÌM KIẾM + FILTER (KHÔNG CÓ BACK) ===
+                // === HEADER + TÌM KIẾM + FILTER (Giữ nguyên) ===
+                // (Phần này là unique, không dùng BaseAdminScreen)
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -161,12 +191,11 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                   ),
                   child: Column(
                     children: [
-                      // HEADER ROW
+                      // HEADER ROW (Giữ nguyên)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                         child: Row(
                           children: [
-                            // ICON + TIÊU ĐỀ
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -180,7 +209,6 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                               ),
                             ),
                             const SizedBox(width: 16),
-
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,66 +233,93 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                                 ],
                               ),
                             ),
+                            // ❌ Xóa Nút Thêm (vì màn này không có)
                           ],
                         ),
                       ),
 
-                      // TÌM KIẾM + FILTER + STATS
+                      // TÌM KIẾM + FILTER + STATS (Giữ nguyên)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                         child: Column(
                           children: [
-                            // TÌM KIẾM
-                            Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: surfaceBlue,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Tìm kiếm theo tên lớp/khóa học...',
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey.shade600,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: primaryBlue,
-                                  ),
-                                  suffixIcon:
-                                      _searchController.text.isNotEmpty
-                                          ? IconButton(
-                                            icon: Icon(
-                                              Icons.clear,
-                                              color: Colors.grey.shade600,
+                            Row(
+                              // ✅ Bọc Row
+                              children: [
+                                Expanded(
+                                  // ✅ Bọc TextField
+                                  child: Container(
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: surfaceBlue,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: TextField(
+                                      controller: _searchController,
+                                      decoration: InputDecoration(
+                                        hintText:
+                                            'Tìm kiếm theo tên lớp/khóa học...',
+                                        hintStyle: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.search,
+                                          color: primaryBlue,
+                                        ),
+                                        suffixIcon:
+                                            _searchController.text.isNotEmpty
+                                                ? IconButton(
+                                                  icon: Icon(
+                                                    Icons.clear,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  onPressed: () {
+                                                    _searchController.clear();
+                                                    context
+                                                        .read<
+                                                          TeacherAdminClassService
+                                                        >()
+                                                        .applySearch('');
+                                                  },
+                                                )
+                                                : null,
+                                        border: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              vertical: 14,
                                             ),
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              // Gọi applySearch ngay lập tức
-                                              // (Không cần qua debouncer)
-                                              context
-                                                  .read<TeacherClassService>()
-                                                  .applySearch('');
-                                            },
-                                          )
-                                          : null,
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 14,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 16), // ✅ Thêm
+                                if (!isLoading) // ✅ Thêm
+                                  Text(
+                                    "Tìm thấy: ${AdminClassService.totalCount} lớp",
+                                    style: const TextStyle(
+                                      color: primaryBlue,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 16),
-
                             // FILTERS (SORT)
                             Row(
                               children: [
                                 Expanded(
                                   child: _buildDropdown<SortOption>(
+                                    // 👈 Hàm này giữ lại
                                     value: _selectedSort,
                                     items: const [
+                                      DropdownMenuItem(
+                                        value: SortOption.nameAsc,
+                                        child: Text('Tên lớp A→Z'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: SortOption.nameDesc,
+                                        child: Text('Tên lớp Z→A'),
+                                      ),
                                       DropdownMenuItem(
                                         value: SortOption.courseNameAsc,
                                         child: Text('Khóa học A→Z'),
@@ -287,21 +342,7 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-
-                            // STATS
-                            if (!isLoading && classes.isNotEmpty)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  "Tìm thấy ${classes.length} lớp học",
-                                  style: TextStyle(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
+                            // ❌ Xóa Text "Tìm thấy..." ở đây
                           ],
                         ),
                       ),
@@ -312,40 +353,42 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
 
                 // === BẢNG LỚP HỌC ===
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child:
-                              isLoading
-                                  ? const Center(
-                                    child: CircularProgressIndicator(
-                                      color: primaryBlue,
-                                    ),
-                                  )
-                                  : classes.isEmpty
-                                  ? _buildEmptyState()
-                                  : SingleChildScrollView(
-                                    child: _buildResponsiveTable(
-                                      classes,
-                                      constraints.maxWidth,
-                                    ),
-                                  ),
-                        ),
-                      );
-                    },
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Column(
+                        // 👈 Bọc Column
+                        children: [
+                          Expanded(
+                            child: bodyContent, // 👈 Đẩy body vào
+                          ),
+                          // ✅ SỬ DỤNG PaginationControls
+                          PaginationControls(
+                            currentPage: AdminClassService.currentPage,
+                            totalPages: AdminClassService.totalPages,
+                            totalCount: AdminClassService.totalCount,
+                            isLoading: isLoading,
+                            onPageChanged: (page) {
+                              // 👈 Service này dùng hàm goToPage
+                              context.read<TeacherAdminClassService>().goToPage(
+                                page,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -356,184 +399,105 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.class_outlined, size: 72, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text(
-            'Không tìm thấy lớp học nào',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Thử tìm kiếm bằng từ khóa khác',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
+  // ✅ 5. SỬ DỤNG CommonEmptyState
+  Widget _buildEmptyStateWidget(String? searchQuery) {
+    bool isSearching = searchQuery != null && searchQuery.isNotEmpty;
+    return CommonEmptyState(
+      icon: Icons.class_outlined,
+      title: isSearching ? 'Không tìm thấy lớp học' : 'Bạn chưa có lớp học nào',
+      subtitle:
+          isSearching
+              ? 'Thử tìm kiếm bằng từ khóa khác'
+              : 'Các lớp học bạn phụ trách sẽ xuất hiện ở đây',
     );
   }
 
-  Widget _buildResponsiveTable(
+  // ✅ 6. SỬ DỤNG BaseAdminTable
+  Widget _buildResponsiveTableWidget(
+    BuildContext context, // Thêm context
     List<TeacherClassModel> classes,
     double maxWidth,
   ) {
     final colWidths = {
-      0: maxWidth * 0.35, // Tên lớp
-      1: maxWidth * 0.25, // Khóa học
-      2: maxWidth * 0.15, // Số SV
-      3: maxWidth * 0.25, // Thao tác
+      0: maxWidth * 0.35,
+      1: maxWidth * 0.25,
+      2: maxWidth * 0.15,
+      3: maxWidth * 0.25,
     };
+    final colHeaders = ['Tên lớp', 'Khóa học', 'Số sinh viên', 'Thao tác'];
 
-    return SingleChildScrollView(
-      child: IntrinsicWidth(
-        child: Table(
-          columnWidths: colWidths.map(
-            (k, v) => MapEntry(k, FixedColumnWidth(v)),
-          ),
-          border: TableBorder(
-            bottom: BorderSide(color: surfaceBlue),
-            horizontalInside: BorderSide(
-              color: Colors.grey.shade200,
-              width: 0.5,
-            ),
-          ),
-          children: [
-            // Header
-            TableRow(
-              decoration: BoxDecoration(color: surfaceBlue),
-              children:
-                  ['Tên lớp', 'Khóa học', 'Số sinh viên', 'Thao tác']
-                      .map(
-                        (t) => Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            t,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                      .toList(),
-            ),
-            // Rows
-            ...classes.map((c) {
-              return TableRow(
-                children: [
-                  _buildCell(
-                    c.name,
-                    bold: true,
-                    color: const Color(0xFF1E3A8A),
-                    align: TextAlign.center,
-                  ),
-                  _buildCell(c.courseName ?? '—', align: TextAlign.center),
-                  _buildCell(
-                    c.studentCount.toString(),
-                    align: TextAlign.center,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildActionButton(
-                          Icons.quiz,
-                          Colors.purple,
-                          'Xem bài tập',
-                          () {
-                            context.go(
-                              '/teacher/teacherClasses/${c.id}/quiz',
-                              extra: c.name,
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 12),
-                        _buildActionButton(
-                          Icons.edit,
-                          Colors.blue,
-                          'Đổi tên lớp',
-                          () => _showFormDialog(classModel: c),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildActionButton(
-                          Icons.people,
-                          Colors.teal,
-                          'Xem danh sách sinh viên',
-                          () {
-                            context.go(
-                              '/teacher/teacherClasses/${c.id}/students',
-                              extra: c.name,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
+    final int startingIndex =
+        (context.read<TeacherAdminClassService>().currentPage - 1) * 5;
 
-  Widget _buildCell(
-    dynamic content, {
-    TextAlign align = TextAlign.left,
-    bool bold = false,
-    Color? color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      child:
-          content is Widget
-              ? content
-              : Text(
-                content.toString(),
-                style: TextStyle(
-                  fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-                  color: color ?? Colors.black87,
-                  fontSize: 14,
-                ),
-                textAlign: align,
-                overflow: TextOverflow.ellipsis,
+    final dataRows =
+        classes.asMap().entries.map((entry) {
+          final index = entry.key + startingIndex + 1; // Tính STT
+          final c = entry.value;
+          return TableRow(
+            children: [
+              // ✅ 7. SỬ DỤNG CommonTableCell
+              CommonTableCell(
+                c.name,
+                bold: true,
+                color: const Color(0xFF1E3A8A),
+                align: TextAlign.center,
               ),
+              CommonTableCell(c.courseName ?? '—', align: TextAlign.center),
+              CommonTableCell(
+                c.studentCount.toString(),
+                align: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ✅ 8. SỬ DỤNG ActionIconButton
+                    ActionIconButton(
+                      icon: Icons.quiz,
+                      color: Colors.purple,
+                      tooltip: 'Xem bài tập',
+                      onPressed: () {
+                        context.go(
+                          '/teacher/teacherClasses/${c.id}/quiz',
+                          extra: c.name,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    ActionIconButton(
+                      icon: Icons.edit,
+                      color: Colors.blue,
+                      tooltip: 'Đổi tên lớp',
+                      onPressed: () => _showFormDialog(classModel: c),
+                    ),
+                    const SizedBox(width: 12),
+                    ActionIconButton(
+                      icon: Icons.people,
+                      color: Colors.teal,
+                      tooltip: 'Xem danh sách sinh viên',
+                      onPressed: () {
+                        context.go(
+                          '/teacher/teacherClasses/${c.id}/students',
+                          extra: c.name,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }).toList();
+
+    return BaseAdminTable(
+      columnWidths: colWidths.map((k, v) => MapEntry(k, FixedColumnWidth(v))),
+      columnHeaders: colHeaders,
+      dataRows: dataRows,
     );
   }
 
-  Widget _buildActionButton(
-    IconData icon,
-    Color color,
-    String tooltip,
-    VoidCallback onPressed,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: color, size: 22),
-        tooltip: tooltip,
-        onPressed: onPressed,
-        padding: const EdgeInsets.all(10),
-        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-      ),
-    );
-  }
-
+  // (Hàm _buildDropdown giữ nguyên, vì nó là unique)
   Widget _buildDropdown<T>({
     required T? value,
     required List<DropdownMenuItem<T>> items,
@@ -556,4 +520,6 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
       ),
     );
   }
+
+  // ❌ 9. XÓA _buildCell, _buildActionButton, _buildEmptyState, _buildResponsiveTable, VÀ _buildPaginationControls
 }

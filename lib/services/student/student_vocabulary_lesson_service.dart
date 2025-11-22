@@ -1,4 +1,3 @@
-// lib/services/student/student_vocabulary_lesson_service.dart
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/module_details_model.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_lesson_repository.dart';
@@ -16,7 +15,7 @@ class StudentVocabularyLessonService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchLessons(int moduleId) async {
+  Future<void> fetchLessons(String moduleId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

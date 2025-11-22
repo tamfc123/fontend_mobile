@@ -1,12 +1,10 @@
-// file: data/models/lesson_model.dart
-
-// Model để nhận dữ liệu Lesson (khớp LessonDTO)
 class LessonModel {
-  final int id;
-  final int moduleId;
+  final String id;
+  final String moduleId;
   final String title;
   final int order;
   final String? content; // ⬅️ Trường "giống Word" (JSON)
+  final bool hasContent;
 
   LessonModel({
     required this.id,
@@ -14,6 +12,7 @@ class LessonModel {
     required this.title,
     required this.order,
     this.content,
+    required this.hasContent,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
@@ -23,13 +22,14 @@ class LessonModel {
       title: json['title'],
       order: json['order'],
       content: json['content'],
+      hasContent: json['hasContent'] ?? false,
     );
   }
 }
 
 // Model để gửi đi khi TẠO/SỬA (khớp LessonModifyDTO)
 class LessonModifyModel {
-  final int moduleId;
+  final String moduleId;
   final String title;
   final int order;
   final String? content;

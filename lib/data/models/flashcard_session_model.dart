@@ -2,7 +2,7 @@
 
 // Khớp với FlashcardItemDTO
 class FlashcardItemModel {
-  final int vocabularyId;
+  final String vocabularyId;
   final String referenceText;
   final String? meaning;
   final String? phonetic;
@@ -35,7 +35,7 @@ class FlashcardItemModel {
 
 // Khớp với FlashcardSessionDTO
 class FlashcardSessionModel {
-  final int lessonId;
+  final String lessonId;
   final String lessonTitle;
   final List<FlashcardItemModel> flashcards;
 

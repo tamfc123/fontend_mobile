@@ -1,7 +1,7 @@
 class TeacherClassModel {
-  final int id;
+  final String id;
   final String name;
-  final int courseId;
+  final String courseId;
   final String? courseName;
   final String? teacherName;
   final int studentCount;

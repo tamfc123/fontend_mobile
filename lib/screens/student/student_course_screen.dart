@@ -54,20 +54,6 @@ class _CourseStudentScreenState extends State<CourseStudentScreen> {
           "Khóa học",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {
-              // TODO: Implement search
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tính năng tìm kiếm đang phát triển'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-          ),
-        ],
       ),
 
       body: Consumer<StudentCourseService>(
@@ -238,13 +224,19 @@ class _CourseStudentScreenState extends State<CourseStudentScreen> {
                             itemCount: filteredCourses.length,
                             itemBuilder: (context, index) {
                               final course = filteredCourses[index];
-                              return CourseCard(
-                                course: course,
-                                onTap:
-                                    () => context.go(
-                                      '/student/courses/class-in-course',
-                                      extra: course,
-                                    ),
+
+                              // ✅ THÊM ANIMATION Ở ĐÂY
+                              return _AnimatedListItem(
+                                index: index,
+                                child: CourseCard(
+                                  course: course,
+                                  onTap:
+                                      () => context.push(
+                                        // Dùng push để giữ stack
+                                        '/student/courses/class-in-course',
+                                        extra: course,
+                                      ),
+                                ),
                               );
                             },
                           ),
@@ -253,6 +245,38 @@ class _CourseStudentScreenState extends State<CourseStudentScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ✅ WIDGET ANIMATION (Tái sử dụng logic đã làm ở màn hình trước)
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
+  const _AnimatedListItem({required this.index, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      // Tạo hiệu ứng trễ nhẹ dựa theo index để các item không hiện ra cùng lúc
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)), // Trượt từ dưới lên 50px
+          child: Opacity(
+            opacity: value, // Mờ dần thành rõ
+            child: child,
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 0,
+        ), // Padding do ListView quản lý
+        child: child,
       ),
     );
   }

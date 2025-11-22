@@ -7,11 +7,10 @@ class StudentClassRepository {
   final ApiClient _apiClient;
   StudentClassRepository(this._apiClient);
 
-  // Lấy danh sách lớp đã tham gia
+  // 1. Lấy danh sách lớp ĐÃ tham gia
   Future<List<StudentClassModel>> getJoinedClasses() async {
     try {
       final response = await _apiClient.dio.get(ApiConfig.studentJoinedClasses);
-
       final List data = response.data;
       return data.map((json) => StudentClassModel.fromJson(json)).toList();
     } on DioException catch (e) {
@@ -21,11 +20,19 @@ class StudentClassRepository {
     }
   }
 
-  // Rời lớp
-  Future<void> leaveClass(int classId) async {
+  Future<void> joinClass(String classId) async {
+    try {
+      await _apiClient.dio.post(ApiConfig.studentJoinClass(classId));
+    } on DioException catch (e) {
+      // Backend trả về lỗi 400 nếu chưa đủ Level hoặc đã tham gia
+      throw Exception(e.response?.data['message'] ?? 'Không thể tham gia lớp');
+    }
+  }
+
+  // 4. Rời lớp
+  Future<void> leaveClass(String classId) async {
     try {
       await _apiClient.dio.delete(ApiConfig.studentLeaveClass(classId));
-      // Dio tự ném lỗi nếu status != 200
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Không thể rời lớp');
     }

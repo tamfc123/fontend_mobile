@@ -1,4 +1,3 @@
-// lib/services/student/student_vocabulary_module_service.dart
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/vocabulary_modules_model.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_module_repository.dart';
@@ -17,7 +16,7 @@ class StudentVocabularyModuleService extends ChangeNotifier {
   String? get error => _error;
 
   // Hàm để UI (màn hình 2) gọi khi vào
-  Future<void> fetchModules(int levelId) async {
+  Future<void> fetchModules(String levelId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

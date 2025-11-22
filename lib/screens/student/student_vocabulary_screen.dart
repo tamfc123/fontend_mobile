@@ -2,23 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/models/vocabulary_levels_model.dart';
 import 'package:mobile/services/student/student_vocabulary_level_service.dart';
+import 'package:mobile/utils/color_helper.dart';
+import 'package:mobile/utils/toast_helper.dart'; // ✅ Import ToastHelper
 import 'package:provider/provider.dart';
-
-class AppColors {
-  static const primary = Color(0xFF3B82F6);
-  static const primaryDark = Color(0xFF2563EB);
-  static const primaryLight = Color(0xFF60A5FA);
-  static const primaryXLight = Color(0xFFEFF6FF);
-  static const success = Color(0xFF10B981);
-  static const successLight = Color(0xFFD1FAE5);
-  static const warning = Color(0xFFF59E0B);
-  static const danger = Color(0xFFEF4444);
-  static const surface = Color(0xFFFFFFFF);
-  static const background = Color(0xFFF8FAFC);
-  static const textPrimary = Color(0xFF0F172A);
-  static const textSecondary = Color(0xFF64748B);
-  static const divider = Color(0xFFE2E8F0);
-}
+import 'dart:math' as math;
 
 class VocabularyStudentScreen extends StatefulWidget {
   const VocabularyStudentScreen({super.key});
@@ -37,11 +24,15 @@ class _VocabularyStudentScreenState extends State<VocabularyStudentScreen> {
     });
   }
 
-  String _getCurrentLevelName(int currentLevel, List<LevelInfoModel> levels) {
+  // Tìm tên level dựa trên số level (int)
+  String _getCurrentLevelName(
+    int currentLevelNum,
+    List<LevelInfoModel> levels,
+  ) {
     try {
-      return levels.firstWhere((level) => level.id == currentLevel).name;
+      return levels.firstWhere((level) => level.level == currentLevelNum).name;
     } catch (e) {
-      return 'Chưa xác định';
+      return 'Sơ cấp'; // Fallback
     }
   }
 
@@ -51,34 +42,15 @@ class _VocabularyStudentScreenState extends State<VocabularyStudentScreen> {
     final data = levelService.levelsData;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: const Color(0xFF1F2937),
         centerTitle: true,
-        title: const Text(
-          'Từ vựng',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            color: AppColors.textPrimary,
-          ),
-        ),
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withOpacity(0.1),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
+        title: const Text(
+          'Lộ trình Từ vựng',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       ),
       body: _buildBody(levelService, data),
@@ -90,421 +62,390 @@ class _VocabularyStudentScreenState extends State<VocabularyStudentScreen> {
     VocabularyLevelsModel? data,
   ) {
     if (service.isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation(AppColors.primary),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Đang tải cấp độ...',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (service.error != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.danger.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(
-                  Icons.error_outline_rounded,
-                  size: 40,
-                  color: AppColors.danger,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Lỗi tải dữ liệu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.danger,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                service.error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => service.fetchLevels(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(service.error!, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => service.fetchLevels(),
+              child: const Text('Thử lại'),
+            ),
+          ],
         ),
       );
     }
 
     if (data == null || data.levels.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primaryXLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.library_books_outlined,
-                size: 40,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Chưa có dữ liệu cấp độ',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const Center(child: Text('Chưa có dữ liệu cấp độ'));
+    }
+
+    // So sánh 'level' (int) với 'currentUserLevel' (int)
+    int currentUserIndex = data.levels.indexWhere(
+      (l) => l.level == data.currentUserLevel,
+    );
+
+    if (currentUserIndex == -1) {
+      if (data.currentUserLevel <= 1)
+        currentUserIndex = 0;
+      else
+        currentUserIndex = data.levels.length - 1;
     }
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // Header Section
+        // Header
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryLight],
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Text(
+                  'Cấp độ hiện tại: ${_getCurrentLevelName(data.currentUserLevel, data.levels)} (Lv.${data.currentUserLevel})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.blue,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                const SizedBox(height: 8),
+                Text(
+                  'Hoàn thành bài học và tham gia lớp để mở khóa cấp độ mới!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.school_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Cấp độ hiện tại',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _getCurrentLevelName(
-                            data.currentUserLevel,
-                            data.levels,
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
 
-        // Description
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Text(
-              'Chọn cấp độ từ vựng phù hợp với trình độ của bạn',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ),
-
-        // List Level Cards
+        // Danh sách Level
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final level = data.levels[index];
-              return _buildLevelCard(context, level, data.currentUserLevel);
+
+              // ✅ ANIMATION 1: Xuất hiện lần lượt (Staggered List)
+              return _AnimatedListItem(
+                index: index,
+                child: _LevelCard(
+                  level: level,
+                  itemIndex: index,
+                  userLevelIndex: currentUserIndex,
+                ),
+              );
             }, childCount: data.levels.length),
           ),
         ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
       ],
     );
   }
+}
 
-  Widget _buildLevelCard(
-    BuildContext context,
-    LevelInfoModel level,
-    int currentUserLevel,
-  ) {
-    final bool isLocked = level.isLocked;
-    final bool isCompleted = level.id < currentUserLevel;
-    final bool isCurrent = level.id == currentUserLevel;
+// ✅ WIDGET ANIMATION: Xuất hiện từ từ (Slide Up + Fade In)
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
 
-    Color primaryColor;
-    Color backgroundColor;
-    Color borderColor;
-    IconData icon;
+  const _AnimatedListItem({required this.index, required this.child});
 
-    if (isLocked) {
-      icon = Icons.lock_rounded;
-      primaryColor = Colors.grey.shade400;
-      backgroundColor = Colors.grey.shade50;
-      borderColor = Colors.grey.shade200;
-    } else if (isCompleted) {
-      icon = Icons.check_circle_rounded;
-      primaryColor = AppColors.success;
-      backgroundColor = AppColors.successLight.withOpacity(0.4);
-      borderColor = AppColors.success.withOpacity(0.2);
-    } else if (isCurrent) {
-      icon = Icons.play_circle_fill_rounded;
-      primaryColor = AppColors.primary;
-      backgroundColor = AppColors.primaryXLight;
-      borderColor = AppColors.primary.withOpacity(0.3);
-    } else {
-      icon = Icons.play_circle_outline_rounded;
-      primaryColor = AppColors.primary;
-      backgroundColor = AppColors.primaryXLight.withOpacity(0.5);
-      borderColor = AppColors.primary.withOpacity(0.15);
-    }
-
-    return GestureDetector(
-      onTap: () {
-        if (isLocked) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Cần hoàn thành cấp độ trước đó'),
-              backgroundColor: AppColors.danger,
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        } else {
-          context.pushNamed('levelContent', extra: level);
-        }
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      // Delay dựa trên index để tạo hiệu ứng thác đổ
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            if (isCurrent)
-              BoxShadow(
-                color: primaryColor.withOpacity(0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  // Icon container
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: primaryColor, size: 28),
-                  ),
-                  const SizedBox(width: 12),
+      child: Padding(padding: const EdgeInsets.only(bottom: 0), child: child),
+    );
+  }
+}
 
-                  // Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+// ✅ LEVEL CARD (Đã tách ra Stateful để xử lý Animation Rung Lắc & Nhún)
+class _LevelCard extends StatefulWidget {
+  final LevelInfoModel level;
+  final int itemIndex;
+  final int userLevelIndex;
+
+  const _LevelCard({
+    required this.level,
+    required this.itemIndex,
+    required this.userLevelIndex,
+  });
+
+  @override
+  State<_LevelCard> createState() => _LevelCardState();
+}
+
+class _LevelCardState extends State<_LevelCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  double _shakeOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05, // Nhún xuống 5%
+    );
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // Hàm thực hiện rung lắc (Shake)
+  Future<void> _shakeCard() async {
+    for (int i = 0; i < 3; i++) {
+      setState(() => _shakeOffset = 5.0);
+      await Future.delayed(const Duration(milliseconds: 50));
+      setState(() => _shakeOffset = -5.0);
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    setState(() => _shakeOffset = 0.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final level = widget.level;
+
+    // ✅ Logic khóa từ Backend
+    final bool isLocked = level.isLocked;
+    final bool isCompleted = widget.itemIndex < widget.userLevelIndex;
+    final bool isCurrent = widget.itemIndex == widget.userLevelIndex;
+
+    // Lấy màu từ Helper
+    final colorHelper = ColorHelper();
+    final config = colorHelper.getLevelConfig(level.level);
+    final Color themeColor = config['color'];
+    final List<Color> gradient = config['gradient'];
+    final IconData iconData = config['icon'];
+    final String levelName = config['name'];
+
+    final displayColor = isLocked ? Colors.grey : themeColor;
+    final displayGradient =
+        isLocked ? [Colors.grey.shade300, Colors.grey.shade400] : gradient;
+
+    // Scale factor cho hiệu ứng nhún
+    final scale = 1.0 - _controller.value;
+
+    return Transform.translate(
+      offset: Offset(_shakeOffset, 0), // Xử lý rung lắc
+      child: Transform.scale(
+        scale: scale, // Xử lý nhún
+        child: GestureDetector(
+          onTapDown: (_) => _controller.forward(),
+          onTapUp: (_) {
+            _controller.reverse();
+            if (isLocked) {
+              _shakeCard(); // Rung nếu bị khóa
+              // ✅ Dùng ToastHelper thay cho SnackBar
+              ToastHelper.showError(
+                'Cấp độ này đang bị khóa. Hãy tham gia lớp học Level ${level.level} để mở khóa!',
+              );
+            } else {
+              // Delay nhẹ để animation chạy xong rồi mới chuyển màn hình
+              Future.delayed(const Duration(milliseconds: 100), () {
+                context.pushNamed('levelContent', extra: level);
+              });
+            }
+          },
+          onTapCancel: () => _controller.reverse(),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: displayColor.withOpacity(isLocked ? 0.1 : 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // Background mờ
+                  Positioned(
+                    right: -20,
+                    top: -20,
+                    child: Icon(
+                      iconData,
+                      size: 120,
+                      color: displayColor.withOpacity(0.05),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
                       children: [
-                        Text(
-                          level.name,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        // 1. Icon Box
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: displayGradient,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow:
+                                isLocked
+                                    ? []
+                                    : [
+                                      BoxShadow(
+                                        color: displayColor.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                          ),
+                          child: Icon(
+                            isLocked ? Icons.lock_rounded : iconData,
+                            color: Colors.white,
+                            size: 28,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.language_rounded,
-                              size: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '120 từ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                        const SizedBox(width: 16),
+
+                        // 2. Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: displayColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'LEVEL ${level.level}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: displayColor,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isCurrent) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'HIỆN TẠI',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Text(
+                                level.name,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color:
+                                      isLocked
+                                          ? Colors.grey.shade600
+                                          : const Color(0xFF1F2937),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                levelName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+
+                        // 3. Arrow
+                        if (!isLocked)
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 18,
+                            color: Colors.grey.shade300,
+                          ),
                       ],
                     ),
                   ),
 
-                  // Arrow or lock icon
-                  if (!isLocked)
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: primaryColor.withOpacity(0.4),
+                  // Overlay nếu Completed
+                  if (isCompleted && !isCurrent)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
-
-            // Current level badge
-            if (isCurrent)
-              Positioned(
-                top: 10,
-                right: 14,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    'Đang học',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-              ),
-
-            // Completed badge
-            if (isCompleted && !isCurrent)
-              Positioned(
-                top: 10,
-                right: 14,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.success.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );

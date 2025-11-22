@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/data/models/student_quiz_list_model.dart';
 import 'package:mobile/data/models/student_quiz_review_model.dart';
 import 'package:mobile/data/models/student_quiz_take_model.dart';
-// ✅ 1. IMPORT MODEL MỚI CHO VIỆC NỘP BÀI
 import 'package:mobile/data/models/student_submission_model.dart';
 import 'package:mobile/domain/repositories/student_quiz_repository.dart';
 
@@ -41,7 +40,7 @@ class StudentQuizService extends ChangeNotifier {
   String? get reviewError => _reviewError;
 
   // --- API 1: Lấy danh sách quiz (Giữ nguyên) ---
-  Future<void> fetchQuizList(int classId) async {
+  Future<void> fetchQuizList(String classId) async {
     _isLoadingList = true;
     _listError = null;
     notifyListeners();
@@ -57,7 +56,7 @@ class StudentQuizService extends ChangeNotifier {
   }
 
   // --- API 2: Lấy chi tiết quiz để làm (Giữ nguyên) ---
-  Future<void> fetchQuizForTaking(int classId, int quizId) async {
+  Future<void> fetchQuizForTaking(String classId, String quizId) async {
     _isLoadingDetail = true;
     _detailError = null;
     _currentQuiz = null;
@@ -73,22 +72,16 @@ class StudentQuizService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ ========================================================
-  // ✅ API 3: NỘP BÀI (ĐÃ CẬP NHẬT)
-  // ✅ ========================================================
   Future<Map<String, dynamic>> submitQuiz(
-    int classId,
-    int quizId,
-    // 2. 👈 THAM SỐ ĐÃ THAY ĐỔI
+    String classId,
+    String quizId,
     List<StudentAnswerInputModel> answers,
   ) async {
-    // 3. 👈 Chỉ cần gọi thẳng repository
-    // (UI sẽ quản lý state loading/error khi nộp bài)
     return _quizRepository.submitQuiz(classId, quizId, answers);
   }
 
   // --- API 4 lịch sử làm bài (Giữ nguyên) ---
-  Future<void> fetchQuizResult(int classId, int quizId) async {
+  Future<void> fetchQuizResult(String classId, String quizId) async {
     _isLoadingReview = true;
     _reviewError = null;
     _currentReview = null;
@@ -104,7 +97,6 @@ class StudentQuizService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Hàm dọn dẹp (Giữ nguyên) ---
   void clearQuizDetail() {
     _currentQuiz = null;
     _detailError = null;

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
 import 'package:mobile/data/models/course_model.dart';
@@ -8,16 +9,14 @@ class StudentCourseRepository {
   final ApiClient _apiClient;
   StudentCourseRepository(this._apiClient);
 
-  // Lấy danh sách khóa học khả dụng
+  // Lấy danh sách khóa học
   Future<List<CourseModel>> getAvailableCourses() async {
     try {
       final response = await _apiClient.dio.get(
-        ApiConfig.studentAvailableCourses,
+        ApiConfig.studentAvailableCourses, // /api/StudentCourses/courses
       );
 
       final data = response.data;
-
-      // Giữ nguyên logic xử lý 2 kiểu trả về của backend
       if (data is List) {
         return data.map((e) => CourseModel.fromJson(e)).toList();
       }
@@ -26,33 +25,28 @@ class StudentCourseRepository {
             .map((e) => CourseModel.fromJson(e))
             .toList();
       }
-      throw ("Dữ liệu không đúng định dạng");
+      return [];
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Không thể tải khóa học');
     }
   }
 
-  Future<List<StudentClassModel>> getClassesByCourse(int courseId) async {
+  // ✅ CẬP NHẬT: Gọi đúng API api/StudentCourses/{id}/classes
+  Future<List<StudentClassModel>> getClassesByCourse(String courseId) async {
     try {
+      // Sử dụng helper trong ApiConfig để tạo URL: /api/StudentCourses/123/classes
       final response = await _apiClient.dio.get(
         ApiConfig.studentClassesByCourse(courseId),
       );
 
+      // API này trả về List<AvailableClassDTO>
       final data = response.data as List;
-      // Code ApiService cũ của bạn đã map sang StudentClassModel
+
+      // Model đã có logic map isLocked từ JSON rồi
       return data.map((e) => StudentClassModel.fromJson(e)).toList();
     } on DioException catch (e) {
+      debugPrint(e.toString());
       throw Exception(e.response?.data['message'] ?? 'Không thể tải lớp học');
-    }
-  }
-
-  // --- BỔ SUNG HÀM MỚI 2 ---
-  Future<void> joinClass(int classId) async {
-    try {
-      await _apiClient.dio.post(ApiConfig.studentJoinClass(classId));
-      // Dio tự ném lỗi nếu status != 200
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Không thể tham gia lớp');
     }
   }
 }

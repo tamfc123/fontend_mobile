@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/course_model.dart';
+import 'package:mobile/data/models/student_class_model.dart';
+import 'package:mobile/services/student/student_class_service.dart';
 import 'package:mobile/services/student/student_course_class_service.dart';
 import 'package:mobile/utils/color_helper.dart';
+import 'package:mobile/utils/toast_helper.dart'; // ✅ Import ToastHelper
+import 'package:mobile/widgets/student/confirm_join_class_dialog.dart'; // ✅ Import Dialog mới
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 class CourseClassesScreen extends StatefulWidget {
   final CourseModel course;
@@ -24,15 +29,13 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final service = context.watch<StudentCourseClassService>();
+    final courseClassService = context.watch<StudentCourseClassService>();
     final colorHelper = ColorHelper();
     final levelConfig = colorHelper.getLevelConfig(widget.course.requiredLevel);
     final levelColor = levelConfig['color'] as Color;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-
-      // Modern AppBar
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -47,10 +50,9 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
-
       body: Column(
         children: [
-          // Course info header
+          // --- HEADER THÔNG TIN KHÓA HỌC (Giữ nguyên) ---
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -72,21 +74,22 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
               children: [
                 Row(
                   children: [
-                    // Course icon
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: levelColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        levelConfig['icon'] as IconData,
-                        color: levelColor,
-                        size: 28,
+                    Hero(
+                      tag: 'course_icon_${widget.course.id}',
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: levelColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          levelConfig['icon'] as IconData,
+                          color: levelColor,
+                          size: 28,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
-                    // Course name and level
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +126,7 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Level ${levelConfig['name']}',
+                                  'Yêu cầu Level ${widget.course.requiredLevel}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -138,8 +141,6 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
                     ),
                   ],
                 ),
-
-                // Course stats
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -166,12 +167,11 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
             ),
           ),
 
-          // Classes list
+          // --- DANH SÁCH LỚP ---
           Expanded(
             child: Builder(
               builder: (_) {
-                // Loading state
-                if (service.isLoading) {
+                if (courseClassService.isLoading) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -190,94 +190,21 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
                   );
                 }
 
-                // Error state
-                if (service.error != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline_rounded,
-                          size: 64,
-                          color: Colors.red.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Có lỗi xảy ra",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Text(
-                            service.error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            service.fetchClasses(widget.course.id!);
-                          },
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Thử lại'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: levelColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                if (courseClassService.error != null) {
+                  return _buildErrorState(courseClassService, levelColor);
                 }
 
-                // Empty state
-                if (service.classes.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.class_outlined,
-                          size: 80,
-                          color: Colors.grey.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Chưa có lớp học nào",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Các lớp học sẽ sớm được mở",
-                          style: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      ],
-                    ),
-                  );
+                if (courseClassService.classes.isEmpty) {
+                  return _buildEmptyState();
                 }
 
-                // Classes list
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                       child: Text(
-                        '${service.classes.length} lớp học có sẵn',
+                        '${courseClassService.classes.length} lớp học có sẵn',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -288,95 +215,56 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: () async {
-                          await service.fetchClasses(widget.course.id!);
+                          await courseClassService.fetchClasses(
+                            widget.course.id!,
+                          );
                         },
                         color: levelColor,
                         child: ListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                          itemCount: service.classes.length,
+                          itemCount: courseClassService.classes.length,
                           itemBuilder: (context, index) {
-                            final cls = service.classes[index];
-                            return _ClassCard(
-                              classData: cls,
-                              levelColor: levelColor,
-                              onJoin: () async {
-                                // Show confirmation dialog
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder:
-                                      (context) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                        title: const Text('Xác nhận tham gia'),
-                                        content: Text(
-                                          'Bạn có muốn tham gia lớp "${cls.className}"?',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(
-                                                  context,
-                                                  false,
-                                                ),
-                                            child: const Text('Hủy'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed:
-                                                () => Navigator.pop(
-                                                  context,
-                                                  true,
-                                                ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: levelColor,
-                                              foregroundColor: Colors.white,
-                                            ),
-                                            child: const Text('Tham gia'),
-                                          ),
-                                        ],
-                                      ),
-                                );
+                            final cls = courseClassService.classes[index];
 
-                                if (confirmed == true) {
-                                  final success = await service.joinClass(
-                                    cls.classId,
-                                  );
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            Icon(
-                                              success
-                                                  ? Icons.check_circle
-                                                  : Icons.error,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                success
-                                                    ? 'Tham gia lớp thành công!'
-                                                    : 'Lỗi: ${service.error ?? "Không thể tham gia"}',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor:
-                                            success ? Colors.green : Colors.red,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                      ),
+                            return _AnimatedListItem(
+                              index: index,
+                              child: _ClassCard(
+                                classData: cls,
+                                levelColor: levelColor,
+                                onJoin: () async {
+                                  // 1. Check khóa
+                                  if (cls.isLocked) {
+                                    // ✅ Sử dụng ToastHelper thay cho SnackBar
+                                    ToastHelper.showError(
+                                      "Bạn cần đạt Level ${cls.requiredLevel} để tham gia!",
                                     );
+                                    return;
                                   }
-                                }
-                              },
+
+                                  // 2. Hiện Dialog xác nhận (Custom Dialog)
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    // ✅ Sử dụng Widget Dialog mới tách ra
+                                    builder:
+                                        (context) => ConfirmJoinClassDialog(
+                                          className: cls.className,
+                                          levelColor: levelColor,
+                                        ),
+                                  );
+
+                                  // 3. Xử lý nếu đồng ý
+                                  if (confirmed == true) {
+                                    final success = await context
+                                        .read<StudentClassService>()
+                                        .joinClass(cls.classId);
+
+                                    if (success && context.mounted) {
+                                      // Có thể pop về hoặc reload list tùy logic
+                                      Navigator.pop(context);
+                                    }
+                                  }
+                                },
+                              ),
                             );
                           },
                         ),
@@ -392,7 +280,7 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
     );
   }
 
-  // Course stat chip
+  // (Các widget helper cũ giữ nguyên hoặc tách ra nếu muốn gọn file hơn)
   Widget _buildCourseStatChip({
     required IconData icon,
     required String label,
@@ -422,11 +310,105 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
       ),
     );
   }
+
+  Widget _buildErrorState(StudentCourseClassService service, Color color) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 64,
+            color: Colors.red.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Có lỗi xảy ra",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              service.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => service.fetchClasses(widget.course.id!),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Thử lại'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.class_outlined, size: 80, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            "Chưa có lớp học nào",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Các lớp học sẽ sớm được mở",
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// Class Card Widget
-class _ClassCard extends StatelessWidget {
-  final dynamic classData;
+// ... (Giữ nguyên _AnimatedListItem và _ClassCard, _ClassDetailsSheet từ code cũ nếu chưa tách) ...
+// Để file gọn hơn, tôi khuyến khích bạn tách _ClassCard và _ClassDetailsSheet ra file riêng trong folder widgets/student/
+// Nhưng nếu để chung thì copy lại các class đó ở dưới này (như phiên bản trước).
+
+// ✅ ANIMATION WIDGET
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
+  const _AnimatedListItem({required this.index, required this.child});
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: Padding(padding: const EdgeInsets.only(bottom: 0), child: child),
+    );
+  }
+}
+
+// ✅ CLASS CARD
+class _ClassCard extends StatefulWidget {
+  final StudentClassModel classData;
   final Color levelColor;
   final VoidCallback onJoin;
 
@@ -437,132 +419,167 @@ class _ClassCard extends StatelessWidget {
   });
 
   @override
+  State<_ClassCard> createState() => _ClassCardState();
+}
+
+class _ClassCardState extends State<_ClassCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  double _shakeOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    );
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _shakeCard() async {
+    for (int i = 0; i < 3; i++) {
+      setState(() => _shakeOffset = 5.0);
+      await Future.delayed(const Duration(milliseconds: 50));
+      setState(() => _shakeOffset = -5.0);
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    setState(() => _shakeOffset = 0.0);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    final bool isLocked = widget.classData.isLocked;
+    final Color cardColor = isLocked ? Colors.grey : widget.levelColor;
+    final scale = 1.0 - _controller.value;
+
+    return Transform.translate(
+      offset: Offset(_shakeOffset, 0),
+      child: Transform.scale(
+        scale: scale,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Show class details
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder:
-                  (context) => _ClassDetailsSheet(
-                    classData: classData,
-                    levelColor: levelColor,
-                    onJoin: onJoin,
-                  ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with class name and teacher
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Class icon
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: levelColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.class_rounded,
-                        color: levelColor,
-                        size: 24,
-                      ),
+          child: GestureDetector(
+            onTapDown: (_) => _controller.forward(),
+            onTapUp: (_) {
+              _controller.reverse();
+              if (isLocked) _shakeCard();
+
+              if (isLocked) {
+                widget.onJoin();
+              } else {
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder:
+                        (context) => _ClassDetailsSheet(
+                          classData: widget.classData,
+                          levelColor: cardColor,
+                          onJoin: widget.onJoin,
+                          isLocked: isLocked,
+                        ),
+                  );
+                });
+              }
+            },
+            onTapCancel: () => _controller.reverse(),
+            child: Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: cardColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    // Class info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            classData.className,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
-                            ),
+                    child: Icon(
+                      isLocked ? Icons.lock_outline : Icons.class_rounded,
+                      color: cardColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.classData.className,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                isLocked
+                                    ? Colors.grey
+                                    : const Color(0xFF1F2937),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline_rounded,
-                                size: 16,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.person_outline_rounded,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.classData.teacherName,
+                              style: TextStyle(
+                                fontSize: 13,
                                 color: Colors.grey.shade600,
                               ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  classData.teacherName,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Join button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onJoin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: levelColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_circle_outline, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Tham gia lớp',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  if (isLocked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "Lv ${widget.classData.requiredLevel}",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(Icons.chevron_right, color: Colors.grey.shade300),
+                ],
+              ),
             ),
           ),
         ),
@@ -573,18 +590,21 @@ class _ClassCard extends StatelessWidget {
 
 // Class Details Bottom Sheet
 class _ClassDetailsSheet extends StatelessWidget {
-  final dynamic classData;
+  final StudentClassModel classData;
   final Color levelColor;
   final VoidCallback onJoin;
+  final bool isLocked;
 
   const _ClassDetailsSheet({
     required this.classData,
     required this.levelColor,
     required this.onJoin,
+    required this.isLocked,
   });
 
   @override
   Widget build(BuildContext context) {
+    // ... (Giữ nguyên nội dung BottomSheet như cũ, chỉ lưu ý chỗ nút bấm gọi onJoin)
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -595,7 +615,6 @@ class _ClassDetailsSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
           Center(
             child: Container(
               width: 40,
@@ -607,17 +626,22 @@ class _ClassDetailsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Title
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: levelColor.withValues(alpha: 0.1),
+                  color:
+                      isLocked
+                          ? Colors.grey.withValues(alpha: 0.1)
+                          : levelColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.class_rounded, color: levelColor, size: 28),
+                child: Icon(
+                  isLocked ? Icons.lock : Icons.class_rounded,
+                  color: isLocked ? Colors.grey : levelColor,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -644,37 +668,58 @@ class _ClassDetailsSheet extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 24),
-
-          // Info text
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: levelColor.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline_rounded, color: levelColor, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Sau khi tham gia, bạn sẽ có thể truy cập tất cả tài liệu và bài học của lớp.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade700,
-                      height: 1.4,
+          if (isLocked)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade100),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.lock_clock, color: Colors.red.shade400, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Lớp học này yêu cầu Level ${classData.requiredLevel}. Bạn chưa đủ điều kiện tham gia.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red.shade700,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: levelColor.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: levelColor, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Sau khi tham gia, bạn sẽ có thể truy cập tất cả tài liệu và bài học của lớp.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-
           const SizedBox(height: 24),
-
-          // Action buttons
           Row(
             children: [
               Expanded(
@@ -694,12 +739,15 @@ class _ClassDetailsSheet extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onJoin();
-                  },
+                  onPressed:
+                      isLocked
+                          ? null
+                          : () {
+                            Navigator.pop(context);
+                            onJoin();
+                          }, // ✅ Gọi onJoin ở đây
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: levelColor,
+                    backgroundColor: isLocked ? Colors.grey : levelColor,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -707,15 +755,14 @@ class _ClassDetailsSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Tham gia ngay',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  child: Text(
+                    isLocked ? 'Bị khóa' : 'Tham gia ngay',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
             ],
           ),
-
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
       ),

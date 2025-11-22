@@ -15,7 +15,6 @@ class TeacherScheduleService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// Hàm này hỗ trợ truyền các điều kiện lọc như thứ, lớp, môn học
   Future<void> fetchSchedules({int? dayOfWeek}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -33,53 +32,6 @@ class TeacherScheduleService extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  Future<bool> createSchedule(Map<String, dynamic> scheduleJson) async {
-    try {
-      // 6. GỌI REPOSITORY (Không cần check 'success' nữa)
-      await _scheduleRepository.createTeacherSchedule(scheduleJson);
-
-      await fetchSchedules();
-      ToastHelper.showSucess('Tạo lịch giảng dạy thành công');
-      return true;
-    } catch (e) {
-      ToastHelper.showError(
-        'Lỗi khi tạo lịch: ${e.toString().replaceFirst('Exception: ', '')}',
-      );
-      return false;
-    }
-  }
-
-  Future<bool> updateSchedule(int id, Map<String, dynamic> scheduleJson) async {
-    try {
-      // 7. GỌI REPOSITORY
-      await _scheduleRepository.updateTeacherSchedule(id, scheduleJson);
-
-      await fetchSchedules();
-      ToastHelper.showSucess('Cập nhật lịch giảng dạy thành công');
-      return true;
-    } catch (e) {
-      ToastHelper.showError(
-        'Lỗi khi cập nhật: ${e.toString().replaceFirst('Exception: ', '')}',
-      );
-      return false;
-    }
-  }
-
-  Future<void> deleteSchedule(int id) async {
-    try {
-      // 8. GỌI REPOSITORY
-      await _scheduleRepository.deleteTeacherSchedule(id);
-
-      _schedules.removeWhere((s) => s.id == id);
-      notifyListeners();
-      ToastHelper.showSucess('Xoá lịch thành công');
-    } catch (e) {
-      ToastHelper.showError(
-        'Lỗi khi xoá lịch: ${e.toString().replaceFirst('Exception: ', '')}',
-      );
     }
   }
 }

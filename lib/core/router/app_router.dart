@@ -8,7 +8,8 @@ import 'package:mobile/data/models/student_class_model.dart';
 import 'package:mobile/data/models/user_model.dart';
 import 'package:mobile/data/models/vocabulary_levels_model.dart';
 import 'package:mobile/data/models/vocabulary_modules_model.dart';
-import 'package:mobile/screens/admin/dash_board_admin.dart';
+import 'package:mobile/screens/admin/admin_dash_board_screen.dart';
+import 'package:mobile/screens/admin/bulk_schedule_screen.dart';
 import 'package:mobile/screens/admin/manage_course_screen.dart';
 import 'package:mobile/screens/admin/manage_lesson_screen.dart';
 import 'package:mobile/screens/admin/manage_module_screen.dart';
@@ -33,7 +34,7 @@ import 'package:mobile/screens/student/settings_screen.dart';
 import 'package:mobile/screens/student/student_classes_screen.dart';
 import 'package:mobile/screens/student/student_course_class_screen.dart';
 import 'package:mobile/screens/student/student_leader_board_screen.dart';
-import 'package:mobile/screens/student/student_module_class_screen.dart';
+import 'package:mobile/screens/student/student_class_detail_screen.dart';
 import 'package:mobile/screens/student/student_quiz_list_screen.dart';
 import 'package:mobile/screens/student/student_quiz_review_screen.dart';
 import 'package:mobile/screens/student/student_quiz_taking_screen.dart';
@@ -42,21 +43,21 @@ import 'package:mobile/screens/student/student_store_screen.dart';
 import 'package:mobile/screens/student/student_vocabulary_screen.dart';
 import 'package:mobile/screens/student/vocabulary_level_content_screen.dart';
 import 'package:mobile/screens/student/vocabulary_module_details_screen.dart';
-import 'package:mobile/screens/teacher/dash_board_teacher.dart';
-import 'package:mobile/screens/teacher/home_teacher_screen.dart';
-import 'package:mobile/screens/admin/home_admin_screen.dart';
+import 'package:mobile/screens/teacher/teacher_dashboard_screen.dart.dart';
+import 'package:mobile/screens/teacher/teacher_home_screen.dart';
+import 'package:mobile/screens/admin/admin_home_screen.dart';
 import 'package:mobile/screens/admin/manage_account_screen.dart';
 import 'package:mobile/screens/admin/manage_class_screen.dart';
 import 'package:mobile/screens/teacher/manage_teacher_class_screen.dart';
-import 'package:mobile/screens/teacher/manage_schedule_teacher_screen.dart';
+import 'package:mobile/screens/teacher/manage_teacher_schedule_screen.dart';
 import 'package:mobile/screens/teacher/student_list_screen.dart';
 import 'package:mobile/screens/teacher/teacher_media_screen.dart';
-import 'package:mobile/screens/teacher/teacher_quiz_detail_screen.dart';
-import 'package:mobile/screens/teacher/teacher_quiz_screen.dart';
 import 'package:mobile/widgets/admin/admin_create_user_screen.dart';
 import 'package:mobile/widgets/admin/admin_edit_user_screen.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
@@ -126,8 +127,8 @@ final appRouter = GoRouter(
                             final params = state.extra as Map<String, dynamic>;
 
                             return StudentQuizTakingScreen(
-                              classId: params['classId'] as int,
-                              quizId: params['quizId'] as int,
+                              classId: params['classId'] as String,
+                              quizId: params['quizId'] as String,
                               quizTitle: params['quizTitle'] as String,
                             );
                           },
@@ -139,8 +140,8 @@ final appRouter = GoRouter(
                             // Gửi Map {classId, quizId} qua 'extra'
                             final params = state.extra as Map<String, dynamic>;
                             return StudentQuizReviewScreen(
-                              classId: params['classId'] as int,
-                              quizId: params['quizId'] as int,
+                              classId: params['classId'] as String,
+                              quizId: params['quizId'] as String,
                             );
                           },
                         ),
@@ -337,6 +338,48 @@ final appRouter = GoRouter(
                     ),
                   ],
                 ),
+                GoRoute(
+                  path: ':courseId/quizzes', // Path: /admin/courses/123/quizzes
+                  builder: (context, state) {
+                    final course = state.extra as CourseModel?;
+                    if (course == null)
+                      return const Scaffold(
+                        body: Center(child: Text('Lỗi: Data khóa học bị null')),
+                      );
+
+                    // 👇 BƯỚC TIẾP THEO CHÚNG TA SẼ TẠO MÀN HÌNH NÀY
+                    // return AdminQuizListScreen(course: course);
+                    return Scaffold(
+                      appBar: AppBar(
+                        title: Text("Quản lý Quiz: ${course.name}"),
+                      ),
+                      body: const Center(
+                        child: Text(
+                          "Màn hình AdminQuizListScreen sẽ hiện ở đây",
+                        ),
+                      ),
+                    );
+                  },
+                  routes: [
+                    // Route xem chi tiết/sửa Quiz
+                    GoRoute(
+                      path: ':quizId', // Path: /admin/courses/123/quizzes/456
+                      builder: (context, state) {
+                        final course =
+                            (state.extra as Map<String, dynamic>)['course']
+                                as CourseModel;
+                        final quizId = state.pathParameters['quizId']!;
+
+                        // 👇 BƯỚC TIẾP THEO SẼ TẠO
+                        // return AdminQuizDetailScreen(course: course, quizId: quizId);
+                        return Scaffold(
+                          appBar: AppBar(title: const Text("Chi tiết Quiz")),
+                          body: Center(child: Text("Quiz ID: $quizId")),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
             GoRoute(
@@ -346,6 +389,12 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'schedules',
               builder: (context, state) => const ManageScheduleScreen(),
+              routes: [
+                GoRoute(
+                  path: 'bulk-create',
+                  builder: (context, state) => const BulkScheduleScreen(),
+                ),
+              ],
             ),
             GoRoute(
               path: 'rooms',
@@ -369,45 +418,9 @@ final appRouter = GoRouter(
               routes: [
                 GoRoute(
                   path:
-                      ':classId/quiz', // Path: /teacher/teacherClasses/123/quiz
-                  builder: (context, state) {
-                    final classId = int.parse(state.pathParameters['classId']!);
-                    final className = state.extra as String;
-
-                    return TeacherQuizScreen(
-                      classId: classId,
-                      className: className,
-                    );
-                  },
-                  routes: [
-                    GoRoute(
-                      path:
-                          ':quizId', // Path: /teacher/teacherClasses/123/quiz/456
-                      builder: (context, state) {
-                        final classId = int.parse(
-                          state.pathParameters['classId']!,
-                        );
-                        final quizId = int.parse(
-                          state.pathParameters['quizId']!,
-                        );
-                        final quizTitle = state.extra as String?;
-
-                        return TeacherQuizDetailScreen(
-                          classId: classId,
-                          quizId: quizId,
-                          quizTitle: quizTitle ?? 'Chi tiết',
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                GoRoute(
-                  path:
                       ':classId/students', // Path: /teacher/teacherClasses/123/students
                   builder: (context, state) {
-                    final classId = int.parse(state.pathParameters['classId']!);
-
-                    // Chúng ta sẽ truyền 'className' qua 'extra' giống như cách bạn làm với quiz
+                    final classId = state.pathParameters['classId']!;
                     final className = state.extra as String;
 
                     return StudentListScreen(

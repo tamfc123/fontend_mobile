@@ -22,34 +22,52 @@ class StudentClassService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 6. GỌI REPOSITORY
       _joinedClasses = await _classRepository.getJoinedClasses();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
-      ToastHelper.showError(_error!); // Thêm toast
+      ToastHelper.showError(_error!);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Rời lớp
-  Future<bool> leaveClass(int classId) async {
+  Future<bool> joinClass(String classId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 7. GỌI REPOSITORY
-      await _classRepository.leaveClass(classId);
+      await _classRepository.joinClass(classId);
+      await loadJoinedClasses();
 
-      // Tối ưu: Xóa khỏi list thay vì fetch lại
-      _joinedClasses.removeWhere((c) => c.classId == classId);
-      ToastHelper.showSucess('Rời lớp thành công'); // Thêm toast
+      ToastHelper.showSuccess('Tham gia lớp thành công');
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
-      ToastHelper.showError(_error!); // Thêm toast
+      ToastHelper.showError(_error!);
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Rời lớp học
+  Future<bool> leaveClass(String classId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _classRepository.leaveClass(classId);
+      _joinedClasses.removeWhere((c) => c.classId == classId);
+
+      ToastHelper.showSuccess('Rời lớp thành công');
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      ToastHelper.showError(_error!);
       return false;
     } finally {
       _isLoading = false;

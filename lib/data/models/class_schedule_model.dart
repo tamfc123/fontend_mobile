@@ -1,14 +1,15 @@
 class ClassScheduleModel {
-  final int id;
-  final int classId;
+  final String id;
+  final String classId;
   final String className;
   final String dayOfWeek;
   final String startTime;
   final String endTime;
-  final String? room;
+  final String roomId;
+  final String? roomName;
   final String? teacherName;
-  final DateTime startDate; // <-- mới
-  final DateTime endDate; // <-- mới
+  final DateTime startDate;
+  final DateTime endDate;
   final String teacherId;
 
   ClassScheduleModel({
@@ -18,7 +19,8 @@ class ClassScheduleModel {
     required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
-    required this.room,
+    required this.roomId,
+    required this.roomName,
     required this.teacherName,
     required this.startDate,
     required this.endDate,
@@ -27,13 +29,15 @@ class ClassScheduleModel {
 
   factory ClassScheduleModel.fromJson(Map<String, dynamic> json) {
     return ClassScheduleModel(
-      id: json['id'] ?? 0,
+      id: json['id'],
       classId: json['classId'],
-      className: json['className'],
-      dayOfWeek: json['dayOfWeek'],
-      startTime: json['startTime'],
-      endTime: json['endTime'],
-      room: json['room'],
+      className: json['className'] ?? '',
+      dayOfWeek: json['dayOfWeek'] ?? '',
+      startTime: json['startTime'] ?? '',
+      endTime: json['endTime'] ?? '',
+      roomId: json['roomId'] ?? '',
+      roomName: json['roomName'],
+
       teacherName: json['teacherName'],
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
@@ -41,13 +45,15 @@ class ClassScheduleModel {
     );
   }
 
+  // Dùng khi gọi API PUT/POST lẻ (ClassScheduleRequestDTO)
   Map<String, dynamic> toJson() {
     return {
+      "id": id,
       "classId": classId,
       "dayOfWeek": _convertDayOfWeekToInt(dayOfWeek),
       "startTime": startTime,
       "endTime": endTime,
-      "room": room,
+      "roomId": roomId,
       "teacherName": teacherName,
       "startDate": startDate.toIso8601String(),
       "endDate": endDate.toIso8601String(),
@@ -55,15 +61,16 @@ class ClassScheduleModel {
     };
   }
 
-  // Thêm copyWith
+  // Cập nhật copyWith
   ClassScheduleModel copyWith({
-    int? id,
-    int? classId,
+    String? id,
+    String? classId,
     String? className,
     String? dayOfWeek,
     String? startTime,
     String? endTime,
-    String? room,
+    String? roomId,
+    String? roomName,
     String? teacherName,
     DateTime? startDate,
     DateTime? endDate,
@@ -76,7 +83,8 @@ class ClassScheduleModel {
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
-      room: room ?? this.room,
+      roomId: roomId ?? this.roomId,
+      roomName: roomName ?? this.roomName,
       teacherName: teacherName ?? this.teacherName,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,

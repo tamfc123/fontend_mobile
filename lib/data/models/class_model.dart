@@ -1,7 +1,7 @@
 class ClassModel {
-  final int id;
+  final String id;
   final String name;
-  final int courseId;
+  final String courseId;
   final String courseName;
   final String? teacherId;
   final String? teacherName;
@@ -17,9 +17,9 @@ class ClassModel {
 
   factory ClassModel.fromJson(Map<String, dynamic> json) {
     return ClassModel(
-      id: json['id'],
+      id: json['id'].toString(),
       name: json['name'],
-      courseId: json['courseId'],
+      courseId: json['courseId'].toString(),
       courseName: json['courseName'] ?? '',
       teacherId: json['teacherId'], // nullable
       teacherName: json['teacherName'],
@@ -38,9 +38,9 @@ class ClassModel {
   }
 
   ClassModel copyWith({
-    int? id,
+    String? id,
     String? name,
-    int? courseId,
+    String? courseId,
     String? courseName,
     String? teacherId,
     String? teacherName,

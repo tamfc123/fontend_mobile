@@ -2,8 +2,8 @@
 
 // Model để nhận dữ liệu Vocabulary (khớp VocabularyDTO)
 class VocabularyModel {
-  final int id;
-  final int lessonId;
+  final String id;
+  final String lessonId;
   final String referenceText;
   final String? meaning;
   final String? phonetic;
@@ -32,7 +32,7 @@ class VocabularyModel {
 
 // Model để gửi đi khi TẠO/SỬA (khớp VocabularyModifyDTO)
 class VocabularyModifyModel {
-  final int lessonId;
+  final String lessonId;
   final String referenceText;
   final String? meaning;
   final String? phonetic;

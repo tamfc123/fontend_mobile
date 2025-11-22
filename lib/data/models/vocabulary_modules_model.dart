@@ -1,8 +1,4 @@
-// lib/data/models/vocabulary_modules_model.dart
-
-// Class này tương ứng với VocabularyModulesDTO
 class VocabularyModulesModel {
-  // Tên 'topics' phải khớp với key JSON 'topics' từ C#
   final List<ModuleInfoModel> topics;
 
   VocabularyModulesModel({required this.topics});
@@ -17,7 +13,7 @@ class VocabularyModulesModel {
 
 // Class này tương ứng với ModuleInfoDTO
 class ModuleInfoModel {
-  final int id;
+  final String id;
   final String name;
   final String? imageUrl;
   final int totalWords;
@@ -31,7 +27,6 @@ class ModuleInfoModel {
     required this.completedWords,
   });
 
-  // Các key (id, name, totalWords...) phải khớp 100% với C# DTO
   factory ModuleInfoModel.fromJson(Map<String, dynamic> json) {
     return ModuleInfoModel(
       id: json['id'],

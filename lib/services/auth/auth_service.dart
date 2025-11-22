@@ -44,7 +44,7 @@ class AuthService extends ChangeNotifier {
       _currentUser = user;
       _isloading = false;
       notifyListeners();
-      ToastHelper.showSucess('Đăng kí thành công');
+      ToastHelper.showSuccess('Đăng kí thành công');
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -80,7 +80,7 @@ class AuthService extends ChangeNotifier {
       if (_currentUser != null) {
         _isloading = false;
         notifyListeners(); // Thông báo rằng đăng nhập thành công, UI sẽ được cập nhật
-        ToastHelper.showSucess('Đăng nhập thành công!');
+        ToastHelper.showSuccess('Đăng nhập thành công!');
         return true;
       } else {
         _errorMessage =
@@ -107,7 +107,7 @@ class AuthService extends ChangeNotifier {
     try {
       final message = await _authRepository.forgotPassword(email: email);
       _isloading = false;
-      ToastHelper.showSucess(message);
+      ToastHelper.showSuccess(message);
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -143,7 +143,7 @@ class AuthService extends ChangeNotifier {
 
       _isloading = false;
       notifyListeners();
-      ToastHelper.showSucess(message);
+      ToastHelper.showSuccess(message);
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -177,6 +177,6 @@ class AuthService extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     await TokenHelper.clearToken(); // Xóa token khỏi bộ nhớ
-    ToastHelper.showSucess('Đã đăng xuất!');
+    ToastHelper.showSuccess('Đã đăng xuất!');
   }
 }

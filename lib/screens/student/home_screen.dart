@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/services/student/leaderboard_service.dart';
+import 'package:mobile/services/student/student_leaderboard_service.dart';
 import 'package:mobile/services/student/student_profile_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -36,7 +36,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StudentProfileService>().loadProfile();
-      context.read<LeaderboardService>().fetchLeaderboard();
+      context.read<StudentLeaderboardService>().fetchLeaderboard();
     });
     _startBannerTimer();
   }
@@ -285,7 +285,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
   @override
   Widget build(BuildContext context) {
     final profileService = context.watch<StudentProfileService>();
-    final leaderboardService = context.watch<LeaderboardService>();
+    final leaderboardService = context.watch<StudentLeaderboardService>();
     final user = profileService.profile;
     if (user == null) {
       return Scaffold(
@@ -628,7 +628,6 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         title: 'Lớp học của bạn',
                         subtitle: 'Xem danh sách lớp đã tham gia',
                         color: AppColors.secondary,
-                        badge: 2,
                         onTap: () => context.go('/student/student-class'),
                       ),
                       _buildQuickActionButton(
@@ -643,7 +642,6 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         title: 'Kết quả học tập',
                         subtitle: 'Xem điểm và đánh giá',
                         color: AppColors.success,
-                        badge: 1,
                         onTap: () => context.go('/student/grades'),
                       ),
                       _buildQuickActionButton(

@@ -1,6 +1,6 @@
 // === Model Cha ===
 class StudentQuizReviewModel {
-  final int submissionId;
+  final String submissionId;
   final double score;
   final String quizTitle;
   final DateTime submittedAt;
@@ -16,7 +16,7 @@ class StudentQuizReviewModel {
 
   factory StudentQuizReviewModel.fromJson(Map<String, dynamic> json) {
     return StudentQuizReviewModel(
-      submissionId: json['submissionId'] ?? 0,
+      submissionId: json['submissionId'] ?? '',
       score: (json['score'] as num? ?? 0.0).toDouble(), // 👈 Thêm an toàn
       quizTitle: json['quizTitle'] ?? '',
       submittedAt:
@@ -32,17 +32,15 @@ class StudentQuizReviewModel {
 
 // === Model Câu hỏi (Con) ===
 class StudentQuestionReviewModel {
-  final int questionId;
+  final String questionId;
   final String questionText;
-
-  // ✅ THÊM MỚI (Từ API)
   final String? audioUrl;
   final String questionType;
   final String? correctAnswerText; // Đáp án đúng bài Viết
   final String? studentAnswerText; // Bài Viết của SV
   final bool isCorrect; // SV làm Đúng hay Sai
 
-  final int? selectedOptionId; // Đáp án SV đã chọn (Trắc nghiệm)
+  final String? selectedOptionId; // Đáp án SV đã chọn (Trắc nghiệm)
   final List<StudentOptionReviewModel> options;
 
   StudentQuestionReviewModel({
@@ -50,8 +48,6 @@ class StudentQuestionReviewModel {
     required this.questionText,
     this.selectedOptionId,
     required this.options,
-
-    // ✅ THÊM MỚI
     this.audioUrl,
     required this.questionType,
     this.correctAnswerText,
@@ -61,11 +57,9 @@ class StudentQuestionReviewModel {
 
   factory StudentQuestionReviewModel.fromJson(Map<String, dynamic> json) {
     return StudentQuestionReviewModel(
-      questionId: json['questionId'] ?? 0,
+      questionId: json['questionId'] ?? '',
       questionText: json['questionText'] ?? '',
-      selectedOptionId: json['selectedOptionId'],
-
-      // ✅ THÊM MỚI
+      selectedOptionId: json['selectedOptionId'] ?? '',
       audioUrl: json['audioUrl'],
       questionType: json['questionType'] ?? 'MULTIPLE_CHOICE',
       correctAnswerText: json['correctAnswerText'],
@@ -73,7 +67,7 @@ class StudentQuestionReviewModel {
       isCorrect: json['isCorrect'] ?? false,
 
       options:
-          (json['options'] as List? ?? []) // 👈 Thêm an toàn
+          (json['options'] as List? ?? [])
               .map((o) => StudentOptionReviewModel.fromJson(o))
               .toList(),
     );
@@ -82,7 +76,7 @@ class StudentQuestionReviewModel {
 
 // === Model Lựa chọn (Con) ===
 class StudentOptionReviewModel {
-  final int optionId;
+  final String optionId;
   final String optionText;
   final bool isCorrect; // Đáp án đúng
 
@@ -94,7 +88,7 @@ class StudentOptionReviewModel {
 
   factory StudentOptionReviewModel.fromJson(Map<String, dynamic> json) {
     return StudentOptionReviewModel(
-      optionId: json['optionId'] ?? 0,
+      optionId: json['optionId'] ?? '',
       optionText: json['optionText'] ?? '',
       isCorrect: json['isCorrect'] ?? false,
     );

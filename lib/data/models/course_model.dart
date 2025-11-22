@@ -1,12 +1,10 @@
 class CourseModel {
-  final int? id;
+  final String? id;
   final String name;
   final String? description;
   final int durationInWeeks;
-
-  // Gamification
   final int requiredLevel;
-  final int? rewardExp; // để optional vì backend tự tính
+  final int? rewardExp;
   final int rewardCoins;
 
   CourseModel({
@@ -15,7 +13,7 @@ class CourseModel {
     this.description,
     required this.durationInWeeks,
     required this.requiredLevel,
-    this.rewardExp, // không required
+    this.rewardExp,
     required this.rewardCoins,
   });
 

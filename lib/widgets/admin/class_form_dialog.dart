@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/class_model.dart';
-import 'package:mobile/services/admin/class_service.dart';
-import 'package:mobile/services/admin/user_service.dart';
-import 'package:mobile/services/admin/course_service.dart';
+import 'package:mobile/services/admin/admin_class_service.dart';
+import 'package:mobile/services/admin/admin_user_service.dart';
+import 'package:mobile/services/admin/admin_course_service.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -17,7 +17,7 @@ class ClassFormDialog extends StatefulWidget {
 
 class _ClassFormDialogState extends State<ClassFormDialog> {
   late TextEditingController _nameController;
-  int? _selectedCourseId;
+  String? _selectedCourseId;
   String? _selectedTeacherId;
 
   // Màu sắc chủ đạo
@@ -34,6 +34,10 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
     );
     _selectedCourseId = widget.classModel?.courseId;
     _selectedTeacherId = widget.classModel?.teacherId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Tải danh sách khóa học (FULL)
+      context.read<AdminCourseService>().fetchAllCoursesForDropdown();
+    });
   }
 
   @override
@@ -56,19 +60,20 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
       return;
     }
 
-    final classService = context.read<ClassService>();
+    final adminClassService = context.read<AdminClassService>();
     bool success = false;
 
     if (widget.classModel == null) {
-      success = await classService.addClass(name, courseId, teacherId);
+      success = await adminClassService.addClass(name, courseId, teacherId);
     } else {
-      success = await classService.updateClass(
+      success = await adminClassService.updateClass(
         widget.classModel!.id,
         name,
         courseId,
         teacherId,
       );
     }
+
     if (success) {
       Navigator.of(context).pop();
     } else {
@@ -78,11 +83,11 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final userService = context.watch<UserService>();
+    final userService = context.watch<AdminUserService>();
     final teachers = userService.teachers;
 
-    final courseService = context.watch<CourseService>();
-    final courses = courseService.courses;
+    final courseService = context.watch<AdminCourseService>();
+    final courses = courseService.coursesForDropdown;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -154,7 +159,7 @@ class _ClassFormDialogState extends State<ClassFormDialog> {
                     const SizedBox(height: 20),
 
                     // Khóa học
-                    _buildModernDropdown<int>(
+                    _buildModernDropdown<String>(
                       label: 'Khóa học',
                       value: _selectedCourseId,
                       hint: 'Chọn khóa học',

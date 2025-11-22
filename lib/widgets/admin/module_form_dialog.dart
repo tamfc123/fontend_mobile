@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/data/models/module_model.dart';
+import '../../data/models/module_model.dart';
 
 class ModuleFormDialog extends StatefulWidget {
-  final ModuleModel? module; // Nếu null là TẠO MỚI, có là SỬA
-  final int courseId; // Bắt buộc phải có để biết tạo cho course nào
+  final ModuleModel? module;
+  final String courseId;
 
   const ModuleFormDialog({super.key, this.module, required this.courseId});
 
@@ -12,11 +12,15 @@ class ModuleFormDialog extends StatefulWidget {
 }
 
 class _ModuleFormDialogState extends State<ModuleFormDialog> {
-  final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late int _order;
   bool _isEdit = false;
+
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color lightBlue = Color(0xFF42A5F5);
+  static const Color backgroundBlue = Color(0xFFF3F8FF);
+  static const Color surfaceBlue = Color(0xFFE3F2FD);
 
   @override
   void initState() {
@@ -37,64 +41,223 @@ class _ModuleFormDialogState extends State<ModuleFormDialog> {
   }
 
   void _submit() {
-    if (_formKey.currentState!.validate()) {
-      // Tạo một ModuleModel (dù là Thêm hay Sửa)
-      // Service sẽ tự biết cách xử lý
-      final result = ModuleModel(
-        id: widget.module?.id ?? 0, // 0 nếu tạo mới
-        courseId: widget.courseId, // Luôn dùng courseId được truyền vào
-        title: _titleController.text,
-        description: _descriptionController.text,
-        order: _order, // Giữ nguyên order khi sửa
-      );
-      Navigator.of(context).pop(result);
+    if (_titleController.text.trim().isEmpty) {
+      _showError("Tên chương không được để trống");
+      return;
     }
+
+    final module = ModuleModel(
+      id: widget.module?.id ?? '',
+      courseId: widget.courseId,
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      order: _order,
+    );
+    Navigator.of(context).pop(module);
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEdit ? 'Cập nhật Chương' : 'Tạo Chương mới'),
-      content: Form(
-        key: _formKey,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: backgroundBlue,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Tên Chương',
-                  border: OutlineInputBorder(),
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, lightBlue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập tên chương';
-                  }
-                  return null;
-                },
+                child: Column(
+                  children: [
+                    Icon(
+                      widget.module == null ? Icons.add_circle : Icons.edit,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.module == null
+                          ? 'Thêm chương mới'
+                          : 'Chỉnh sửa chương',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Mô tả',
-                  border: OutlineInputBorder(),
+
+              // Form content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    _buildModernInputField(
+                      controller: _titleController,
+                      label: 'Tên chương',
+                      hint: 'Nhập tên chương...',
+                      icon: Icons.title,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildModernInputField(
+                      controller: _descriptionController,
+                      label: 'Mô tả',
+                      hint: 'Nhập mô tả...',
+                      icon: Icons.description,
+                      maxLines: 3,
+                    ),
+                  ],
                 ),
-                maxLines: 3,
+              ),
+
+              // Actions
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: primaryBlue.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Hủy',
+                          style: TextStyle(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _submit,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.module == null ? Icons.add : Icons.save,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.module == null ? 'Thêm' : 'Lưu',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Hủy'),
+    );
+  }
+
+  Widget _buildModernInputField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: Text(_isEdit ? 'Cập nhật' : 'Tạo mới'),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: Icon(icon, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
         ),
       ],
     );

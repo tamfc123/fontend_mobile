@@ -1,4 +1,3 @@
-// Modern Course Card
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/utils/color_helper.dart';
@@ -21,12 +20,16 @@ class CourseCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24), // Bo góc lớn hơn -> Hiện đại
+        border: Border.all(color: Colors.grey.shade100), // Viền siêu mỏng
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: const Color(
+              0xFF475569,
+            ).withValues(alpha: 0.08), // Shadow màu xám xanh hiện đại
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -34,45 +37,38 @@ class CourseCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with level badge
+                // --- HEADER: ICON & TITLE ---
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Course icon
+                    // 1. Course Icon Box
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 60,
+                      height: 60,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            levelColor.withValues(alpha: 0.2),
-                            levelColor.withValues(alpha: 0.1),
-                          ],
+                        color: levelColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: levelColor.withValues(alpha: 0.1),
+                          width: 1,
                         ),
-                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(levelIcon, color: levelColor, size: 28),
                     ),
-                    const SizedBox(width: 12),
-                    // Title and level
+                    const SizedBox(width: 16),
+
+                    // 2. Title & Level Badge
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            course.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
+                          // Level Badge (Capsule style)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -80,31 +76,31 @@ class CourseCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: levelColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: levelColor.withValues(alpha: 0.3),
-                                width: 1,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Level $levelText',
+                              style: TextStyle(
+                                color: levelColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star_rounded,
-                                  size: 14,
-                                  color: levelColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Lv.$levelText',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: levelColor,
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Course Name
+                          Text(
+                            course.name,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B), // Slate 800
+                              height: 1.3,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -112,92 +108,66 @@ class CourseCard extends StatelessWidget {
                   ],
                 ),
 
-                // Description
+                const SizedBox(height: 16),
+
+                // --- DESCRIPTION (Optional) ---
                 if (course.description != null &&
                     course.description!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
                   Text(
                     course.description!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade500,
                       height: 1.5,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 16),
                 ],
 
+                // --- DIVIDER ---
+                Divider(height: 1, color: Colors.grey.shade100),
                 const SizedBox(height: 16),
 
-                // Stats grid
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.access_time_rounded,
-                        label: '${course.durationInWeeks} tuần',
-                        color: Colors.blue,
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.monetization_on_rounded,
-                        label: '${course.rewardCoins} xu',
-                        color: Colors.amber,
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildStatItem(
-                        icon: Icons.star_rounded,
-                        label: '${course.rewardExp} XP',
-                        color: Colors.purple,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Price and action
+                // --- FOOTER: STATS & ACTION ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Action button
+                    // Stats Row
+                    Row(
+                      children: [
+                        _buildMiniStat(
+                          Icons.access_time_rounded,
+                          '${course.durationInWeeks} tuần',
+                          Colors.blue.shade400,
+                        ),
+                        const SizedBox(width: 16),
+                        _buildMiniStat(
+                          Icons.monetization_on_rounded,
+                          '${course.rewardCoins}',
+                          Colors.amber.shade500,
+                        ),
+                        const SizedBox(width: 16),
+                        _buildMiniStat(
+                          Icons.star_rounded,
+                          '${course.rewardExp}',
+                          Colors.purple.shade400,
+                        ),
+                      ],
+                    ),
+
+                    // Arrow Action (Thay cho nút Xem chi tiết to đùng)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade600,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.shade600.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: Colors.grey.shade50,
+                        shape: BoxShape.circle,
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Xem chi tiết',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ],
+                      child: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: Colors.grey.shade400,
                       ),
                     ),
                   ],
@@ -210,26 +180,18 @@ class CourseCard extends StatelessWidget {
     );
   }
 
-  // Stat item widget
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
+  // Helper widget cho các icon thống kê nhỏ
+  Widget _buildMiniStat(IconData icon, String text, Color color) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade600,
           ),
         ),
       ],

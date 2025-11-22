@@ -22,11 +22,10 @@ class StudentCourseService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 6. GỌI REPOSITORY
       _courses = await _courseRepository.getAvailableCourses();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
-      ToastHelper.showError(_error!); // Thêm toast
+      ToastHelper.showError(_error!);
     } finally {
       _isLoading = false;
       notifyListeners();

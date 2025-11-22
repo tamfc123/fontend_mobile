@@ -77,197 +77,75 @@ class _VocabularyLevelContentScreenState
           ),
         ),
       ),
-      body: _buildTreeContent(service, data),
+      body: _buildBody(service, data),
     );
   }
 
-  Widget _buildTreeContent(
+  Widget _buildBody(
     StudentVocabularyModuleService service,
     VocabularyModulesModel? data,
   ) {
     if (service.isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Đang tải các chủ đề...',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
     if (service.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.error_outline_rounded,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Lỗi tải dữ liệu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                service.error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return Center(child: Text('Lỗi: ${service.error}'));
     }
 
     if (data == null || data.topics.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primaryXLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.inbox_rounded,
-                size: 40,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Chưa có chủ đề nào',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const Center(child: Text('Chưa có chủ đề nào'));
     }
+
+    // ✅ TÍNH TOÁN TIẾN ĐỘ TỔNG QUAN
+    int totalModules = data.topics.length;
+    int totalWords = data.topics.fold(0, (sum, item) => sum + item.totalWords);
+    int completedModules =
+        data.topics
+            .where((m) => m.completedWords >= m.totalWords && m.totalWords > 0)
+            .length;
+
+    double overallProgress =
+        totalModules > 0 ? completedModules / totalModules : 0.0;
+    // ✅ FIX LỖI UNDEFINED NAME: Định nghĩa biến ở đây
+    String moduleProgressText = '$completedModules/$totalModules Chủ đề';
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // Header introduction section
+        // 1. HEADER CARD (Dashboard style)
+        SliverToBoxAdapter(
+          child: _buildHeader(
+            levelName: widget.level.name,
+            totalWords: totalWords,
+            moduleProgressText: moduleProgressText,
+            overallProgress: overallProgress,
+          ),
+        ),
+
+        // 2. DANH SÁCH MODULES HEADER
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+            child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  width: 4,
+                  height: 20,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.route_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${data.topics.length} chủ đề',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Lộ trình học tập của bạn',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  'Hoàn thành từng chủ đề để tiến lên cấp độ tiếp theo. Mỗi chủ đề chứa các từ vựng mới cần học.',
+                const SizedBox(width: 10),
+                const Text(
+                  'Các chương từ vựng',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.6,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -275,9 +153,9 @@ class _VocabularyLevelContentScreenState
           ),
         ),
 
-        // Timeline content
+        // 3. DANH SÁCH MODULES (TIMELINE)
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final module = data.topics[index];
@@ -286,160 +164,348 @@ class _VocabularyLevelContentScreenState
                       ? 0.0
                       : module.completedWords.toDouble() /
                           module.totalWords.toDouble();
-              final isLast = index == data.topics.length - 1;
 
-              return _buildTimelineItem(
-                context,
-                index,
-                module,
-                progress,
-                isLast,
-                data.topics.length,
+              final bool isFirst = index == 0;
+              final bool isLast = index == data.topics.length - 1;
+              final bool isCompleted = progress >= 1.0; // Tính toán cho Node
+
+              // ✅ FIX LỖI THAM SỐ: Thêm isCompleted vào đây (tổng 7 tham số)
+              return _AnimatedListItem(
+                index: index,
+                child: _buildTimelineItem(
+                  context,
+                  index + 1,
+                  module,
+                  progress,
+                  isCompleted, // ✅ Tham số thứ 5
+                  isFirst,
+                  isLast,
+                ),
               );
             }, childCount: data.topics.length),
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
       ],
     );
   }
 
-  Widget _buildTimelineItem(
-    BuildContext context,
-    int index,
-    ModuleInfoModel module,
-    double progress,
-    bool isLast,
-    int totalItems,
-  ) {
-    final completed = progress >= 1.0;
-    final color = completed ? AppColors.success : AppColors.primary;
-
-    return Stack(
-      children: [
-        // Timeline line
-        if (!isLast)
-          Positioned(
-            left: 27,
-            top: 56,
-            bottom: -32,
-            child: Container(
-              width: 1.5,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [color.withOpacity(0.3), color.withOpacity(0.05)],
+  // ✅ WIDGET MỚI: HEADER DASHBOARD
+  Widget _buildHeader({
+    required String levelName,
+    required int totalWords,
+    required String moduleProgressText,
+    required double overallProgress,
+  }) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title & Icon
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
-            ),
-          ),
-
-        // Content
-        Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Node icon
-              _buildTimelineNode(index + 1, progress, completed, color),
-              const SizedBox(width: 14),
-
-              // Card content
+              const SizedBox(width: 16),
               Expanded(
-                child: _buildModuleCard(
-                  context,
-                  module,
-                  progress,
-                  completed,
-                  color,
+                child: Text(
+                  levelName, // Tên level
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Progress Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Tiến độ Module',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.85),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                '${(overallProgress * 100).toStringAsFixed(0)}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: overallProgress,
+              minHeight: 8,
+              backgroundColor: Colors.black.withOpacity(0.15),
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Stats Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildHeaderStat(Icons.check_circle_outline, moduleProgressText),
+              _buildHeaderStat(Icons.language_rounded, '$totalWords Từ vựng'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderStat(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white.withOpacity(0.8), size: 16),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTimelineNode(
+  // --- LESSON TIMELINE ITEMS (Cấu trúc Timeline Node) ---
+
+  // ✅ FIX: Đã thêm tham số isCompleted vào signature
+  Widget _buildTimelineItem(
+    BuildContext context,
     int number,
+    ModuleInfoModel module,
     double progress,
-    bool completed,
-    Color color,
+    bool isCompleted, // ✅ THÊM THAM SỐ THỨ 5
+    bool isFirst,
+    bool isLast,
   ) {
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Stack(
-        alignment: Alignment.center,
+    final color = isCompleted ? AppColors.success : AppColors.primary;
+    const double nodeSize = 40.0;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Background circle
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.cardBackground,
-              border: Border.all(color: color.withOpacity(0.3), width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          // --- CỘT 1: TIMELINE ---
+          SizedBox(
+            width: nodeSize,
+            child: Column(
+              children: [
+                Expanded(
+                  child:
+                      isFirst
+                          ? const SizedBox()
+                          : Container(width: 2, color: color.withOpacity(0.3)),
+                ),
+
+                _buildTimelineNode(number, isCompleted, color, nodeSize),
+
+                Expanded(
+                  child:
+                      isLast
+                          ? const SizedBox()
+                          : Container(width: 2, color: color.withOpacity(0.3)),
                 ),
               ],
             ),
           ),
 
-          // Inner gradient
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [color.withOpacity(0.08), color.withOpacity(0.02)],
+          const SizedBox(width: 16),
+
+          // --- CỘT 2: CARD (CÓ ANIMATION NHÚN) ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: _AnimatedModuleCard(
+                module: module,
+                progress: progress,
+                completed: isCompleted,
+                color: color,
               ),
             ),
           ),
-
-          // Content
-          if (completed)
-            Icon(Icons.check_rounded, color: color, size: 26)
-          else
-            Text(
-              '$number',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
         ],
       ),
     );
   }
 
-  Widget _buildModuleCard(
-    BuildContext context,
-    ModuleInfoModel module,
-    double progress,
+  Widget _buildTimelineNode(
+    int number,
     bool completed,
     Color color,
+    double size,
   ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.pushNamed('moduleDetails', extra: module),
-        borderRadius: BorderRadius.circular(12),
-        splashColor: color.withOpacity(0.08),
-        highlightColor: Colors.transparent,
+    return Container(
+      width: size,
+      height: size,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.cardBackground,
+        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child:
+            completed
+                ? Icon(Icons.check_rounded, color: color, size: 20)
+                : Text(
+                  '$number',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+      ),
+    );
+  }
+}
+
+// ✅ 1. WIDGET ANIMATION LIST ITEM (Slide Up + Fade In)
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
+
+  const _AnimatedListItem({required this.index, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final int delay = index * 100;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 400 + delay),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+// ✅ 2. WIDGET MODULE CARD (Có hiệu ứng nhún)
+class _AnimatedModuleCard extends StatefulWidget {
+  final ModuleInfoModel module;
+  final double progress;
+  final bool completed;
+  final Color color;
+
+  const _AnimatedModuleCard({
+    required this.module,
+    required this.progress,
+    required this.completed,
+    required this.color,
+  });
+
+  @override
+  State<_AnimatedModuleCard> createState() => _AnimatedModuleCardState();
+}
+
+class _AnimatedModuleCardState extends State<_AnimatedModuleCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.03, // Nhún 3%
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = 1.0 - _controller.value;
+
+    return Transform.scale(
+      scale: scale,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          context.pushNamed('moduleDetails', extra: widget.module);
+        },
+        onTapCancel: () => _controller.reverse(),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.15), width: 1.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.color.withOpacity(0.15),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -451,102 +517,78 @@ class _VocabularyLevelContentScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title and badge
+              // Header
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
-                      module.name,
+                      widget.module.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        fontSize: 16,
                         color: AppColors.textPrimary,
-                        height: 1.4,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  if (completed)
+                  if (widget.completed)
                     Container(
+                      margin: const EdgeInsets.only(left: 8),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppColors.success.withOpacity(0.25),
-                          width: 1,
-                        ),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.success,
-                            size: 12,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'Xong',
-                            style: TextStyle(
-                              color: AppColors.success,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                      child: const Text(
+                        "Đã xong",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
+                        ),
                       ),
                     ),
                 ],
               ),
+              const SizedBox(height: 12),
 
-              const SizedBox(height: 10),
-
-              // Progress bar
+              // Progress
               ClipRRect(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
+                  value: widget.progress.clamp(0.0, 1.0),
                   minHeight: 6,
-                  backgroundColor: color.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation(color),
+                  backgroundColor: Colors.grey.shade100,
+                  valueColor: AlwaysStoppedAnimation(widget.color),
                 ),
               ),
+              const SizedBox(height: 8),
 
-              const SizedBox(height: 9),
-
-              // Stats row
+              // Footer Stats
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.language_rounded,
-                        size: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${module.completedWords}/${module.totalWords} từ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
                   Text(
-                    '${(progress * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
+                    '${widget.module.completedWords}/${widget.module.totalWords} từ vựng',
+                    style: const TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: color,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: widget.color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: widget.color,
                     ),
                   ),
                 ],

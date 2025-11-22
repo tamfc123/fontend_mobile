@@ -101,7 +101,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (profileService.error == null) {
-        ToastHelper.showSucess("Đổi mật khẩu thành công");
+        ToastHelper.showSuccess("Đổi mật khẩu thành công");
         Navigator.pop(context);
       } else {
         ToastHelper.showError("Lỗi: ${profileService.error}");

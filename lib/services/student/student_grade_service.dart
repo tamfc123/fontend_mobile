@@ -23,7 +23,6 @@ class StudentGradeService extends ChangeNotifier {
     try {
       _summary = await _repository.getGradeSummary();
     } catch (e) {
-      print('Exception in fetchGradeSummary: $e');
       _error = e.toString().replaceFirst('Exception: ', '');
     } finally {
       _isLoading = false;

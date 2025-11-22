@@ -51,30 +51,16 @@ class _VocabularyModuleDetailsScreenState
         backgroundColor: AppColors.cardBackground,
         foregroundColor: AppColors.textPrimary,
         centerTitle: true,
-        title: Text(
-          widget.module.name,
-          style: const TextStyle(
+        title: const Text(
+          'Chi tiết chủ đề', // Để tiêu đề chung, tên cụ thể đưa xuống Header
+          style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 20,
+            fontSize: 18,
             color: AppColors.textPrimary,
           ),
         ),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withOpacity(0.1),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
       body: _buildBody(lessonService, data),
     );
@@ -85,188 +71,81 @@ class _VocabularyModuleDetailsScreenState
     ModuleDetailsModel? data,
   ) {
     if (service.isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Đang tải bài học...',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
     if (service.error != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.error_outline_rounded,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Lỗi tải dữ liệu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                service.error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (data == null || data.lessons.isEmpty) {
-      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primaryXLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.book_outlined,
-                size: 40,
-                color: AppColors.primary,
-              ),
-            ),
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            const Text(
-              'Chưa có bài học nào',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+            Text(service.error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => service.fetchLessons(widget.module.id),
+              child: const Text("Thử lại"),
             ),
           ],
         ),
       );
     }
 
+    if (data == null || data.lessons.isEmpty) {
+      return const Center(child: Text('Chưa có bài học nào'));
+    }
+
+    // Tính toán tổng quan tiến độ từ danh sách bài học
+    int totalWords = 0;
+    int completedWords = 0;
+    int completedLessons = 0;
+
+    for (var lesson in data.lessons) {
+      totalWords += lesson.totalWords;
+      completedWords += lesson.completedWords;
+      if (lesson.completedWords >= lesson.totalWords && lesson.totalWords > 0) {
+        completedLessons++;
+      }
+    }
+
+    double overallProgress = totalWords > 0 ? completedWords / totalWords : 0.0;
+
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // Header info section
+        // 1. HEADER CARD (Thông tin chủ đề & Tiến độ)
+        SliverToBoxAdapter(
+          child: _buildHeader(
+            widget.module.name,
+            data.lessons.length,
+            completedLessons,
+            overallProgress,
+          ),
+        ),
+
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+            child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  width: 4,
+                  height: 20,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.video_library_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${data.lessons.length} bài học',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Danh sách bài tập của bạn',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  'Nhấn vào từng bài học để luyện tập từ vựng. Theo dõi tiến độ của bạn qua thanh tiến trình.',
+                const SizedBox(width: 10),
+                const Text(
+                  'Các bài từ vựng',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.6,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -274,222 +153,455 @@ class _VocabularyModuleDetailsScreenState
           ),
         ),
 
-        // Lessons list
+        // 2. DANH SÁCH BÀI HỌC (TIMELINE)
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final lesson = data.lessons[index];
-              return _buildLessonCard(context, lesson, index);
+
+              final double lessonProgress =
+                  (lesson.totalWords > 0)
+                      ? (lesson.completedWords / lesson.totalWords)
+                      : 0.0;
+              final bool isCompleted = lessonProgress >= 1.0;
+
+              final bool isFirst = index == 0;
+              final bool isLast = index == data.lessons.length - 1;
+
+              return _AnimatedListItem(
+                index: index,
+                child: _buildTimelineItem(
+                  context,
+                  index + 1,
+                  lesson,
+                  lessonProgress,
+                  isCompleted,
+                  isFirst,
+                  isLast,
+                ),
+              );
             }, childCount: data.lessons.length),
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
       ],
     );
   }
 
-  Widget _buildLessonCard(
-    BuildContext context,
-    LessonInfoModel lesson,
-    int index,
+  // ✅ HEADER MỚI: Tạo điểm nhấn cho màn hình
+  Widget _buildHeader(
+    String moduleName,
+    int totalLessons,
+    int completedLessons,
+    double progress,
   ) {
-    final double progress =
-        (lesson.totalWords > 0)
-            ? (lesson.completedWords / lesson.totalWords)
-            : 0.0;
-    final bool isCompleted = progress >= 1.0;
-    final Color statusColor =
-        isCompleted ? AppColors.success : AppColors.primary;
-
-    return GestureDetector(
-      onTap: () async {
-        await context.pushNamed('lessonFlashcards', extra: lesson);
-        if (context.mounted) {
-          context.read<StudentVocabularyLessonService>().fetchLessons(
-            widget.module.id,
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: statusColor.withOpacity(0.15), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, Color(0xFF60A5FA)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tên chủ đề
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.library_books_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  moduleName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Thanh tiến độ tổng quan
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tiến độ chủ đề',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.black.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation(Colors.white),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Thống kê nhỏ
+          Row(
+            children: [
+              _buildHeaderStat(
+                Icons.check_circle_outline,
+                '$completedLessons/$totalLessons hoàn thành',
+              ),
+              const SizedBox(width: 16),
+              _buildHeaderStat(Icons.school_outlined, 'Học từ vựng'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderStat(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withOpacity(0.9), size: 16),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.95),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ... (Giữ nguyên _buildTimelineItem, _buildTimelineNode, _AnimatedLessonCard, _AnimatedListItem như cũ)
+
+  Widget _buildTimelineItem(
+    BuildContext context,
+    int number,
+    LessonInfoModel lesson,
+    double progress,
+    bool isCompleted,
+    bool isFirst,
+    bool isLast,
+  ) {
+    final color = isCompleted ? AppColors.success : AppColors.primary;
+    const double nodeSize = 40.0;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // --- CỘT 1: TIMELINE ---
+          SizedBox(
+            width: nodeSize,
+            child: Column(
+              children: [
+                Expanded(
+                  child:
+                      isFirst
+                          ? const SizedBox()
+                          : Container(width: 2, color: color.withOpacity(0.3)),
+                ),
+                _buildTimelineNode(number, isCompleted, color, nodeSize),
+                Expanded(
+                  child:
+                      isLast
+                          ? const SizedBox()
+                          : Container(width: 2, color: color.withOpacity(0.3)),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // --- CỘT 2: CARD ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: _AnimatedLessonCard(
+                lesson: lesson,
+                progress: progress,
+                isCompleted: isCompleted,
+                color: color,
+                moduleId: widget.module.id,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineNode(
+    int number,
+    bool completed,
+    Color color,
+    double size,
+  ) {
+    return Container(
+      width: size,
+      height: size,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.cardBackground,
+        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child:
+            completed
+                ? Icon(Icons.check_rounded, color: color, size: 20)
+                : Text(
+                  '$number',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+      ),
+    );
+  }
+}
+
+class _AnimatedListItem extends StatelessWidget {
+  final int index;
+  final Widget child;
+
+  const _AnimatedListItem({required this.index, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      curve: Curves.easeOutQuad,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _AnimatedLessonCard extends StatefulWidget {
+  final LessonInfoModel lesson;
+  final double progress;
+  final bool isCompleted;
+  final Color color;
+  final String moduleId;
+
+  const _AnimatedLessonCard({
+    required this.lesson,
+    required this.progress,
+    required this.isCompleted,
+    required this.color,
+    required this.moduleId,
+  });
+
+  @override
+  State<_AnimatedLessonCard> createState() => _AnimatedLessonCardState();
+}
+
+class _AnimatedLessonCardState extends State<_AnimatedLessonCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.03,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = 1.0 - _controller.value;
+    final lesson = widget.lesson;
+
+    return Transform.scale(
+      scale: scale,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) async {
+          _controller.reverse();
+          await context.pushNamed('lessonFlashcards', extra: lesson);
+          if (context.mounted) {
+            context.read<StudentVocabularyLessonService>().fetchLessons(
+              widget.moduleId,
+            );
+          }
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.color.withOpacity(0.15),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row with lesson number and status
               Row(
                 children: [
-                  // Lesson number badge
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          statusColor.withOpacity(0.15),
-                          statusColor.withOpacity(0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Center(
-                      child:
-                          isCompleted
-                              ? Icon(
-                                Icons.check_rounded,
-                                color: statusColor,
-                                size: 18,
-                              )
-                              : Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: statusColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Lesson title
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lesson.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${lesson.totalWords} từ vựng',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      lesson.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
-
-                  // Arrow icon
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: statusColor.withOpacity(0.4),
-                  ),
+                  if (widget.isCompleted)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        "Xong",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
-              // Progress bar section
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        minHeight: 6,
-                        backgroundColor: statusColor.withOpacity(0.1),
-                        valueColor: AlwaysStoppedAnimation(statusColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
-                    ),
-                  ),
-                ],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: widget.progress.clamp(0.0, 1.0),
+                  minHeight: 6,
+                  backgroundColor: Colors.grey.shade100,
+                  valueColor: AlwaysStoppedAnimation(widget.color),
+                ),
               ),
-
-              const SizedBox(height: 9),
-
-              // Stats row
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Icon(
                     Icons.language_rounded,
-                    size: 13,
+                    size: 14,
                     color: AppColors.textSecondary,
                   ),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 4),
                   Text(
-                    '${lesson.completedWords}/${lesson.totalWords} từ đã học',
-                    style: TextStyle(
+                    '${lesson.completedWords}/${lesson.totalWords} từ',
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
                     ),
                   ),
                   const Spacer(),
-                  if (isCompleted)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppColors.success.withOpacity(0.25),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.success,
-                            size: 11,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'Hoàn thành',
-                            style: TextStyle(
-                              color: AppColors.success,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    '${(widget.progress * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: widget.color,
                     ),
+                  ),
                 ],
               ),
             ],

@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 class VocabularyFormDialog extends StatefulWidget {
   final VocabularyModel? vocab;
-  final int lessonId;
+  final String lessonId;
 
   const VocabularyFormDialog({super.key, this.vocab, required this.lessonId});
 
@@ -91,7 +91,7 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
         if (response?.url != null) {
           setState(() => _audioUrlController.text = response!.url!);
           if (mounted) {
-            ToastHelper.showSucess('Tải lên thành công!');
+            ToastHelper.showSuccess('Tải lên thành công!');
           }
         } else {
           throw Exception('Không nhận được URL');

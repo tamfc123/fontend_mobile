@@ -37,8 +37,8 @@ class _TeacherClassFormDialogState extends State<TeacherClassFormDialog> {
       return;
     }
 
-    final teacherClassService = context.read<TeacherClassService>();
-    final success = await teacherClassService.updateTeacherClass(
+    final teacherAdminClassService = context.read<TeacherAdminClassService>();
+    final success = await teacherAdminClassService.updateTeacherClass(
       widget.classModel!.id,
       name,
     );

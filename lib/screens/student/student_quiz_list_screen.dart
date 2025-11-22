@@ -5,7 +5,7 @@ import 'package:mobile/services/student/student_quiz_service.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizListScreen extends StatefulWidget {
-  final int classId;
+  final String classId;
   final String className;
 
   const StudentQuizListScreen({
@@ -37,9 +37,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
         centerTitle: true,
         title: Text(
           widget.className,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE5E7EB), height: 1),
+        ),
       ),
       body: Consumer<StudentQuizService>(
         builder: (context, service, child) {
@@ -51,42 +55,84 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  'Lỗi tải danh sách: ${service.listError}',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Lỗi tải danh sách:\n${service.listError}',
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => service.fetchQuizList(widget.classId),
+                      child: const Text('Thử lại'),
+                    ),
+                  ],
                 ),
               ),
             );
           }
 
           if (service.quizzes.isEmpty) {
-            return const Center(
-              child: Text(
-                'Không có bài tập nào trong lớp này.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.quiz_outlined,
+                    size: 64,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Không có bài tập nào trong lớp này.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
               ),
             );
           }
 
+          // ✅ SỬ DỤNG ListView.builder ĐỂ CÓ INDEX CHO ANIMATION
           return RefreshIndicator(
             onRefresh: () => service.fetchQuizList(widget.classId),
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'Danh sách bài tập',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              // +1 để dành chỗ cho cái Header Text "Danh sách bài tập"
+              itemCount: service.quizzes.length + 1,
+              itemBuilder: (context, index) {
+                // Item đầu tiên là Header Text
+                if (index == 0) {
+                  return const Padding(
+                    padding: EdgeInsets.only(bottom: 12, left: 4),
+                    child: Text(
+                      'Danh sách bài tập',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                ),
-                ...service.quizzes.map((quiz) => _buildQuizCard(context, quiz)),
-              ],
+                  );
+                }
+
+                // Các item tiếp theo là Quiz Card
+                final quizIndex = index - 1;
+                final quiz = service.quizzes[quizIndex];
+
+                // ✅ BỌC TRONG WIDGET ANIMATION TỰ TẠO (SlideInAnimation)
+                return SlideInAnimation(
+                  index: quizIndex, // Truyền index để tính độ trễ
+                  child: _buildQuizCard(context, quiz),
+                );
+              },
             ),
           );
         },
@@ -106,6 +152,7 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
         color = Colors.purple.shade600;
         break;
       case 'WRITING':
+      case 'DICTATION':
         iconData = Icons.edit_note_rounded;
         tooltip = 'Bài tập Viết';
         color = Colors.orange.shade700;
@@ -121,186 +168,300 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
     return Tooltip(
       message: tooltip,
       child: Container(
-        padding: const EdgeInsets.all(8), // Kích thước icon
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(iconData, color: color, size: 22),
+        child: Icon(iconData, color: color, size: 24),
       ),
     );
   }
 
-  /// Xây dựng UI cho một thẻ bài tập (Đã cập nhật)
   Widget _buildQuizCard(BuildContext context, StudentQuizListModel quiz) {
     final bool isSubmitted = quiz.status == 'Submitted';
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      color: Colors.white,
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSkillIcon(quiz.skillType),
-                const SizedBox(width: 12),
-                // Tiêu đề
-                Expanded(
-                  child: Text(
-                    'Bài tập: ${quiz.title}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Tag trạng thái
-                _buildStatusTag(quiz.status),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(height: 1, color: Color(0xFFE5E7EB)),
-            const SizedBox(height: 16),
-
-            // Hàng 2: Thông tin chi tiết (Giữ nguyên)
-            Row(
-              children: [
-                _buildInfoChip(
-                  Icons.timer_outlined,
-                  '${quiz.timeLimitMinutes} phút',
-                  Colors.blue,
-                ),
-                const SizedBox(width: 12),
-                _buildInfoChip(
-                  Icons.quiz_outlined,
-                  '${quiz.questionCount} câu hỏi',
-                  Colors.green,
-                ),
-              ],
-            ),
-
-            // 👇 HÀNG 3: NÚT HÀNH ĐỘNG (MỚI)
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [_buildActionButton(context, quiz, isSubmitted)],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Widget cho tag trạng thái (Pending/Submitted)
-  Widget _buildStatusTag(String status) {
-    final bool isSubmitted = status == 'Submitted';
-    final Color color = isSubmitted ? Colors.green : Colors.orange;
-    final String text = isSubmitted ? 'Đã nộp' : 'Chưa làm';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      // Dùng Container + Decoration thay vì Card để đổ bóng đẹp hơn
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-
-  /// Widget cho các chip thông tin (Icon + Text)
-  Widget _buildInfoChip(IconData icon, String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          // SỬA Ở ĐÂY: Bỏ .shade700
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              // SỬA Ở ĐÂY: Bỏ .shade800
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
           ),
         ],
+        border: Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap:
+              isSubmitted
+                  ? () {
+                    context.pushNamed(
+                      'student-quiz-review',
+                      extra: {'classId': widget.classId, 'quizId': quiz.id},
+                    );
+                  }
+                  : () {
+                    context.pushNamed(
+                      'student-quiz-taking',
+                      extra: {
+                        'classId': widget.classId,
+                        'quizId': quiz.id,
+                        'quizTitle': quiz.title,
+                      },
+                    );
+                  },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSkillIcon(quiz.skillType),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildStatusTag(quiz.status),
+                              // Có thể thêm date nếu cần
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            quiz.title,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF111827),
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        _buildInfoChip(
+                          Icons.timer_outlined,
+                          '${quiz.timeLimitMinutes}p',
+                          Colors.blueGrey,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildInfoChip(
+                          Icons.help_outline_rounded,
+                          '${quiz.questionCount} câu',
+                          Colors.blueGrey,
+                        ),
+                      ],
+                    ),
+                    _buildActionButton(context, quiz, isSubmitted),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  /// Xây dựng nút hành động (Bắt đầu / Xem lịch sử)
+  Widget _buildStatusTag(String status) {
+    final bool isSubmitted = status == 'Submitted';
+    final Color color =
+        isSubmitted ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final String text = isSubmitted ? 'Đã nộp bài' : 'Chưa hoàn thành';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color.withOpacity(0.7)),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            color: color.withOpacity(0.9),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionButton(
     BuildContext context,
     StudentQuizListModel quiz,
     bool isSubmitted,
   ) {
     if (isSubmitted) {
-      // --- NÚT XEM LỊCH SỬ ---
-      return TextButton.icon(
-        icon: const Icon(Icons.history, size: 18, color: Colors.blueGrey),
-        label: const Text(
-          'Xem lịch sử',
-          style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
+      return SizedBox(
+        height: 32,
+        child: OutlinedButton(
+          onPressed: () {
+            context.pushNamed(
+              'student-quiz-review',
+              extra: {'classId': widget.classId, 'quizId': quiz.id},
+            );
+          },
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            side: BorderSide(color: Colors.grey.shade300),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            'Xem lại',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        ),
-        onPressed: () {
-          context.pushNamed(
-            'student-quiz-review',
-            extra: {'classId': widget.classId, 'quizId': quiz.id},
-          );
-        },
       );
     } else {
-      // --- NÚT BẮT ĐẦU LÀM ---
-      return ElevatedButton.icon(
-        icon: const Icon(Icons.play_arrow_rounded, size: 20),
-        label: const Text('Bắt đầu làm'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.shade600, // Màu xanh dương
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      return SizedBox(
+        height: 32,
+        child: ElevatedButton(
+          onPressed: () {
+            context.pushNamed(
+              'student-quiz-taking',
+              extra: {
+                'classId': widget.classId,
+                'quizId': quiz.id,
+                'quizTitle': quiz.title,
+              },
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 58, 116, 241),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            'Làm bài',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
         ),
-        onPressed: () {
-          // Logic điều hướng (giống như cũ)
-          context.pushNamed(
-            'student-quiz-taking',
-            extra: {
-              'classId': widget.classId,
-              'quizId': quiz.id,
-              'quizTitle': quiz.title,
-            },
-          );
-        },
       );
     }
+  }
+}
+
+// ✅ WIDGET ANIMATION TỰ TẠO (Không cần thư viện ngoài)
+// Widget này giúp item trượt từ dưới lên và hiện dần ra
+class SlideInAnimation extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const SlideInAnimation({super.key, required this.index, required this.child});
+
+  @override
+  State<SlideInAnimation> createState() => _SlideInAnimationState();
+}
+
+class _SlideInAnimationState extends State<SlideInAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500), // Thời gian chạy hiệu ứng
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2), // Bắt đầu từ vị trí thấp hơn 20%
+      end: Offset.zero, // Kết thúc ở vị trí gốc
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutQuint, // Curve mượt mà (nhanh lúc đầu, chậm dần)
+      ),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0, // Bắt đầu trong suốt
+      end: 1.0, // Kết thúc rõ nét
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // Tạo độ trễ dựa trên index để các item xuất hiện lần lượt
+    Future.delayed(Duration(milliseconds: widget.index * 80), () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
+    );
   }
 }

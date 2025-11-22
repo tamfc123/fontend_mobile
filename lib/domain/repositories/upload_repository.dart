@@ -135,7 +135,7 @@ class UploadRepository {
     }
   }
 
-  Future<void> deleteMediaFile(int id) async {
+  Future<void> deleteMediaFile(String id) async {
     try {
       await _apiClient.dio.delete(
         ApiConfig.teacherDeleteMedia(id), // DELETE /api/delete-media/{id}

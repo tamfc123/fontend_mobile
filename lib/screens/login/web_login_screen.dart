@@ -15,6 +15,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   void _handleLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
@@ -118,12 +119,24 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                   // Password input
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock_outline),
                       labelText: "Mật khẩu",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
                     ),
                     validator:
@@ -132,6 +145,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                 ? "Vui lòng nhập mật khẩu"
                                 : null,
                   ),
+
                   const SizedBox(height: 24),
 
                   // Button

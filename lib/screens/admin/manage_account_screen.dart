@@ -1,9 +1,19 @@
+// file: screens/admin/manage_account_screen.dart
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/data/models/user_model.dart';
-import 'package:mobile/services/admin/user_service.dart';
-import 'package:mobile/widgets/admin/comfirm_delete_dialog.dart';
+import 'package:mobile/services/admin/admin_user_service.dart';
+// ✅ 1. IMPORT CÁC WIDGET DÙNG CHUNG
+import 'package:mobile/shared_widgets/admin/base_admin_table.dart';
+import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
+import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
+import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
+import 'package:mobile/shared_widgets/admin/pagination_controls.dart'; // Import pagination mới
+import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+// ✅ 2. (GỢI Ý) Di chuyển file này
 import 'package:mobile/widgets/admin/comfirm_toggle_status.dart';
 import 'package:provider/provider.dart';
 
@@ -17,9 +27,9 @@ class ManageAccountScreen extends StatefulWidget {
 class _ManageAccountScreenState extends State<ManageAccountScreen> {
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
-  String _searchQuery = '';
+  Timer? _debounce; // ✅ Thêm debounce
 
-  // MÀU CHỦ ĐẠO (ĐỒNG NHẤT)
+  // MÀU CHỦ ĐẠO
   static const Color primaryBlue = Colors.blue;
   static const Color backgroundBlue = Color(0xFFF3F8FF);
   static const Color surfaceBlue = Color(0xFFE3F2FD);
@@ -27,18 +37,37 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<UserService>().fetchUsers(page: 1));
-    _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.toLowerCase());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userService = context.read<AdminUserService>();
+      _searchController.text = userService.searchQuery ?? '';
+
+      // Tải dữ liệu lần đầu (Không cần fetchTeachers/Courses ở đây)
+      userService.fetchUsers(page: 1);
     });
+
+    _searchController.addListener(_onSearchChanged); // ✅ Dùng debounce
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+  // ✅ Hàm debounce
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        // Gọi service (service sẽ tự fetch trang 1)
+        context.read<AdminUserService>().applySearch(_searchController.text);
+      }
+    });
+  }
+
+  // (Các hàm _confirmDelete, _handleToggleUserStatus, _goToAddAccount, _goToEditUser giữ nguyên)
   void _confirmDelete(UserModel user) {
     showDialog(
       context: context,
@@ -48,7 +77,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             content: 'Bạn có chắc muốn xóa tài khoản "${user.name}"?',
             itemName: user.name,
             onConfirm: () async {
-              await context.read<UserService>().deleteUser(user.id);
+              await context.read<AdminUserService>().deleteUser(user.id);
             },
           ),
     );
@@ -57,45 +86,63 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   void _handleToggleUserStatus(UserModel user) async {
     final confirmed = await showToggleUserDialog(context: context, user: user);
     if (confirmed == true) {
-      await context.read<UserService>().toggleUserStatus(user.id);
+      await context.read<AdminUserService>().toggleUserStatus(user.id);
     }
   }
 
   void _goToAddAccount() async {
-    final res = await context.pushNamed<bool>(
-      'adminCreateUser', // Tên route bạn vừa đăng ký ở Bước 1
-    );
+    final res = await context.pushNamed<bool>('adminCreateUser');
     if (res == true && mounted) {
-      context.read<UserService>().fetchUsers(page: 1);
+      context.read<AdminUserService>().fetchUsers(page: 1);
     }
   }
 
   void _goToEditUser(UserModel userToEdit) async {
-    // 1. Điều hướng sang màn hình Sửa, gửi 'userToEdit' qua 'extra'
     final res = await context.pushNamed<bool>(
-      'adminUpdateUser', // Tên route bạn đã đăng ký ở Task 2
-      extra: userToEdit, // Gửi object user
+      'adminUpdateUser',
+      extra: userToEdit,
     );
-
-    // 2. Kiểm tra kết quả trả về
-    // (Service của bạn đã tự động refresh,
-    // nhưng chúng ta vẫn có thể refresh lại trang hiện tại cho chắc)
     if (res == true && mounted) {
-      final currentPage = context.read<UserService>().currentPage;
-      context.read<UserService>().fetchUsers(page: currentPage);
+      final currentPage = context.read<AdminUserService>().currentPage;
+      context.read<AdminUserService>().fetchUsers(page: currentPage);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userService = context.watch<UserService>();
+    final userService = context.watch<AdminUserService>();
     final users = userService.users;
+    final isLoading = userService.isLoading;
 
-    final filteredUsers =
-        users.where((u) {
-          return u.name.toLowerCase().contains(_searchQuery) ||
-              u.email.toLowerCase().contains(_searchQuery);
-        }).toList();
+    // ❌ BỎ LỌC CLIENT-SIDE
+    // final filteredUsers = ...
+
+    // ✅ XÂY DỰNG BODYCONTENT
+    Widget bodyContent;
+    if (isLoading && users.isEmpty) {
+      // Dùng `users`
+      bodyContent = const Center(
+        child: CircularProgressIndicator(color: primaryBlue),
+      );
+    } else if (userService.errorMessage != null) {
+      bodyContent = Center(
+        child: Text(
+          userService.errorMessage!,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    } else if (users.isEmpty) {
+      // Dùng `users`
+      bodyContent = _buildEmptyStateWidget(userService.searchQuery);
+    } else {
+      bodyContent = LayoutBuilder(
+        builder:
+            (context, constraints) => _buildResponsiveTableWidget(
+              users,
+              constraints.maxWidth,
+            ), // Dùng `users`
+      );
+    }
 
     return Scaffold(
       backgroundColor: backgroundBlue,
@@ -107,7 +154,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // === HEADER + TÌM KIẾM + FILTER (KHÔNG CÓ BACK) ===
+                // === HEADER + TÌM KIẾM + FILTER (Giữ nguyên) ===
+                // (Phần này là unique, không dùng BaseAdminScreen)
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -123,12 +171,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                   ),
                   child: Column(
                     children: [
-                      // HEADER ROW
+                      // HEADER ROW (Giữ nguyên)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                         child: Row(
                           children: [
-                            // ICON + TIÊU ĐỀ
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -142,7 +189,6 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                               ),
                             ),
                             const SizedBox(width: 16),
-
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,8 +213,6 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                                 ],
                               ),
                             ),
-
-                            // NÚT THÊM
                             ElevatedButton.icon(
                               onPressed: _goToAddAccount,
                               icon: const Icon(
@@ -199,49 +243,67 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                         ),
                       ),
 
-                      // TÌM KIẾM + FILTER + STATS
+                      // TÌM KIẾM + FILTER (Giữ nguyên)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                         child: Column(
                           children: [
-                            // TÌM KIẾM
-                            Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: surfaceBlue,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Tìm kiếm theo tên, email...',
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey.shade600,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: primaryBlue,
-                                  ),
-                                  suffixIcon:
-                                      _searchQuery.isNotEmpty
-                                          ? IconButton(
-                                            icon: Icon(
-                                              Icons.clear,
-                                              color: Colors.grey.shade600,
+                            Row(
+                              // ✅ Bọc Row
+                              children: [
+                                Expanded(
+                                  // ✅ Bọc TextField
+                                  child: Container(
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: surfaceBlue,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: TextField(
+                                      controller: _searchController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Tìm kiếm theo tên, email...',
+                                        hintStyle: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.search,
+                                          color: primaryBlue,
+                                        ),
+                                        suffixIcon:
+                                            _searchController.text.isNotEmpty
+                                                ? IconButton(
+                                                  icon: Icon(
+                                                    Icons.clear,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  onPressed:
+                                                      () =>
+                                                          _searchController
+                                                              .clear(),
+                                                )
+                                                : null,
+                                        border: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              vertical: 14,
                                             ),
-                                            onPressed:
-                                                () => _searchController.clear(),
-                                          )
-                                          : null,
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 14,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 16), // ✅ Thêm
+                                if (!isLoading) // ✅ Thêm
+                                  Text(
+                                    "Tìm thấy: ${userService.totalItems} T.khoản",
+                                    style: const TextStyle(
+                                      color: primaryBlue,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 16),
-                            // FILTERS
                             Row(
                               children: [
                                 Expanded(
@@ -269,7 +331,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                                         (v) =>
                                             v != null
                                                 ? context
-                                                    .read<UserService>()
+                                                    .read<AdminUserService>()
                                                     .updateRoleFilter(v)
                                                 : null,
                                   ),
@@ -296,27 +358,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                                         (v) =>
                                             v != null
                                                 ? context
-                                                    .read<UserService>()
+                                                    .read<AdminUserService>()
                                                     .updateStatusFilter(v)
                                                 : null,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            // STATS
-                            if (filteredUsers.isNotEmpty)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Tìm thấy ${userService.totalItems} tài khoản (Trang ${userService.currentPage}/${userService.totalPages})',
-                                  style: TextStyle(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
                       ),
@@ -327,52 +375,40 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
                 // === BẢNG TÀI KHOẢN ===
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child:
-                              userService.isLoading
-                                  ? const Center(
-                                    child: CircularProgressIndicator(
-                                      color: primaryBlue,
-                                    ),
-                                  )
-                                  : userService.errorMessage != null
-                                  ? Center(
-                                    child: Text(
-                                      userService.errorMessage!,
-                                      style: const TextStyle(color: Colors.red),
-                                    ),
-                                  )
-                                  : filteredUsers.isEmpty
-                                  ? _buildEmptyState()
-                                  : Column(
-                                    children: [
-                                      Expanded(
-                                        child: _buildResponsiveTable(
-                                          filteredUsers,
-                                          constraints.maxWidth,
-                                        ),
-                                      ),
-                                      _buildPagination(userService),
-                                    ],
-                                  ),
-                        ),
-                      );
-                    },
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: bodyContent, // 👈 Đẩy body vào
+                          ),
+                          // ✅ SỬ DỤNG PaginationControls
+                          PaginationControls(
+                            currentPage: userService.currentPage,
+                            totalPages: userService.totalPages,
+                            totalCount: userService.totalItems, // Sửa tên biến
+                            isLoading: isLoading,
+                            onPageChanged: (page) {
+                              context.read<AdminUserService>().fetchUsers(
+                                page: page,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -383,267 +419,135 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.person_off_outlined,
-            size: 72,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _searchQuery.isEmpty
-                ? 'Chưa có tài khoản nào'
-                : 'Không tìm thấy tài khoản',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _searchQuery.isEmpty
-                ? 'Nhấn "Thêm Tài khoản" để bắt đầu'
-                : 'Thử tìm kiếm bằng từ khóa khác',
-            style: TextStyle(color: Colors.grey.shade500),
-          ),
-        ],
-      ),
+  // ✅ SỬ DỤNG CommonEmptyState
+  Widget _buildEmptyStateWidget(String? searchQuery) {
+    bool isSearching = searchQuery != null && searchQuery.isNotEmpty;
+    return CommonEmptyState(
+      icon: Icons.person_off_outlined,
+      title: isSearching ? 'Không tìm thấy tài khoản' : 'Chưa có tài khoản nào',
+      subtitle:
+          isSearching
+              ? 'Thử tìm kiếm bằng từ khóa khác'
+              : 'Nhấn "Thêm Tài khoản" để bắt đầu',
     );
   }
 
-  Widget _buildResponsiveTable(List<UserModel> users, double maxWidth) {
+  // ✅ SỬ DỤNG BaseAdminTable
+  Widget _buildResponsiveTableWidget(List<UserModel> users, double maxWidth) {
     final colWidths = {
-      0: maxWidth * 0.16, // Tên
-      1: maxWidth * 0.20, // Email
-      2: maxWidth * 0.14, // SĐT
-      3: maxWidth * 0.11, // Ngày sinh
-      4: maxWidth * 0.10, // Vai trò
-      5: maxWidth * 0.11, // Trạng thái
-      6: maxWidth * 0.18, // Hành động
+      0: maxWidth * 0.16,
+      1: maxWidth * 0.20,
+      2: maxWidth * 0.14,
+      3: maxWidth * 0.11,
+      4: maxWidth * 0.10,
+      5: maxWidth * 0.11,
+      6: maxWidth * 0.18,
     };
+    final colHeaders = [
+      'Tên',
+      'Email',
+      'SĐT',
+      'Ngày sinh',
+      'Vai trò',
+      'Trạng thái',
+      'Hành động',
+    ];
 
-    return SingleChildScrollView(
-      child: IntrinsicWidth(
-        child: Table(
-          columnWidths: colWidths.map(
-            (k, v) => MapEntry(k, FixedColumnWidth(v)),
-          ),
-          border: TableBorder(
-            bottom: BorderSide(color: surfaceBlue),
-            horizontalInside: BorderSide(
-              color: Colors.grey.shade200,
-              width: 0.5,
-            ),
-          ),
-          children: [
-            // Header
-            TableRow(
-              decoration: BoxDecoration(color: surfaceBlue),
-              children:
-                  [
-                        'Tên',
-                        'Email',
-                        'SĐT',
-                        'Ngày sinh',
-                        'Vai trò',
-                        'Trạng thái',
-                        'Hành động',
-                      ]
-                      .map(
-                        (t) => Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            t,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                      .toList(),
-            ),
-            // Rows
-            ...users.map((user) {
-              return TableRow(
-                children: [
-                  _buildCell(
-                    user.name,
-                    bold: true,
-                    color: const Color(0xFF1E3A8A),
-                    align: TextAlign.center,
-                  ),
-                  _buildCell(user.email, align: TextAlign.center),
-                  _buildCell(user.phone, align: TextAlign.center),
-                  _buildCell(
-                    user.birthday != null
-                        ? _dateFormat.format(user.birthday!)
-                        : '—',
-                    align: TextAlign.center,
-                  ),
-                  _buildCell(
-                    user.role,
-                    color:
-                        user.role == 'admin'
-                            ? Colors.red.shade700
-                            : user.role == 'teacher'
-                            ? Colors.green.shade700
-                            : Colors.blue.shade700,
-                    align: TextAlign.center,
-                  ),
-                  _buildCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          user.isActive ? Icons.check_circle : Icons.block,
-                          size: 16,
-                          color: user.isActive ? Colors.green : Colors.red,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          user.isActive ? 'Hoạt động' : 'Bị khóa',
-                          style: TextStyle(
-                            color:
-                                user.isActive
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    align: TextAlign.center,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildActionButton(
-                          Icons.edit_note_rounded, // Icon Sửa
-                          Colors.blue.shade600, // Màu xanh
-                          'Sửa', // Tiêu đề
-                          () => _goToEditUser(user), // Gọi hàm mới
-                        ),
-                        const SizedBox(width: 8),
-                        _buildActionButton(
-                          user.isActive ? Icons.lock_outline : Icons.lock_open,
-                          Colors.orange.shade600,
-                          user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
-                          () => _handleToggleUserStatus(user),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildActionButton(
-                          Icons.delete,
-                          Colors.redAccent,
-                          'Xóa',
-                          () => _confirmDelete(user),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPagination(UserService service) {
-    if (service.totalPages <= 1) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: surfaceBlue,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-            onPressed:
-                service.currentPage > 1
-                    ? () => context.read<UserService>().fetchUsers(
-                      page: service.currentPage - 1,
-                    )
-                    : null,
-            color: primaryBlue,
-          ),
-          Text(
-            'Trang ${service.currentPage} / ${service.totalPages}',
-            style: TextStyle(fontWeight: FontWeight.w600, color: primaryBlue),
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 18),
-            onPressed:
-                service.currentPage < service.totalPages
-                    ? () => context.read<UserService>().fetchUsers(
-                      page: service.currentPage + 1,
-                    )
-                    : null,
-            color: primaryBlue,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCell(
-    dynamic content, {
-    TextAlign align = TextAlign.left,
-    bool bold = false,
-    Color? color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      child:
-          content is Widget
-              ? content
-              : Text(
-                content.toString(),
-                style: TextStyle(
-                  fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-                  color: color ?? Colors.black87,
-                  fontSize: 14,
-                ),
-                textAlign: align,
-                overflow: TextOverflow.ellipsis,
+    final dataRows =
+        users.map((user) {
+          return TableRow(
+            children: [
+              // ✅ SỬ DỤNG CommonTableCell
+              CommonTableCell(
+                user.name,
+                bold: true,
+                color: const Color(0xFF1E3A8A),
+                align: TextAlign.center,
               ),
+              CommonTableCell(user.email, align: TextAlign.center),
+              CommonTableCell(user.phone, align: TextAlign.center),
+              CommonTableCell(
+                user.birthday != null
+                    ? _dateFormat.format(user.birthday!)
+                    : '—',
+                align: TextAlign.center,
+              ),
+              CommonTableCell(
+                user.role,
+                color:
+                    user.role == 'admin'
+                        ? Colors.red.shade700
+                        : user.role == 'teacher'
+                        ? Colors.green.shade700
+                        : Colors.blue.shade700,
+                align: TextAlign.center,
+              ),
+              CommonTableCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      user.isActive ? Icons.check_circle : Icons.block,
+                      size: 16,
+                      color: user.isActive ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      user.isActive ? 'Hoạt động' : 'Bị khóa',
+                      style: TextStyle(
+                        color:
+                            user.isActive
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                align: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ✅ SỬ DỤNG ActionIconButton
+                    ActionIconButton(
+                      icon: Icons.edit_note_rounded,
+                      color: Colors.blue.shade600,
+                      tooltip: 'Sửa',
+                      onPressed: () => _goToEditUser(user),
+                    ),
+                    const SizedBox(width: 8),
+                    ActionIconButton(
+                      icon:
+                          user.isActive ? Icons.lock_outline : Icons.lock_open,
+                      color: Colors.orange.shade600,
+                      tooltip: user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
+                      onPressed: () => _handleToggleUserStatus(user),
+                    ),
+                    const SizedBox(width: 8),
+                    ActionIconButton(
+                      icon: Icons.delete,
+                      color: Colors.redAccent,
+                      tooltip: 'Xóa',
+                      onPressed: () => _confirmDelete(user),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }).toList();
+
+    return BaseAdminTable(
+      columnWidths: colWidths.map((k, v) => MapEntry(k, FixedColumnWidth(v))),
+      columnHeaders: colHeaders,
+      dataRows: dataRows,
     );
   }
 
-  Widget _buildActionButton(
-    IconData icon,
-    Color color,
-    String tooltip,
-    VoidCallback onPressed,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: color, size: 22),
-        tooltip: tooltip,
-        onPressed: onPressed,
-        padding: const EdgeInsets.all(10),
-        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-      ),
-    );
-  }
-
+  // (Hàm _buildDropdown giữ nguyên, vì nó là unique)
   Widget _buildDropdown<T>({
     required T value,
     required List<DropdownMenuItem<T>> items,
@@ -666,4 +570,6 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       ),
     );
   }
+
+  // ❌ XÓA _buildCell, _buildActionButton, VÀ _buildPagination
 }
