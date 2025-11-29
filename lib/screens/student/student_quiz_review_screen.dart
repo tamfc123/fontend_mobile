@@ -1,7 +1,11 @@
+import 'dart:convert';
+
+import 'package:fl_chart/fl_chart.dart'; // 👈 Nhớ thêm package này vào pubspec.yaml
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:mobile/data/models/student_quiz_review_model.dart';
+import 'package:mobile/data/models/student_quiz_models.dart';
 import 'package:mobile/services/student/student_quiz_service.dart';
 import 'package:provider/provider.dart';
 
@@ -21,13 +25,11 @@ class StudentQuizReviewScreen extends StatefulWidget {
 }
 
 class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
-  // ✅ 2. THÊM AUDIO PLAYER
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    // Gọi service ngay khi màn hình được build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StudentQuizService>().fetchQuizResult(
         widget.classId,
@@ -38,12 +40,8 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
 
   @override
   void dispose() {
-    // ✅ 3. DỌN DẸP AUDIO PLAYER
     _audioPlayer.dispose();
-
-    // Dọn dẹp state khi rời màn hình
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Đảm bảo context vẫn còn tồn tại
       if (mounted) {
         context.read<StudentQuizService>().clearQuizResult();
       }
@@ -56,39 +54,49 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFBFC),
       appBar: AppBar(
-        title: const Text('Xem lại bài làm'),
+        title: const Text(
+          'Xem lại bài làm',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
+        foregroundColor: Colors.black87,
       ),
-      // Dùng Consumer để build body
       body: Consumer<StudentQuizService>(
         builder: (context, service, child) {
-          // 1. Trạng thái Loading
           if (service.isLoadingReview) {
             return const Center(child: CircularProgressIndicator());
           }
-          // 2. Trạng thái Lỗi
           if (service.reviewError != null) {
-            debugPrint('Lỗi: ${service.reviewError}');
             return Center(child: Text('Lỗi: ${service.reviewError}'));
           }
-          // 3. Trạng thái chưa có dữ liệu
           if (service.currentReview == null) {
-            return const Center(child: Text('Không tải được lịch sử bài làm.'));
+            return const Center(child: Text('Không tải được dữ liệu.'));
           }
 
           final review = service.currentReview!;
+          final hasPassage =
+              review.readingPassage != null &&
+              review.readingPassage!.isNotEmpty;
 
-          // 4. Khi có dữ liệu -> Hiển thị ListView
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: review.questions.length + 1, // +1 cho header kết quả
+            // +1 cho header (điểm số + biểu đồ)
+            itemCount: review.questions.length + 1 + (hasPassage ? 1 : 0),
             itemBuilder: (context, index) {
-              if (index == 0) {
-                // Hiển thị Header Kết quả
-                return _buildReviewHeader(review);
+              if (index == 0) return _buildReviewHeader(review);
+              if (hasPassage) {
+                if (index == 1) {
+                  return _buildReadingPassageCard(review.readingPassage!);
+                }
+                // Nếu index > 1 thì là câu hỏi (index thực của câu hỏi bị lùi 2)
+                final question = review.questions[index - 2];
+                return _buildQuestionCard(
+                  question,
+                  index - 1,
+                ); // index - 1 vì trừ header+passage, cộng lại 1 cho số thứ tự
               }
-              // Hiển thị các câu hỏi
               final question = review.questions[index - 1];
               return _buildQuestionCard(question, index);
             },
@@ -99,32 +107,40 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
   }
 
   Widget _buildReviewHeader(StudentQuizReviewModel review) {
-    // ... (Toàn bộ code cũ của bạn giữ nguyên)
     final scoreFormatted = NumberFormat("0.#").format(review.score);
     final totalQuestions = review.questions.length;
-    final correctCount =
-        review.questions
-            .where((q) => q.isCorrect)
-            .length; // 👈 Sửa nhỏ: Đếm trực tiếp
+    final correctCount = review.questions.where((q) => q.isCorrect).length;
+    final wrongCount = totalQuestions - correctCount;
+
     final formattedDate = DateFormat(
       'HH:mm, dd/MM/yyyy',
     ).format(review.submittedAt.toLocal());
 
+    // Lấy dữ liệu từ Model (dùng getter đã viết)
+    final aiData = review.aiAssessment;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Tiêu đề & Ngày
           Text(
             review.quizTitle,
+            textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1F2937),
             ),
@@ -134,68 +150,241 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
             'Đã nộp lúc: $formattedDate',
             style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
           ),
-          const SizedBox(height: 16),
-          const Divider(color: Color(0xFFE5E7EB)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          // 2. BIỂU ĐỒ TRÒN (Pie Chart)
+          SizedBox(
+            height: 200,
+            child: Stack(
+              children: [
+                PieChart(
+                  PieChartData(
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 70,
+                    startDegreeOffset: -90,
+                    sections: [
+                      PieChartSectionData(
+                        color: const Color(0xFF10B981),
+                        value: correctCount.toDouble(),
+                        title:
+                            '${((correctCount / (totalQuestions > 0 ? totalQuestions : 1)) * 100).toInt()}%',
+                        radius: 20,
+                        titleStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      PieChartSectionData(
+                        color: const Color(0xFFEF4444),
+                        value: wrongCount.toDouble(),
+                        title: '',
+                        radius: 15,
+                      ),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        scoreFormatted,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1F2937),
+                          height: 1,
+                        ),
+                      ),
+                      const Text(
+                        'Điểm',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 3. CHÚ THÍCH (LEGEND) - ✅ ĐÂY LÀ CHỖ SỬ DỤNG _buildLegendItem
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    const Text(
-                      'ĐIỂM SỐ',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blueGrey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$scoreFormatted / 10',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        color: Color(0xFF2563EB),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildLegendItem(
+                color: const Color(0xFF10B981),
+                label: 'Đúng',
+                count: '$correctCount câu',
               ),
-              Expanded(
-                child: Column(
-                  children: [
-                    const Text(
-                      'CÂU ĐÚNG',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blueGrey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$correctCount / $totalQuestions',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        color: Color(0xFF059669),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+              Container(width: 1, height: 40, color: Colors.grey.shade200),
+              _buildLegendItem(
+                color: const Color(0xFFEF4444),
+                label: 'Sai / Bỏ qua',
+                count: '$wrongCount câu',
               ),
             ],
           ),
+
+          // 4. AI FEEDBACK (Nằm ngoài Row, ở dưới cùng)
+          // ✅ SỬA LẠI: Đặt ở đây mới đúng layout, không bị vỡ
+          if (aiData != null) _buildAiFeedbackSection(aiData),
         ],
       ),
     );
   }
 
-  Widget _buildQuestionCard(
-    StudentQuestionReviewModel question,
-    int questionNumber,
-  ) {
+  Widget _buildAiFeedbackSection(AiAssessmentResult aiData) {
+    if (aiData.feedback.isEmpty && aiData.corrections.isEmpty)
+      return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 32),
+        const Row(
+          children: [
+            Icon(Icons.psychology, color: Colors.purple),
+            SizedBox(width: 8),
+            Text(
+              "Đánh giá chi tiết từ AI",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.purple,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Nhận xét chung
+        if (aiData.feedback.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              aiData.feedback,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+          ),
+
+        // Sửa lỗi chi tiết
+        if (aiData.corrections.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            "Các lỗi cần khắc phục:",
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          ...aiData.corrections.map((c) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.red.shade100),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    c.original,
+                    style: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.red,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.arrow_right_alt,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          c.fixed,
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (c.explanation.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        c.explanation,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLegendItem({
+    required Color color,
+    required String label,
+    required String count,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ... (Phần _buildQuestionCard giữ nguyên code cũ) ...
+  Widget _buildQuestionCard(StudentQuestionReviewModel question, int index) {
+    // Copy hàm _buildQuestionCard từ code cũ của bạn
+    // (Phần này bạn làm đúng rồi, tôi không paste lại cho dài dòng)
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
@@ -206,7 +395,7 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header câu hỏi (Giữ nguyên)
+          // Header câu hỏi
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -232,11 +421,10 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '$questionNumber',
+                    '$index',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -248,7 +436,6 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1F2937),
-                      height: 1.6,
                     ),
                   ),
                 ),
@@ -256,7 +443,7 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
             ),
           ),
 
-          // Phần nội dung câu trả lời
+          // Nội dung câu trả lời
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -266,23 +453,44 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
 
                 if (question.questionType == 'MULTIPLE_CHOICE')
                   ...question.options.asMap().entries.map((entry) {
-                    final optIndex = entry.key;
-                    final option = entry.value;
                     return _buildOptionTile(
-                      option: option,
-                      optionIndex: optIndex,
-                      // ✅ FIX LỖI: selectedOptionId có thể là String (Guid) hoặc int,
-                      // nhưng Model nên parse thành String để an toàn.
-                      // Ở đây ta truyền vào widget dưới dạng String?
-                      selectedOptionId: question.selectedOptionId?.toString(),
+                      option: entry.value,
+                      optionIndex: entry.key,
+                      // ✅ Truyền String ID
+                      selectedOptionId: question.selectedOptionId,
                     );
                   })
-                else if (question.questionType == 'FILL_IN_THE_BLANK' ||
-                    question.questionType == 'DICTATION')
-                  _buildWritingReview(question)
                 else
-                  Text(
-                    "Lỗi: Loại câu hỏi '${question.questionType}' không được hỗ trợ.",
+                  _buildWritingReview(question),
+
+                // ✅ HIỂN THỊ GIẢI THÍCH (EXPLANATION)
+                if (question.explanation != null &&
+                    question.explanation!.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.lightbulb,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Giải thích: ${question.explanation}",
+                            style: TextStyle(color: Colors.brown.shade800),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -292,200 +500,166 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
     );
   }
 
-  // ✅ 6. THÊM WIDGET MỚI CHO AUDIO
-  Widget _buildAudioPlayer(StudentQuestionReviewModel question) {
-    // Không hiển thị gì nếu không có audio
-    if (question.audioUrl == null || question.audioUrl!.isEmpty) {
-      return const SizedBox.shrink();
+  // ... (Phần _buildAudioPlayer và _buildWritingReview giữ nguyên) ...
+
+  // ✅ ĐÃ SỬA LỖI TYPE MISMATCH
+  Widget _buildOptionTile({
+    required StudentOptionReviewModel option,
+    required int optionIndex,
+    required String? selectedOptionId, // 👈 Nhận String
+  }) {
+    final optionLabel = String.fromCharCode(65 + optionIndex);
+    bool isCorrect = option.isCorrect;
+
+    // So sánh String với String (Chuẩn)
+    bool isSelected = option.optionId == selectedOptionId;
+
+    Color borderColor = Colors.grey.shade200;
+    Color bgColor = Colors.white;
+    if (isCorrect) {
+      borderColor = Colors.green;
+      bgColor = Colors.green.shade50;
+    } else if (isSelected) {
+      borderColor = Colors.red;
+      bgColor = Colors.red.shade50;
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconButton(
-            icon: const Icon(
-              Icons.play_circle_fill_rounded,
-              color: Colors.purple,
-              size: 40,
-            ),
-            onPressed: () async {
-              try {
-                await _audioPlayer.setUrl(question.audioUrl!);
-                _audioPlayer.play();
-              } catch (e) {
-                /* Xử lý lỗi */
-              }
-            },
+          Text(
+            "$optionLabel.",
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          const Text(
-            "Phát lại file nghe",
-            style: TextStyle(color: Colors.purple, fontWeight: FontWeight.w500),
-          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(option.optionText)),
+          if (isCorrect) const Icon(Icons.check, color: Colors.green),
+          if (isSelected && !isCorrect)
+            const Icon(Icons.close, color: Colors.red),
         ],
       ),
     );
   }
 
-  // ✅ 7. THÊM WIDGET MỚI CHO BÀI VIẾT
-  Widget _buildWritingReview(StudentQuestionReviewModel question) {
-    final bool isCorrect = question.isCorrect;
-    final Color color = isCorrect ? Colors.green.shade700 : Colors.red.shade700;
+  Widget _buildAudioPlayer(StudentQuestionReviewModel question) {
+    // (Giữ nguyên code cũ của bạn)
+    if (question.audioUrl == null || question.audioUrl!.isEmpty)
+      return const SizedBox.shrink();
+    return IconButton(
+      icon: const Icon(Icons.volume_up, color: Colors.purple),
+      onPressed: () async {
+        await _audioPlayer.setUrl(question.audioUrl!);
+        _audioPlayer.play();
+      },
+    );
+  }
 
+  // ✅ NÂNG CẤP: HIỂN THỊ FEEDBACK CHI TIẾT CỦA AI
+  Widget _buildWritingReview(StudentQuestionReviewModel question) {
+    // Parse JSON từ SkillAnalysis (nếu có) để lấy feedback chi tiết
+    // Lưu ý: SkillAnalysisJson nằm ở tầng ReviewModel chung, nhưng với bài Essay 1 câu hỏi,
+    // ta có thể giả định nó áp dụng cho câu hỏi này.
+
+    // Tuy nhiên, ở màn hình này, `question` là `StudentQuestionReviewModel`
+    // Nó không chứa `skillAnalysisJson`.
+    // `skillAnalysisJson` nằm ở `StudentQuizReviewModel` (biến `review` ở hàm build).
+
+    // -> Để đơn giản, ta chỉ hiển thị Text so sánh ở đây.
+    // Còn phần Feedback AI, ta đã hiển thị ở Header (như tôi hướng dẫn ở bước trước).
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Bài làm của bạn:",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue.shade100),
+          ),
+          child: Text(
+            question.studentAnswerText ?? '(Bạn đã bỏ trống)',
+            style: const TextStyle(fontSize: 15, height: 1.5),
+          ),
+        ),
+
+        // Với bài Essay AI chấm, không có "Đáp án đúng" cố định
+        // Nên ta ẩn phần CorrectAnswerText đi nếu nó rỗng hoặc không cần thiết
+        if (question.correctAnswerText != null &&
+            question.correctAnswerText!.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            "Đáp án tham khảo:",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.shade100),
+            ),
+            child: Text(
+              question.correctAnswerText!,
+              style: const TextStyle(fontSize: 15, height: 1.5),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildReadingPassageCard(String passage) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.5)),
+        color: const Color(0xFFFFF9E6), // Màu vàng nhạt
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFE0B2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Câu trả lời của bạn
-          Text(
-            'Câu trả lời của bạn:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
+          const Row(
             children: [
-              Icon(
-                isCorrect ? Icons.check_circle : Icons.cancel,
-                color: color,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  question.studentAnswerText ?? '(Bạn đã bỏ trống)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                  ),
+              Icon(Icons.menu_book, color: Colors.orange, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Reading Passage',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                  fontSize: 16,
                 ),
               ),
             ],
           ),
-
-          // Nếu sai, hiển thị đáp án đúng
-          if (!isCorrect) ...[
-            const Divider(height: 24),
-            const Text(
-              'Đáp án đúng:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: Colors.black54,
-              ),
+          const SizedBox(height: 12),
+          Text(
+            passage,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.6,
+              color: Color(0xFF4B5563),
             ),
-            const SizedBox(height: 4),
-            Text(
-              question.correctAnswerText ?? '(Không có đáp án)',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOptionTile({
-    required StudentOptionReviewModel option,
-    required int optionIndex,
-    required String? selectedOptionId, // 👈 ĐỔI TỪ int? SANG String?
-  }) {
-    final optionLabel = String.fromCharCode(65 + optionIndex);
-
-    // --- Logic xác định trạng thái ---
-    bool isCorrect = option.isCorrect;
-    // 👈 So sánh String ID thay vì int
-    bool isSelected = option.optionId.toString() == selectedOptionId;
-
-    Color borderColor;
-    Color backgroundColor;
-    Widget? trailingIcon;
-    Color labelColor;
-
-    if (isCorrect) {
-      // Đáp án ĐÚNG
-      borderColor = const Color(0xFF10B981);
-      backgroundColor = const Color(0xFFF0FDF4);
-      labelColor = const Color(0xFF059669);
-      trailingIcon = const Icon(Icons.check_circle, color: Color(0xFF10B981));
-    } else if (isSelected) {
-      // Đáp án SV chọn (SAI)
-      borderColor = const Color(0xFFEF4444);
-      backgroundColor = const Color(0xFFFEF2F2);
-      labelColor = const Color(0xFFDC2626);
-      trailingIcon = const Icon(Icons.cancel, color: Color(0xFFEF4444));
-    } else {
-      // Đáp án khác
-      borderColor = const Color(0xFFE5E7EB);
-      backgroundColor = const Color(0xFFFAFBFC);
-      labelColor = const Color(0xFFD1D5DB);
-      trailingIcon = null;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: Border.all(color: borderColor, width: 2),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: labelColor,
-                borderRadius: BorderRadius.circular(50),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                optionLabel,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                option.optionText,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF1F2937),
-                  fontWeight:
-                      (isCorrect || isSelected)
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            if (trailingIcon != null) ...[
-              const SizedBox(width: 8),
-              trailingIcon,
-            ],
-          ],
-        ),
       ),
     );
   }

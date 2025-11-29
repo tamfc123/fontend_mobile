@@ -1,26 +1,31 @@
 import 'package:dio/dio.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
-import 'package:mobile/data/models/student_quiz_list_model.dart';
-import 'package:mobile/data/models/student_quiz_review_model.dart';
-import 'package:mobile/data/models/student_quiz_take_model.dart';
-import 'package:mobile/data/models/student_submission_model.dart';
+import 'package:mobile/data/models/student_quiz_models.dart';
 
 class StudentQuizRepository {
   final ApiClient _apiClient;
   StudentQuizRepository(this._apiClient);
 
-  Future<List<StudentQuizListModel>> fetchQuizList(String classId) async {
+  Future<List<StudentQuizListModel>> fetchQuizList(
+    String classId, {
+    String? skillType,
+  }) async {
     try {
       final response = await _apiClient.dio.get(
         ApiConfig.getStudentQuizList(classId),
+        // ✅ Gửi thêm query parameters
+        queryParameters:
+            (skillType != null && skillType != 'ALL')
+                ? {'skillType': skillType}
+                : null,
       );
+
       final List<dynamic> data = response.data as List;
       return data.map((json) => StudentQuizListModel.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw Exception(
-        'Lỗi Repository: Không thể tải danh sách quiz: ${e.message}',
-      );
+      final msg = e.response?.data['message'] ?? e.message;
+      throw Exception(msg);
     }
   }
 
@@ -63,6 +68,28 @@ class StudentQuizRepository {
       final errorMessage =
           e.response?.data?['message'] ?? e.message ?? "Lỗi không xác định";
       throw Exception('Lỗi Repository: Không thể nộp bài: $errorMessage');
+    }
+  }
+
+  Future<Map<String, dynamic>> submitWritingQuiz(
+    String classId,
+    String quizId,
+    String content,
+  ) async {
+    try {
+      // Body khớp với StudentWritingSubmissionDTO bên Backend
+      final body = {'Content': content};
+
+      final response = await _apiClient.dio.post(
+        ApiConfig.submitWritingQuiz(classId, quizId),
+        data: body,
+      );
+
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      final errorMessage =
+          e.response?.data?['message'] ?? e.message ?? "Lỗi không xác định";
+      throw Exception(errorMessage);
     }
   }
 

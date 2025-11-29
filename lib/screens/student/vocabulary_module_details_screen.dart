@@ -52,10 +52,10 @@ class _VocabularyModuleDetailsScreenState
         foregroundColor: AppColors.textPrimary,
         centerTitle: true,
         title: const Text(
-          'Chi tiết chủ đề', // Để tiêu đề chung, tên cụ thể đưa xuống Header
+          'Chi tiết chủ đề',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
             color: AppColors.textPrimary,
           ),
         ),

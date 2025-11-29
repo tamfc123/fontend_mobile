@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mobile/data/models/lesson_model.dart';
 import 'package:mobile/data/models/vocabulary_model.dart';
@@ -37,7 +36,13 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     super.initState();
     final vocabService = context.read<AdminVocabularyService>();
     _searchController.text = vocabService.currentSearchQuery ?? '';
-    Future.microtask(() => _triggerFetch(pageNumber: 1));
+    // Reset về chế độ xem mặc định (không xem rác) khi vào màn hình
+    if (vocabService.showDeleted) {
+      Future.microtask(() => vocabService.toggleShowDeleted(widget.lesson.id));
+    } else {
+      Future.microtask(() => _triggerFetch(pageNumber: 1));
+    }
+
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -70,7 +75,6 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     super.dispose();
   }
 
-  // (Hàm _showVocabularyForm, _confirmDelete, _playAudio giữ nguyên)
   void _showVocabularyForm({VocabularyModel? vocab}) async {
     final result = await showDialog<VocabularyModifyModel>(
       context: context,
@@ -87,21 +91,84 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     }
   }
 
+  // ✅ [ĐÃ SỬA] Sử dụng dialogContext trực tiếp, bỏ Builder không cần thiết
   void _confirmDelete(VocabularyModel vocab) {
     showDialog(
       context: context,
-      builder:
-          (_) => ConfirmDeleteDialog(
-            title: 'Xác nhận xóa',
-            content: 'Bạn có chắc muốn xóa từ vựng "${vocab.referenceText}"?',
-            itemName: vocab.referenceText,
-            onConfirm: () async {
-              await context.read<AdminVocabularyService>().deleteVocabulary(
-                vocab.id,
-                vocab.lessonId,
-              );
-            },
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Chuyển vào thùng rác?'),
+          content: Text(
+            'Bạn có chắc muốn ẩn từ vựng "${vocab.referenceText ?? ''}"?',
           ),
+          actions: [
+            TextButton(
+              // Dùng Navigator.of(dialogContext) để chắc chắn pop đúng dialog
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              onPressed: () async {
+                // 1. Đóng dialog trước
+                Navigator.of(dialogContext).pop();
+
+                // 2. Gọi API xóa
+                // Lưu ý: Dùng 'context' của State (ManageVocabularyScreen) để gọi Provider
+                await context.read<AdminVocabularyService>().deleteVocabulary(
+                  vocab.id,
+                  vocab.lessonId,
+                );
+              },
+              child: const Text(
+                'Đồng ý',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ✅ [ĐÃ SỬA] Fix lỗi dialog không đóng hoặc đóng nhầm màn hình
+  void _confirmRestore(VocabularyModel vocab) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Khôi phục từ vựng'),
+          content: Text(
+            'Bạn muốn khôi phục "${vocab.referenceText ?? ''}" trở lại danh sách bài học?',
+          ),
+          actions: [
+            TextButton(
+              // Dùng Navigator.of(dialogContext) là an toàn nhất
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () async {
+                // 1. Đóng dialog NGAY LẬP TỨC bằng dialogContext
+                Navigator.of(dialogContext).pop();
+
+                // 2. Gọi API khôi phục sau khi dialog đã đóng
+                await context.read<AdminVocabularyService>().restoreVocabulary(
+                  vocab.id,
+                  vocab.lessonId,
+                );
+              },
+              child: const Text(
+                'Khôi phục',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -129,34 +196,92 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     final vocabService = context.watch<AdminVocabularyService>();
     final vocabularies = vocabService.vocabularies;
     final isLoading = vocabService.isLoading;
+    final showDeleted = vocabService.showDeleted;
 
-    // ✅ 3. XÂY DỰNG BODYCONTENT
     Widget bodyContent;
+
+    Widget mainContent;
     if (isLoading && vocabularies.isEmpty) {
-      bodyContent = const Center(child: CircularProgressIndicator());
+      mainContent = const Center(child: CircularProgressIndicator());
     } else if (vocabularies.isEmpty) {
-      bodyContent = _buildEmptyState(vocabService.currentSearchQuery);
+      mainContent = _buildEmptyState(
+        vocabService.currentSearchQuery,
+        showDeleted,
+      );
     } else {
-      bodyContent = LayoutBuilder(
+      mainContent = LayoutBuilder(
         builder:
-            (context, constraints) =>
-                _buildResponsiveTable(vocabularies, constraints.maxWidth),
+            (context, constraints) => _buildResponsiveTable(
+              vocabularies,
+              constraints.maxWidth,
+              showDeleted,
+            ),
       );
     }
 
-    // ✅ 4. SỬ DỤNG BaseAdminScreen
+    bodyContent = Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: showDeleted ? Colors.red.shade50 : Colors.blue.shade50,
+          child: Row(
+            children: [
+              Icon(
+                showDeleted ? Icons.delete_sweep : Icons.check_circle,
+                color: showDeleted ? Colors.red : primaryBlue,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                showDeleted ? 'Đang xem Thùng Rác' : 'Danh sách Hiển thị',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: showDeleted ? Colors.red : primaryBlue,
+                ),
+              ),
+              const Spacer(),
+              const Text('Xem Thùng rác', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Switch(
+                value: showDeleted,
+                activeColor: Colors.red,
+                onChanged: (value) {
+                  context.read<AdminVocabularyService>().toggleShowDeleted(
+                    widget.lesson.id,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(child: mainContent),
+      ],
+    );
+
     return BaseAdminScreen(
       title: 'Quản lý Từ vựng',
-      subtitle: 'Bài học: ${widget.lesson.title}',
-      headerIcon: Icons.menu_book,
+      subtitle:
+          showDeleted
+              ? 'THÙNG RÁC - ${widget.lesson.title}'
+              : 'Bài học: ${widget.lesson.title}',
+      headerIcon: showDeleted ? Icons.delete_outline : Icons.menu_book,
+
       addLabel: 'Thêm Từ vựng',
-      onAddPressed: () => _showVocabularyForm(),
+      onAddPressed: () {
+        if (showDeleted) {
+          context.read<AdminVocabularyService>().toggleShowDeleted(
+            widget.lesson.id,
+          );
+        }
+        _showVocabularyForm();
+      },
+
       onBackPressed: () => Navigator.of(context).pop(),
       searchController: _searchController,
-      searchHint: 'Tìm kiếm từ vựng, nghĩa...',
+      searchHint: 'Tìm kiếm từ vựng...',
       isLoading: isLoading,
       totalCount: vocabService.totalCount,
-      countLabel: 'từ', // 👈 Sửa label
+      countLabel: 'từ',
       body: bodyContent,
       paginationControls: PaginationControls(
         currentPage: vocabService.currentPage,
@@ -168,9 +293,21 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     );
   }
 
-  // ✅ 5. SỬ DỤNG CommonEmptyState
-  Widget _buildEmptyState(String? searchQuery) {
+  Widget _buildEmptyState(String? searchQuery, bool showDeleted) {
     bool isSearching = searchQuery != null && searchQuery.isNotEmpty;
+
+    if (showDeleted) {
+      return CommonEmptyState(
+        icon: Icons.delete_sweep_outlined,
+        title:
+            isSearching ? 'Không tìm thấy trong thùng rác' : 'Thùng rác trống',
+        subtitle:
+            isSearching
+                ? 'Thử từ khóa khác'
+                : 'Các từ vựng bị xóa sẽ xuất hiện ở đây',
+      );
+    }
+
     return CommonEmptyState(
       icon: Icons.library_books_outlined,
       title: isSearching ? 'Không tìm thấy kết quả' : 'Chưa có từ vựng nào',
@@ -181,10 +318,10 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
     );
   }
 
-  // ✅ 6. SỬ DỤNG BaseAdminTable
   Widget _buildResponsiveTable(
     List<VocabularyModel> vocabularies,
     double maxWidth,
+    bool showDeleted,
   ) {
     final colWidths = {
       0: maxWidth * 0.06,
@@ -200,7 +337,7 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
       'Nghĩa',
       'Phiên âm',
       'Audio',
-      'Hành động',
+      showDeleted ? 'Khôi phục' : 'Hành động',
     ];
 
     final int startingIndex =
@@ -214,10 +351,9 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
 
           return TableRow(
             children: [
-              // ✅ 7. SỬ DỤNG CommonTableCell
               CommonTableCell('$index', align: TextAlign.center, bold: true),
               CommonTableCell(
-                vocab.referenceText,
+                vocab.referenceText ?? '',
                 bold: true,
                 color: const Color(0xFF1E3A8A),
                 align: TextAlign.center,
@@ -233,31 +369,52 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
                 align: TextAlign.center,
               ),
               CommonTableCell(
-                // 👈 Dùng CommonTableCell
                 vocab.sampleAudioUrl != null
                     ? _buildPlayButton(vocab.sampleAudioUrl!, isPlaying)
                     : const Icon(Icons.close, color: Colors.grey, size: 22),
                 align: TextAlign.center,
               ),
+
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ✅ 8. SỬ DỤNG ActionIconButton
-                    ActionIconButton(
-                      icon: Icons.edit,
-                      color: Colors.orange.shade600,
-                      tooltip: 'Sửa',
-                      onPressed: () => _showVocabularyForm(vocab: vocab),
-                    ),
-                    const SizedBox(width: 12),
-                    ActionIconButton(
-                      icon: Icons.delete,
-                      color: Colors.redAccent,
-                      tooltip: 'Xóa',
-                      onPressed: () => _confirmDelete(vocab),
-                    ),
+                    if (showDeleted) ...[
+                      ElevatedButton.icon(
+                        icon: const Icon(
+                          Icons.restore,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Khôi phục',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: () => _confirmRestore(vocab),
+                      ),
+                    ] else ...[
+                      ActionIconButton(
+                        icon: Icons.edit,
+                        color: Colors.orange.shade600,
+                        tooltip: 'Sửa',
+                        onPressed: () => _showVocabularyForm(vocab: vocab),
+                      ),
+                      const SizedBox(width: 12),
+                      ActionIconButton(
+                        icon: Icons.delete,
+                        color: Colors.redAccent,
+                        tooltip: 'Xóa',
+                        onPressed: () => _confirmDelete(vocab),
+                      ),
+                    ],
                   ],
                 ),
               ),

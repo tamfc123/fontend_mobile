@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:mobile/core/di/service_locator.dart'; // 👈 2. IMPORT
 import 'package:mobile/domain/repositories/admin_dashboard_repository.dart';
 import 'package:mobile/domain/repositories/admin_lesson_repository.dart';
+import 'package:mobile/domain/repositories/admin_media_repository.dart';
 import 'package:mobile/domain/repositories/admin_quiz_repository.dart';
 import 'package:mobile/domain/repositories/admin_vocabulary_repository.dart';
 import 'package:mobile/domain/repositories/auth_repository.dart';
@@ -26,11 +27,13 @@ import 'package:mobile/domain/repositories/student_vocabulary_lesson_repository.
 import 'package:mobile/domain/repositories/student_vocabulary_level_repository.dart';
 import 'package:mobile/domain/repositories/student_vocabulary_module_repository.dart';
 import 'package:mobile/domain/repositories/teacher_class_repository.dart';
+import 'package:mobile/domain/repositories/teacher_quiz_repository.dart';
 import 'package:mobile/domain/repositories/teacher_schedule_repository.dart';
 import 'package:mobile/domain/repositories/upload_repository.dart';
 import 'package:mobile/domain/repositories/admin_user_repository.dart';
 import 'package:mobile/services/admin/admin_dashboard_service.dart';
 import 'package:mobile/services/admin/admin_lesson_service.dart';
+import 'package:mobile/services/admin/admin_media_service.dart';
 import 'package:mobile/services/admin/admin_quiz_service.dart';
 import 'package:mobile/services/admin/admin_vocabulary_service.dart';
 import 'package:mobile/services/admin/admin_course_service.dart';
@@ -49,7 +52,7 @@ import 'package:mobile/services/student/student_vocabulary_lesson_service.dart';
 import 'package:mobile/services/student/student_vocabulary_level_service.dart';
 import 'package:mobile/services/student/student_vocabulary_module_service.dart';
 import 'package:mobile/services/teacher/teacher_dashboard_service.dart';
-import 'package:mobile/services/teacher/teacher_media_service.dart';
+import 'package:mobile/services/teacher/teacher_quiz_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/services/admin/admin_schedule_service.dart';
 import 'package:mobile/services/auth/auth_service.dart';
@@ -105,6 +108,12 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create:
+              (_) => AdminMediaService(
+                getIt<AdminMediaRepository>(),
+              ), // ✅ Lấy từ GetIt
+        ),
+        ChangeNotifierProvider(
+          create:
               (_) => TeacherAdminClassService(getIt<TeacherClassRepository>()),
         ),
         ChangeNotifierProvider(
@@ -115,6 +124,9 @@ void main() async {
           create:
               (_) =>
                   TeacherDashboardService(getIt<TeaacherDashboardRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TeacherQuizService(getIt<TeacherQuizRepository>()),
         ),
 
         ChangeNotifierProvider(
@@ -175,9 +187,7 @@ void main() async {
                 getIt<AuthService>(),
               ),
         ),
-        ChangeNotifierProvider(
-          create: (_) => TeacherMediaService(getIt<UploadRepository>()),
-        ),
+
         ChangeNotifierProvider(
           create:
               (_) => AdminDashboardService(getIt<AdminDashboardRepository>()),

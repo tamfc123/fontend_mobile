@@ -4,7 +4,7 @@ import 'package:mobile/data/datasources/schedule_data_source.dart';
 import 'package:mobile/data/models/class_schedule_model.dart';
 import 'package:mobile/services/admin/admin_room_service.dart';
 import 'package:mobile/services/admin/admin_schedule_service.dart';
-import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:mobile/widgets/admin/schedule_form_dialog.dart';
 import 'package:mobile/widgets/admin/schedule_filter_bar.dart';
 import 'package:provider/provider.dart';

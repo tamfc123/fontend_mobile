@@ -24,6 +24,7 @@ class StudentGradeService extends ChangeNotifier {
       _summary = await _repository.getGradeSummary();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
+      debugPrint(_error);
     } finally {
       _isLoading = false;
       notifyListeners();

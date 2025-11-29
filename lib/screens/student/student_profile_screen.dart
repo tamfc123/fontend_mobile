@@ -16,6 +16,9 @@ class ProfileStudentScreen extends StatefulWidget {
 }
 
 class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
+  static const Color primaryColor = Color(0xFF3B82F6);
+  static const Color backgroundColor = Color(0xFFF8FAFC);
+
   @override
   void initState() {
     super.initState();
@@ -32,8 +35,10 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text('Xác nhận đăng xuất'),
-            content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+            title: const Text('Đăng xuất?'),
+            content: const Text(
+              'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -42,8 +47,9 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red.shade50,
+                  foregroundColor: Colors.red,
+                  elevation: 0,
                 ),
                 child: const Text('Đăng xuất'),
               ),
@@ -62,12 +68,10 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
   Future<void> _pickAndUploadAvatar(BuildContext context) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-
     if (picked != null) {
       final file = File(picked.path);
       if (!context.mounted) return;
-      final profileService = context.read<StudentProfileService>();
-      await profileService.updateAvatar(file);
+      await context.read<StudentProfileService>().updateAvatar(file);
     }
   }
 
@@ -86,341 +90,197 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
     final expProgress = expNeeded > 0 ? user.experiencePoints / expNeeded : 1.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
-          // Modern Header with SliverAppBar
+          // 1. HEADER (SliverAppBar)
           SliverAppBar(
-            expandedHeight: 280,
-            floating: false,
+            expandedHeight: 260,
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            surfaceTintColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF3B82F6),
-                      Color(0xFF2563EB),
-                      Color(0xFF1D4ED8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              background: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Background Gradient (Mềm hơn)
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    // Avatar with level badge
-                    Hero(
-                      tag: 'profile_avatar',
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 56,
-                              backgroundColor: Colors.grey.shade200,
-                              backgroundImage:
-                                  user.avatarUrl != null &&
-                                          user.avatarUrl!.isNotEmpty
-                                      ? NetworkImage(user.avatarUrl!)
-                                      : const AssetImage(
-                                            "assets/images/avatar.png",
-                                          )
-                                          as ImageProvider,
-                            ),
-                          ),
-                          // Camera button
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () => _pickAndUploadAvatar(context),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Level badge
-                          Positioned(
-                            top: -8,
-                            left: -8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: levelConfig['gradient'],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: levelConfig['color'].withOpacity(
-                                      0.4,
-                                    ),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    levelConfig['icon'],
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Lv.${user.level}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Name
-                    Text(
-                      user.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Email
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  // Avatar & Info
+                  Positioned(
+                    bottom: 40,
+                    child: Column(
                       children: [
-                        const Icon(
-                          Icons.email_outlined,
-                          color: Colors.white70,
-                          size: 16,
+                        // Avatar
+                        Stack(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.2),
+                              ),
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    user.avatarUrl != null &&
+                                            user.avatarUrl!.isNotEmpty
+                                        ? NetworkImage(user.avatarUrl!)
+                                        : const AssetImage(
+                                              "assets/images/avatar.png",
+                                            )
+                                            as ImageProvider,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: InkWell(
+                                onTap: () => _pickAndUploadAvatar(context),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 18,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(height: 12),
                         Text(
-                          user.email,
+                          user.name,
                           style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.email,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
 
-          // Content
+          // 2. CONTENT BODY
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-
-                // Level & Stats Card
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Level Card (Đẹp hơn, gọn hơn)
+                  Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: levelConfig['gradient'],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: levelConfig['color'].withOpacity(0.3),
-                          blurRadius: 15,
+                          color: Colors.blue.withOpacity(0.08),
+                          blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              levelConfig['icon'],
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              levelConfig['name'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        if (user.level < 6) ...[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Kinh nghiệm',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                '${user.experiencePoints}/$expNeeded XP',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: expProgress.clamp(0.0, 1.0),
-                              backgroundColor: Colors.white.withOpacity(0.3),
-                              color: Colors.white,
-                              minHeight: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${((expProgress * 100).clamp(0, 100)).toStringAsFixed(1)}% đến cấp độ tiếp theo',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ] else ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Cấp độ tối đa - ${user.experiencePoints} XP',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 20),
-
-                        // Coins display
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
+                          width: 50,
+                          height: 50,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            color: levelConfig['color'].withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Icon(
+                            levelConfig['icon'],
+                            color: levelConfig['color'],
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.monetization_on,
-                                color: Colors.amber.shade600,
-                                size: 28,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    levelConfig['name'],
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: levelConfig['color'],
+                                    ),
+                                  ),
+                                  Text(
+                                    "Lv.${user.level}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 16,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                '${NumberFormat('#,###').format(user.coins)} Coins',
-                                style: TextStyle(
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: LinearProgressIndicator(
+                                  value: expProgress.clamp(0.0, 1.0),
+                                  minHeight: 8,
+                                  backgroundColor: Colors.grey.shade100,
                                   color: levelConfig['color'],
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "${user.experiencePoints}/$expNeeded XP",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
                                 ),
                               ),
                             ],
@@ -429,175 +289,89 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                       ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
-
-                // Personal info section - Unified Card
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Thông tin cá nhân',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 40,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Column(
-                            children: [
-                              _buildUnifiedInfoRow(
-                                icon: Icons.phone_rounded,
-                                title: "Số điện thoại",
-                                value:
-                                    user.phone.isNotEmpty
-                                        ? user.phone
-                                        : "Chưa có",
-                                color: const Color(0xFF3B82F6),
-                              ),
-                              Divider(height: 1, color: Colors.grey.shade100),
-                              _buildUnifiedInfoRow(
-                                icon: Icons.cake_rounded,
-                                title: "Ngày sinh",
-                                value:
-                                    user.birthday != null
-                                        ? DateFormat(
-                                          'dd/MM/yyyy',
-                                        ).format(user.birthday!)
-                                        : "Chưa cập nhật",
-                                color: Colors.purple,
-                              ),
-                              Divider(height: 1, color: Colors.grey.shade100),
-                              _buildUnifiedInfoRow(
-                                icon: Icons.verified_user_rounded,
-                                title: "Trạng thái",
-                                value:
-                                    user.isActive
-                                        ? "Đang hoạt động"
-                                        : "Bị khóa",
-                                color:
-                                    user.isActive ? Colors.green : Colors.red,
-                                isLast: true,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Thông tin cá nhân",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
 
-                const SizedBox(height: 28),
-
-                // Action buttons - Gần nhau hơn
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Cài đặt',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 40,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ],
+                  // Info List (Đồng bộ style)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildInfoRow(
+                          Icons.phone_rounded,
+                          "Số điện thoại",
+                          user.phone.isNotEmpty ? user.phone : "Chưa cập nhật",
                         ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                        const Divider(height: 1, indent: 50),
+                        _buildInfoRow(
+                          Icons.cake_rounded,
+                          "Ngày sinh",
+                          user.birthday != null
+                              ? DateFormat('dd/MM/yyyy').format(user.birthday!)
+                              : "Chưa cập nhật",
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Column(
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.settings_rounded,
-                                label: "Cài đặt",
-                                color: Colors.grey.shade700,
-                                onTap:
-                                    () => context.push(
-                                      '/student/profile/settings',
-                                    ),
-                              ),
-                              Divider(height: 1, color: Colors.grey.shade100),
-                              _buildActionButton(
-                                icon: Icons.logout_rounded,
-                                label: "Đăng xuất",
-                                color: Colors.red.shade600,
-                                onTap: () => _handleLogout(context),
-                                isDestructive: true,
-                                isLast: true,
-                              ),
-                            ],
-                          ),
+                        const Divider(height: 1, indent: 50),
+                        _buildInfoRow(
+                          Icons.verified_user_rounded,
+                          "Trạng thái",
+                          user.isActive ? "Đang hoạt động" : "Bị khóa",
+                          valueColor: user.isActive ? Colors.green : Colors.red,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Cài đặt",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Settings List
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildActionRow(
+                          Icons.settings_rounded,
+                          "Cài đặt tài khoản",
+                          () => context.push('/student/profile/settings'),
+                        ),
+                        const Divider(height: 1, indent: 50),
+                        _buildActionRow(
+                          Icons.logout_rounded,
+                          "Đăng xuất",
+                          () => _handleLogout(context),
+                          isDestructive: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ],
@@ -605,46 +379,34 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
     );
   }
 
-  // Unified info row widget
-  Widget _buildUnifiedInfoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-    bool isLast = false,
+  // --- Helper Widgets (Đơn giản hóa) ---
+
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 14),
+          Icon(icon, size: 20, color: Colors.grey.shade400),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
-                const SizedBox(height: 3),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
+                    fontWeight: FontWeight.w500,
+                    color: valueColor ?? const Color(0xFF1E293B),
                   ),
                 ),
               ],
@@ -655,49 +417,49 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
     );
   }
 
-  // Action button widget - Redesigned
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
+  Widget _buildActionRow(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
     bool isDestructive = false,
-    bool isLast = false,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+    final color = isDestructive ? Colors.red : const Color(0xFF1E293B);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDestructive ? Colors.red.shade50 : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isDestructive ? Colors.red : primaryColor,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: color,
                 ),
-                child: Icon(icon, color: color, size: 20),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isDestructive ? color : const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.grey.shade300,
-                size: 16,
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey.shade300,
+            ),
+          ],
         ),
       ),
     );

@@ -8,17 +8,15 @@ import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
 import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
-import 'package:mobile/widgets/teacher/teacher_class_add_edit_dialog.dart';
 import 'package:provider/provider.dart';
 
-// (Enum SortOption giữ nguyên)
 enum SortOption {
   courseNameAsc,
   courseNameDesc,
   studentCountAsc,
   studentCountDesc,
-  nameAsc, // 👈 Thêm
-  nameDesc, // 👈 Thêm
+  nameAsc,
+  nameDesc,
 }
 
 class ManageTeacherClassScreen extends StatefulWidget {
@@ -64,7 +62,6 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
     super.dispose();
   }
 
-  // (Các hàm _onSearchChanged, _showFormDialog, _onSortChanged, _mapServiceSortToUiSort giữ nguyên)
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -74,18 +71,6 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
         );
       }
     });
-  }
-
-  void _showFormDialog({TeacherClassModel? classModel}) {
-    final AdminClassService = context.read<TeacherAdminClassService>();
-    showDialog(
-      context: context,
-      builder:
-          (_) => ChangeNotifierProvider.value(
-            value: AdminClassService,
-            child: TeacherClassFormDialog(classModel: classModel),
-          ),
-    );
   }
 
   void _onSortChanged(SortOption? option) {
@@ -458,18 +443,13 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                       color: Colors.purple,
                       tooltip: 'Xem bài tập',
                       onPressed: () {
-                        context.go(
-                          '/teacher/teacherClasses/${c.id}/quiz',
-                          extra: c.name,
+                        // Dùng context.push để giữ nút Back
+                        context.push(
+                          '/teacher/teacherClasses/${c.id}/quizzes', // 1. Sửa 'quiz' thành 'quizzes'
+                          extra:
+                              c, // 2. Truyền cả object ClassModel (biến c), không truyền c.name
                         );
                       },
-                    ),
-                    const SizedBox(width: 12),
-                    ActionIconButton(
-                      icon: Icons.edit,
-                      color: Colors.blue,
-                      tooltip: 'Đổi tên lớp',
-                      onPressed: () => _showFormDialog(classModel: c),
                     ),
                     const SizedBox(width: 12),
                     ActionIconButton(

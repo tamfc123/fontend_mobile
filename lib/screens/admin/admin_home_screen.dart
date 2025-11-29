@@ -151,6 +151,11 @@ class _SidebarMenu extends StatelessWidget {
                   label: 'Phòng học',
                   path: '/admin/rooms',
                 ),
+                item(
+                  icon: Icons.library_music_rounded, // Icon Media
+                  label: 'Thư viện Media',
+                  path: '/admin/media', // 👈 Đường dẫn mới của Admin
+                ),
               ],
             ),
           ),

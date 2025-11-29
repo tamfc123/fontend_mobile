@@ -12,22 +12,23 @@ class AdminQuizRepository {
   Future<Map<String, dynamic>> getQuizzes({
     required String courseId,
     int page = 1,
-    int limit = 10,
+    int limit = 5,
     String? search,
+    bool returnDeleted = false, // Mặc định là false (chỉ lấy cái đang hiện)
   }) async {
     try {
       final response = await _apiClient.dio.get(
         ApiConfig.adminCourseQuizzes(courseId),
         queryParameters: {
-          'pageNumber': page, // Khớp với DTO backend AdminQuizParams
-          'pageSize': limit, // Khớp với DTO backend AdminQuizParams
-          'searchQuery': search, // Khớp với DTO backend AdminQuizParams
+          'courseId': courseId,
+          'pageNumber': page,
+          'pageSize': limit,
+          'searchQuery': search,
+          'returnDeleted': returnDeleted, // Gửi lên backend
         },
       );
 
-      // Backend trả về PagedResultDTO: { "items": [...], "totalCount": 100, ... }
       final data = response.data;
-
       final List<dynamic> itemsJson = data['items'] ?? [];
       final List<QuizListModel> quizzes =
           itemsJson.map((e) => QuizListModel.fromJson(e)).toList();
@@ -54,14 +55,33 @@ class AdminQuizRepository {
     }
   }
 
-  // ✅ 3. Xóa Quiz
   Future<void> deleteQuiz(String courseId, String quizId) async {
     try {
       await _apiClient.dio.delete(
         ApiConfig.adminCourseQuizById(courseId, quizId),
       );
     } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Lỗi khi xóa bài tập');
+      String msg = 'Lỗi khi xóa bài tập';
+
+      try {
+        if (e.response?.data is Map && e.response?.data['message'] != null) {
+          msg =
+              e.response!.data['message']
+                  .toString(); // Ép kiểu toString cho chắc
+        }
+      } catch (_) {}
+
+      throw Exception(msg);
+    }
+  }
+
+  Future<void> restoreQuiz(String courseId, String quizId) async {
+    try {
+      await _apiClient.dio.put(ApiConfig.adminRestoreQuiz(courseId, quizId));
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Lỗi khi khôi phục bài tập',
+      );
     }
   }
 
@@ -72,7 +92,8 @@ class AdminQuizRepository {
         ApiConfig.adminDeleteQuestion(courseId, questionId),
       );
     } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Lỗi khi xóa câu hỏi');
+      final errorMsg = e.response?.data['message'] ?? 'Lỗi khi xóa câu hỏi';
+      throw Exception(errorMsg);
     }
   }
 

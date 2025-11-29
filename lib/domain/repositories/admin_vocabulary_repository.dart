@@ -8,18 +8,19 @@ class AdminVocabularyRepository {
   final ApiClient _apiClient;
   AdminVocabularyRepository(this._apiClient);
 
-  // ✅ 2. SỬA HÀM GET: Lấy Từ vựng phân trang
   Future<PagedResultModel<VocabularyModel>> getPaginatedVocabularies({
     required String lessonId,
     int pageNumber = 1,
     int pageSize = 5,
     String? searchQuery,
+    bool returnDeleted = false, // Mặc định false (Xem cái đang hiện)
   }) async {
     try {
       final queryParameters = {
-        'lessonId': lessonId.toString(),
-        'pageNumber': pageNumber.toString(),
-        'pageSize': pageSize.toString(),
+        'lessonId': lessonId,
+        'pageNumber': pageNumber,
+        'pageSize': pageSize,
+        'returnDeleted': returnDeleted, // Gửi lên backend
       };
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -73,6 +74,14 @@ class AdminVocabularyRepository {
       }
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi xóa từ vựng');
+    }
+  }
+
+  Future<void> restoreVocabulary(String id) async {
+    try {
+      await _apiClient.dio.put(ApiConfig.adminRestoreVocabulary(id));
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Lỗi khôi phục từ vựng');
     }
   }
 }

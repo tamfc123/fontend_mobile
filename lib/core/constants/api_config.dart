@@ -1,12 +1,9 @@
 class ApiConfig {
   static const String baseUrl =
-      'https://xbox-lib-conversion-jack.trycloudflare.com/api';
+      'https://you-coupon-pledge-able.trycloudflare.com/api';
 
   // upload
   static const String upload = "/upload";
-  static const String uploadAudio = "/upload-audio";
-  static const String teacherGetMyMedia = "/my-media"; // GET
-  static String teacherDeleteMedia(String id) => "/delete-media/$id"; // DELETE
 
   // auth
   static const String authLogin = "/auth/login";
@@ -37,7 +34,6 @@ class ApiConfig {
   static String classById(String id) => "/classes/$id";
   static const String adminGetAllActiveClasses = "/classes/all-active";
 
-  // ✅ --- ADMIN: QUIZZES (MỚI) ---
   // Backend: api/admin/courses/{courseId}/quizzes
   static String adminCourseQuizzes(String courseId) =>
       "/admin/courses/$courseId/quizzes";
@@ -47,6 +43,8 @@ class ApiConfig {
   // Backend: api/admin/courses/{courseId}/quizzes/questions/{questionId} (Xóa câu hỏi lẻ)
   static String adminDeleteQuestion(String courseId, String questionId) =>
       "/admin/courses/$courseId/quizzes/questions/$questionId";
+  static String adminRestoreQuiz(String courseId, String quizId) =>
+      "/admin/courses/$courseId/quizzes/$quizId/restore";
 
   // ADMIN DASHBOARD STATS
   static const String adminDashboardStats = "/admin/dashboard-stats";
@@ -81,15 +79,34 @@ class ApiConfig {
   static const String adminVocabularies = '$baseUrl/admin/vocabularies';
   static String adminVocabularyById(String id) =>
       '$baseUrl/admin/vocabularies/$id';
+  static String adminRestoreVocabulary(String id) =>
+      '$baseUrl/admin/vocabularies/$id/restore';
+
+  // POST: /api/admin/media/upload-audio
+  static const String adminUploadAudio = "/admin/media/upload-audio";
+
+  // GET: /api/admin/media?page=1&limit=20
+  static String adminGetAllMedia({int page = 1, int limit = 20}) =>
+      "/admin/media?page=$page&limit=$limit";
+
+  // DELETE: /api/admin/media/{id}
+  static String adminDeleteMedia(String id) => "/admin/media/$id";
 
   // --- TEACHER: DASHBOARD ---
   static const String teacherDashboardSummary = '/teacher/dashboard/summary';
 
   // --- TEACHER: CLASSES ---
-  static const String teacherClasses = "/teacher/classes"; // Dùng cho (GET all)
-  static String teacherClassById(String id) => "/teacher/classes/$id";
+  static const String teacherClasses = "/teacher/classes";
   static String getStudentsInClass(String classId) =>
       "/teacher/classes/$classId/students";
+  static String teacherClassSkills(String classId) =>
+      '/teacher/classes/$classId/skills';
+  static String getStudentDetail(String classId, String studentId) =>
+      '/teacher/classes/$classId/students/$studentId';
+  static String teacherClassQuizzes(String classId) =>
+      "/teacher/classes/$classId/quizzes";
+  static String teacherQuizDetail(String classId, String quizId) =>
+      "/teacher/classes/$classId/quizzes/$quizId";
 
   // --- TEACHER: SCHEDULES ---
   static const String teacherSchedules = "/teacher/schedules";
@@ -130,39 +147,28 @@ class ApiConfig {
   // POST: Nộp bài
   static String submitQuiz(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/submit';
-
-  // GET: Lấy kết quả bài đã nộp
+  static String submitWritingQuiz(String classId, String quizId) =>
+      '/student/classes/$classId/quizzes/$quizId/submit-writing';
   static String getQuizResult(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/result';
 
   static const String uploadRawFile = '$baseUrl/upload';
-
-  // GET: /api/student/vocabulary-levels
   static const String studentVocabularyLevels =
       '$baseUrl/student/vocabulary-levels';
-
-  // GET: /api/student/vocabulary-levels/{levelId}/topics
   static String studentVocabularyModules(String levelId) {
     return '/student/vocabulary-levels/$levelId/topics';
   }
 
-  // ✅ THÊM CÁI NÀY:
   static String studentModuleLessons(String moduleId) {
     return '/student/vocabulary-modules/$moduleId/lessons';
   }
 
-  // GET: /student/vocabulary-lessons/{lessonId}/flashcards
   static String studentLessonFlashcards(String lessonId) {
     return '/student/vocabulary-lessons/$lessonId/flashcards';
   }
 
-  // POST: /api/student/assess-pronunciation
   static const String studentAssessPronunciation =
       '/student/assess-pronunciation';
-
-  // GET: /api/student/grades
-  static const String studentGrades = '/student/grades';
-
-  // GET: /api/student/leaderboard
-  static const String studentLeaderboard = '/leaderboard';
+  static const String studentGrades = '/student/grades/summary';
+  static const String studentLeaderboard = '/student/leaderboard';
 }

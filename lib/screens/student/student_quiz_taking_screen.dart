@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:mobile/data/models/student_quiz_take_model.dart';
-import 'package:mobile/data/models/student_submission_model.dart';
+import 'package:mobile/data/models/student_quiz_models.dart';
 import 'package:mobile/services/student/student_quiz_service.dart';
+import 'package:mobile/utils/toast_helper.dart';
+import 'package:mobile/widgets/student/level_up_reward_dialog.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizTakingScreen extends StatefulWidget {
@@ -24,68 +26,91 @@ class StudentQuizTakingScreen extends StatefulWidget {
 }
 
 class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
-  // ✅ 3. THAY ĐỔI STATE ĐỂ HỖ TRỢ CẢ 2 LOẠI CÂU TRẢ LỜI
-  // State cho Trắc nghiệm (Multiple Choice)
-  final Map<String, String> _selectedOptionAnswers = {};
-  // State cho Điền từ (Fill in the blank)
-  final Map<String, TextEditingController> _textAnswers = {};
+  // State quản lý câu trả lời
+  final Map<String, dynamic> _userAnswers = {};
+  final Map<String, TextEditingController> _textControllers = {};
 
-  // State cho bộ đếm thời gian
+  // Timer
   Timer? _timer;
-  int _remainingSeconds = 0;
-
-  // State
+  int _secondsRemaining = 0;
   bool _isSubmitting = false;
 
-  final Map<String, AudioPlayer> _audioPlayers = {};
+  // Audio Player Chung (Cho bài Listening tổng)
+  final AudioPlayer _mainAudioPlayer = AudioPlayer();
+  bool _isMainAudioLoaded = false;
+
+  // Map quản lý Audio Player cho từng câu hỏi riêng lẻ
+  final Map<String, AudioPlayer> _questionAudioPlayers = {};
+
+  static const Color primaryBlue = Color(0xFF3B82F6);
 
   @override
   void initState() {
     super.initState();
-    _fetchDataAndStartTimer();
-  }
-
-  void _stopAllOtherPlayers(String currentQuestionId) {
-    _audioPlayers.forEach((id, player) {
-      if (id != currentQuestionId && player.playing) {
-        player.stop();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadQuizData();
     });
   }
 
-  void _fetchDataAndStartTimer() async {
-    // 1. Tải chi tiết quiz
+  Future<void> _loadQuizData() async {
     await context.read<StudentQuizService>().fetchQuizForTaking(
       widget.classId,
       widget.quizId,
     );
-    if (mounted) {
-      final quiz = context.read<StudentQuizService>().currentQuiz;
-      if (quiz != null) {
-        for (var question in quiz.questions) {
-          if (question.questionType == 'FILL_IN_THE_BLANK' ||
-              question.questionType == 'DICTATION') {
-            _textAnswers[question.id] = TextEditingController();
-          }
-        }
 
+    final quiz = context.read<StudentQuizService>().currentQuiz;
+    if (quiz != null) {
+      // 1. Thiết lập Timer
+      if (quiz.timeLimitMinutes > 0) {
         setState(() {
-          _remainingSeconds = quiz.timeLimitMinutes * 60;
+          _secondsRemaining = quiz.timeLimitMinutes * 60;
+          _startTimer();
         });
-        _startTimer();
+      }
+
+      // 2. Load Audio Chung (nếu có)
+      if (quiz.skillType == 'LISTENING' &&
+          quiz.mediaUrl != null &&
+          quiz.mediaUrl!.isNotEmpty) {
+        try {
+          await _mainAudioPlayer.setUrl(quiz.mediaUrl!);
+          setState(() => _isMainAudioLoaded = true);
+        } catch (e) {
+          debugPrint("Lỗi load audio chung: $e");
+        }
+      }
+
+      // 3. Khởi tạo Controller cho các câu hỏi nhập liệu (Writing/Essay/Dictation)
+      for (var q in quiz.questions) {
+        if (q.questionType != 'MULTIPLE_CHOICE') {
+          _textControllers[q.id] = TextEditingController();
+        }
       }
     }
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
       } else {
         _timer?.cancel();
-        _handleSubmit(autoSubmit: true);
+        _handleSubmit(isTimeOut: true);
+      }
+    });
+  }
+
+  // Hàm dừng tất cả các player đang chạy để tránh chồng âm thanh
+  void _stopAllOtherPlayers(String? currentPlayingId) {
+    // Dừng player chung
+    if (currentPlayingId != 'main' && _mainAudioPlayer.playing) {
+      _mainAudioPlayer.pause();
+    }
+
+    // Dừng các player con
+    _questionAudioPlayers.forEach((id, player) {
+      if (id != currentPlayingId && player.playing) {
+        player.pause();
       }
     });
   }
@@ -93,646 +118,553 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    _audioPlayers.forEach((_, player) => player.dispose());
-    for (var controller in _textAnswers.values) {
+
+    // Dispose tất cả player
+    _mainAudioPlayer.dispose();
+    for (var player in _questionAudioPlayers.values) {
+      player.dispose();
+    }
+
+    for (var controller in _textControllers.values) {
       controller.dispose();
     }
 
+    // Clear data trong service khi thoát
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<StudentQuizService>().clearQuizDetail();
-      }
+      if (mounted) context.read<StudentQuizService>().clearQuizDetail();
     });
+
     super.dispose();
   }
 
-  String _formatDuration(int seconds) {
-    // ... (Giữ nguyên code)
-    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
-    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$remainingSeconds';
+  // --- LOGIC THOÁT MÀN HÌNH (Back Button) ---
+  Future<bool> _onWillPop() async {
+    if (_isSubmitting) return false;
+
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Thoát bài thi?'),
+            content: const Text(
+              'Thời gian vẫn đang chạy. Nếu thoát bây giờ, bài làm của bạn sẽ KHÔNG được tính.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Ở lại làm tiếp'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text(
+                  'Thoát ngay',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    return shouldPop ?? false;
   }
 
-  // ✅ 5. CẬP NHẬT HOÀN TOÀN HÀM NỘP BÀI
-  Future<void> _handleSubmit({bool autoSubmit = false}) async {
+  // --- LOGIC NỘP BÀI ---
+  Future<void> _handleSubmit({bool isTimeOut = false}) async {
     if (_isSubmitting) return;
 
-    setState(() {
-      _isSubmitting = true;
-    });
-    _timer?.cancel();
-
-    // 1. Xác nhận (nếu không phải tự động)
-    bool confirmed = autoSubmit ? true : await _showConfirmationDialog();
-
-    if (confirmed) {
-      try {
-        final service = context.read<StudentQuizService>();
-        final quiz = service.currentQuiz;
-        if (quiz == null) throw Exception("Không tìm thấy bài quiz.");
-
-        // 2. TẠO LIST CÂU TRẢ LỜI (THEO MODEL MỚI)
-        List<StudentAnswerInputModel> answersToSend = [];
-
-        for (var question in quiz.questions) {
-          // Lấy câu trả lời dựa trên loại câu hỏi
-          if (question.questionType == 'MULTIPLE_CHOICE') {
-            final String? selectedId = _selectedOptionAnswers[question.id];
-            answersToSend.add(
-              StudentAnswerInputModel(
-                questionId: question.id,
-                selectedOptionId: selectedId, // Gửi ID đã chọn (hoặc null)
-                answerText: null,
-              ),
-            );
-          } else if (question.questionType == 'FILL_IN_THE_BLANK' ||
-              question.questionType == 'DICTATION') {
-            final String? text = _textAnswers[question.id]?.text;
-            answersToSend.add(
-              StudentAnswerInputModel(
-                questionId: question.id,
-                selectedOptionId: null,
-                answerText: text, // Gửi text đã gõ (hoặc null)
-              ),
-            );
-          }
-        }
-
-        // 3. GỌI API VỚI LIST MỚI
-        final result = await service.submitQuiz(
-          widget.classId,
-          widget.quizId,
-          answersToSend, // 👈 Gửi đi List<StudentAnswerInputModel>
-        );
-
-        // Nộp bài thành công
-        await _showResultDialog(result);
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        // Nộp bài thất bại
-        await _showErrorDialog(e.toString());
-      }
+    if (!isTimeOut) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('Nộp bài?'),
+              content: const Text('Bạn có chắc chắn muốn nộp bài không?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Kiểm tra lại'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryBlue),
+                  child: const Text(
+                    'Nộp ngay',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+      );
+      if (confirm != true) return;
     }
 
-    if (!confirmed && !autoSubmit) {
-      _startTimer();
+    setState(() => _isSubmitting = true);
+    _timer?.cancel();
+    _stopAllOtherPlayers(null); // Dừng mọi âm thanh
+
+    final quiz = context.read<StudentQuizService>().currentQuiz;
+    if (quiz == null) return;
+
+    Map<String, dynamic>? result;
+
+    // 🟢 PHÂN LOẠI LOGIC NỘP BÀI: ESSAY vs BÀI THƯỜNG
+    if (quiz.skillType == 'ESSAY') {
+      // --- LOGIC ESSAY (AI CHẤM) ---
+      String content = "";
+      if (quiz.questions.isNotEmpty) {
+        final qId = quiz.questions.first.id;
+        content = _userAnswers[qId] ?? "";
+      }
+
+      if (content.trim().isEmpty) {
+        ToastHelper.showError("Bài viết không được để trống!");
+        setState(() => _isSubmitting = false);
+        return;
+      }
+
+      result = await context.read<StudentQuizService>().submitWritingQuiz(
+        widget.classId,
+        widget.quizId,
+        content,
+      );
+    } else {
+      // --- LOGIC THƯỜNG (TRẮC NGHIỆM / ĐIỀN TỪ) ---
+      final List<StudentAnswerInputModel> answers = [];
+      for (var q in quiz.questions) {
+        final userAnswer = _userAnswers[q.id];
+        if (userAnswer == null) continue;
+
+        if (q.questionType == 'MULTIPLE_CHOICE') {
+          answers.add(
+            StudentAnswerInputModel(
+              questionId: q.id,
+              selectedOptionId: userAnswer as String,
+            ),
+          );
+        } else {
+          answers.add(
+            StudentAnswerInputModel(
+              questionId: q.id,
+              answerText: userAnswer as String,
+            ),
+          );
+        }
+      }
+
+      result = await context.read<StudentQuizService>().submitQuiz(
+        widget.classId,
+        widget.quizId,
+        answers,
+      );
     }
 
     if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
+      setState(() => _isSubmitting = false);
+      if (result != null) {
+        // ✅ XỬ LÝ HIỂN THỊ REWARD POPUP
+        await _handleRewardPopup(result);
+
+        // Chuyển trang sau khi đóng popup
+        if (mounted) {
+          context.pushReplacementNamed(
+            'student-quiz-review',
+            extra: {'classId': widget.classId, 'quizId': widget.quizId},
+          );
+        }
+      }
     }
+  }
+
+  Future<void> _handleRewardPopup(Map<String, dynamic> result) async {
+    final reward = result['reward']; // Backend trả về object này
+
+    if (reward != null) {
+      final int xp = reward['xp'] ?? 0;
+      final int coins = reward['coins'] ?? 0;
+      final String msg = reward['msg'] ?? "";
+
+      if (xp > 0) {
+        // Chỉ hiện popup nếu có thưởng
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (_) => LevelUpRewardDialog(exp: xp, coins: coins, message: msg),
+        );
+      } else {
+        // Nếu không có thưởng (điểm thấp), hiện Toast động viên
+        final score = result['score'];
+        ToastHelper.showWarning(msg.isNotEmpty ? msg : "Điểm số: $score");
+      }
+    }
+  }
+
+  String _formatTime(int seconds) {
+    final int min = seconds ~/ 60;
+    final int sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFBFC),
-      appBar: AppBar(
-        // ... (Code AppBar giữ nguyên) ...
-        title: Text(widget.quizTitle),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Chip(
-              avatar: Icon(
-                Icons.timer_outlined,
-                color: _remainingSeconds < 60 ? Colors.red : Colors.blue,
-              ),
-              label: Text(
-                _formatDuration(_remainingSeconds),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _remainingSeconds < 60 ? Colors.red : Colors.blue,
-                ),
-              ),
-              backgroundColor:
-                  _remainingSeconds < 60 ? Colors.red[50] : Colors.blue[50],
-            ),
+    final service = context.watch<StudentQuizService>();
+    final quiz = service.currentQuiz;
+    final isLoading = service.isLoadingDetail;
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close, size: 24),
+            onPressed: () async {
+              if (await _onWillPop()) {
+                if (context.mounted) context.pop();
+              }
+            },
           ),
-        ],
-      ),
-      body: Consumer<StudentQuizService>(
-        builder: (context, service, child) {
-          if (service.isLoadingDetail) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (service.detailError != null) {
-            return Center(child: Text('Lỗi: ${service.detailError}'));
-          }
-          if (service.currentQuiz == null) {
-            return const Center(
-              child: Text('Không tải được chi tiết bài tập.'),
-            );
-          }
-
-          final quiz = service.currentQuiz!;
-
-          // ✅ 6. CẬP NHẬT UI CHÍNH
-          return Column(
+          title: Column(
             children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  // +1 cho Info, +1 cho ReadingPassage (nếu có)
-                  itemCount:
-                      quiz.questions.length +
-                      (quiz.readingPassage != null ? 2 : 1),
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildQuizInfoSection(quiz);
-                    }
-
-                    // ✅ HIỂN THỊ ĐOẠN VĂN (NẾU CÓ)
-                    if (quiz.readingPassage != null) {
-                      if (index == 1) {
-                        return _buildReadingPassage(quiz.readingPassage!);
-                      }
-                      // Nếu có đoạn văn, index câu hỏi bị lùi 2
-                      final question = quiz.questions[index - 2];
-                      return _buildQuestionCard(
-                        question,
-                        index - 1,
-                      ); // Số thứ tự
-                    }
-
-                    // Nếu không có đoạn văn, index câu hỏi lùi 1
-                    final question = quiz.questions[index - 1];
-                    return _buildQuestionCard(question, index); // Số thứ tự
-                  },
+              const Text('Làm bài thi', style: TextStyle(fontSize: 16)),
+              if (quiz != null && quiz.timeLimitMinutes > 0)
+                Text(
+                  _formatTime(_secondsRemaining),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: _secondsRemaining < 60 ? Colors.red : Colors.white,
+                  ),
                 ),
-              ),
-              _buildSubmitButton(),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  // --- Các Widget con để xây dựng UI ---
-
-  // (Widget này giữ nguyên)
-  Widget _buildQuizInfoSection(StudentQuizTakeModel quiz) {
-    // ... (Code cũ của bạn giữ nguyên)
-    return Container(
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            quiz.title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
           ),
-          if (quiz.description != null && quiz.description!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              quiz.description!,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B7280),
-                height: 1.6,
+          centerTitle: true,
+          backgroundColor: primaryBlue,
+          foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+          actions: [
+            TextButton(
+              onPressed: () => _handleSubmit(),
+              child: const Text(
+                'NỘP BÀI',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
-        ],
+        ),
+        body:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : quiz == null
+                ? Center(child: Text(service.detailError ?? 'Lỗi tải đề'))
+                : Column(
+                  children: [
+                    // Context Area (Reading/Listening chung)
+                    if (_shouldShowContextArea(quiz))
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.25,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 5,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: _buildContextContent(quiz),
+                      ),
+
+                    // Danh sách câu hỏi
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: quiz.questions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 20),
+                        itemBuilder: (context, index) {
+                          return _buildQuestionItem(
+                            index,
+                            quiz.questions[index],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
       ),
     );
   }
 
-  // ✅ 7. THÊM WIDGET MỚI CHO BÀI ĐỌC
-  Widget _buildReadingPassage(String passage) {
+  bool _shouldShowContextArea(StudentQuizTakeModel quiz) {
+    return (quiz.skillType == 'READING' && quiz.readingPassage != null) ||
+        (quiz.skillType == 'LISTENING' && quiz.mediaUrl != null);
+  }
+
+  Widget _buildContextContent(StudentQuizTakeModel quiz) {
+    if (quiz.skillType == 'READING') {
+      return SingleChildScrollView(
+        child: Text(
+          quiz.readingPassage ?? '',
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.5,
+            color: Colors.black87,
+          ),
+        ),
+      );
+    } else if (quiz.skillType == 'LISTENING') {
+      // Audio Player Chung
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.headphones, size: 40, color: primaryBlue),
+          const SizedBox(height: 8),
+          const Text("File nghe chung", style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 8),
+          if (!_isMainAudioLoaded)
+            const CircularProgressIndicator()
+          else
+            StreamBuilder<PlayerState>(
+              stream: _mainAudioPlayer.playerStateStream,
+              builder: (context, snapshot) {
+                final playing = snapshot.data?.playing ?? false;
+                return IconButton(
+                  icon: Icon(
+                    playing ? Icons.pause_circle : Icons.play_circle,
+                    size: 48,
+                    color: primaryBlue,
+                  ),
+                  onPressed: () {
+                    if (playing) {
+                      _mainAudioPlayer.pause();
+                    } else {
+                      _stopAllOtherPlayers(
+                        'main',
+                      ); // Dừng các con để chạy cái chính
+                      _mainAudioPlayer.play();
+                    }
+                  },
+                );
+              },
+            ),
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildQuestionItem(int index, StudentQuestionModel question) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.blue.shade200),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.menu_book_rounded, color: Colors.blue),
-              SizedBox(width: 8),
-              Text(
-                'Reading Passage (Đoạn văn)',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Câu ${index + 1}',
+                  style: const TextStyle(
+                    color: primaryBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
-          const Divider(height: 24),
+          const SizedBox(height: 12),
+
+          // ✅ HIỂN THỊ AUDIO RIÊNG NẾU CÓ
+          if (question.audioUrl != null && question.audioUrl!.isNotEmpty)
+            _buildMiniAudioPlayer(question.audioUrl!, question.id),
+
           Text(
-            passage,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF374151),
-              height: 1.6,
-            ),
+            question.questionText,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
+          const SizedBox(height: 16),
+
+          if (question.questionType == 'MULTIPLE_CHOICE')
+            _buildMultipleChoiceOptions(question)
+          else
+            _buildTextInput(question),
         ],
       ),
     );
   }
 
-  Widget _buildAudioPlayer(StudentQuestionModel question) {
-    if (question.audioUrl == null || question.audioUrl!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    final AudioPlayer questionPlayer = _audioPlayers.putIfAbsent(
-      question.id,
+  Widget _buildMiniAudioPlayer(String url, String questionId) {
+    // Tạo player mới nếu chưa có
+    final player = _questionAudioPlayers.putIfAbsent(
+      questionId,
       () => AudioPlayer(),
     );
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: StreamBuilder<PlayerState>(
-        stream: questionPlayer.playerStateStream, // Lắng nghe trạng thái
-        builder: (context, snapshot) {
-          final playerState = snapshot.data;
-          final processingState = playerState?.processingState;
-          final playing = playerState?.playing ?? false;
-
-          Widget icon;
-          VoidCallback onPressed;
-
-          if (processingState == ProcessingState.loading ||
-              processingState == ProcessingState.buffering) {
-            // Đang tải
-            icon = const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.purple,
-              ),
-            );
-            onPressed = () {};
-          } else if (playing) {
-            // Đang chơi -> Hiện nút Pause
-            icon = const Icon(
-              Icons.pause_circle_filled,
-              size: 40,
-              color: Colors.purple,
-            );
-            onPressed = questionPlayer.pause;
-          } else {
-            // Đang dừng -> Hiện nút Play
-            icon = const Icon(
-              Icons.play_circle_filled,
-              size: 40,
-              color: Colors.purple,
-            );
-            onPressed = () async {
-              // Dừng các câu khác trước khi phát câu này
-              _stopAllOtherPlayers(question.id);
-
-              try {
-                // Set URL và Play
-                await questionPlayer.setUrl(question.audioUrl!);
-                questionPlayer.play();
-              } catch (e) {
-                print("Lỗi audio: $e");
-              }
-            };
-          }
-
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.purple.withOpacity(0.2)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min, // Chỉ chiếm chiều rộng cần thiết
-              children: [
-                IconButton(
-                  icon: icon,
-                  onPressed: onPressed,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  "Nghe bài",
-                  style: TextStyle(
-                    color: Colors.purple,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ✅ 9. CẬP NHẬT HÀM XÂY DỰNG CÂU HỎI
-  Widget _buildQuestionCard(StudentQuestionModel question, int questionNumber) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: Colors.purple.shade50,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.purple.shade100),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Header câu hỏi (Giữ nguyên)
-          Container(
-            padding: const EdgeInsets.all(20),
-            // ... (code decoration header) ...
-            child: Row(
-              // ... (code Row header với số câu hỏi) ...
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ... (code cái vòng tròn xanh) ...
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    question.questionText, // Nội dung câu hỏi
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-              ],
+          const Icon(Icons.volume_up, size: 20, color: Colors.purple),
+          const SizedBox(width: 8),
+          const Text(
+            "Nghe câu hỏi",
+            style: TextStyle(
+              color: Colors.purple,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
+          const Spacer(),
+          StreamBuilder<PlayerState>(
+            stream: player.playerStateStream,
+            builder: (context, snapshot) {
+              final playing = snapshot.data?.playing ?? false;
+              final processingState = snapshot.data?.processingState;
 
-          // Nội dung (Trắc nghiệm hoặc Điền từ)
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAudioPlayer(question),
-                if (question.questionType == 'MULTIPLE_CHOICE')
-                  ...question.options.asMap().entries.map((entry) {
-                    final optIndex = entry.key;
-                    final option = entry.value;
-                    return _buildOptionTile(question, option, optIndex);
-                  })
-                else if (question.questionType == 'FILL_IN_THE_BLANK' ||
-                    question.questionType == 'DICTATION')
-                  _buildTextFieldInput(question)
-                else
-                  Text(
-                    "Lỗi: Loại câu hỏi '${question.questionType}' không được hỗ trợ.",
-                  ),
-              ],
-            ),
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                return const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                );
+              }
+
+              return IconButton(
+                icon: Icon(
+                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                  color: Colors.purple,
+                  size: 32,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () async {
+                  if (playing) {
+                    await player.pause();
+                  } else {
+                    _stopAllOtherPlayers(questionId); // Dừng cái khác
+                    if (player.processingState == ProcessingState.idle) {
+                      await player.setUrl(url);
+                    }
+                    await player.play();
+                  }
+                },
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  // 10. THÊM WIDGET MỚI CHO BÀI VIẾT (ĐIỀN TỪ)
-  Widget _buildTextFieldInput(StudentQuestionModel question) {
-    final controller = _textAnswers[question.id];
+  Widget _buildMultipleChoiceOptions(StudentQuestionModel question) {
+    return Column(
+      children:
+          question.options.map((option) {
+            final isSelected = _userAnswers[question.id] == option.id;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _userAnswers[question.id] = option.id;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? primaryBlue.withOpacity(0.05)
+                            : Colors.white,
+                    border: Border.all(
+                      color: isSelected ? primaryBlue : Colors.grey.shade300,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected ? primaryBlue : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          option.optionText,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                            color: isSelected ? primaryBlue : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
 
-    if (controller == null) {
-      return const Text("Lỗi: Không tìm thấy controller cho câu hỏi này.");
+  Widget _buildTextInput(StudentQuestionModel question) {
+    if (!_textControllers.containsKey(question.id)) {
+      _textControllers[question.id] = TextEditingController();
     }
 
+    // Nếu là bài Essay thì cho phép nhập nhiều dòng
+    final isEssay = question.questionType == 'ESSAY';
+
     return TextField(
-      controller: controller,
-      decoration: const InputDecoration(
-        labelText: 'Nhập câu trả lời của bạn',
-        hintText: '...',
-        border: OutlineInputBorder(),
+      controller: _textControllers[question.id],
+      onChanged: (value) {
+        _userAnswers[question.id] = value;
+      },
+      maxLines: isEssay ? 10 : 1, // Essay 10 dòng
+      minLines: isEssay ? 5 : 1,
+      decoration: InputDecoration(
+        hintText:
+            isEssay
+                ? 'Viết bài luận của bạn vào đây...'
+                : 'Nhập câu trả lời...',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         filled: true,
-        fillColor: Color(0xFFFAFBFC),
+        fillColor: Colors.grey.shade50,
       ),
-      // (Bạn có thể thêm onSubmitted...)
-    );
-  }
-
-  // ✅ 11. CẬP NHẬT HÀM NÀY ĐỂ DÙNG STATE MỚI
-  Widget _buildOptionTile(
-    StudentQuestionModel question,
-    StudentOptionModel option,
-    int optionIndex,
-  ) {
-    // 👈 SỬA: Dùng state _selectedOptionAnswers
-    final bool isSelected = _selectedOptionAnswers[question.id] == option.id;
-    final optionLabel = String.fromCharCode(65 + optionIndex); // A, B, C, D
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedOptionAnswers[question.id] = option.id;
-          });
-        },
-        child: Container(
-          // ... (Toàn bộ code UI của OptionTile giữ nguyên) ...
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFFAFBFC),
-            border: Border.all(
-              color:
-                  isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFE5E7EB),
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              // ... (Code icon A, B, C, D) ...
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  option.optionText,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: const Color(0xFF1F2937),
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              if (isSelected)
-                const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF2563EB),
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // (Widget nút Submit giữ nguyên)
-  Widget _buildSubmitButton() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed:
-                _isSubmitting ? null : () => _handleSubmit(autoSubmit: false),
-            icon:
-                _isSubmitting
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                    : const Icon(Icons.check_circle_outline),
-            label: Text(
-              _isSubmitting ? 'Đang nộp bài...' : 'Hoàn thành và Nộp bài',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.green[600],
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- Dialogs (Giữ nguyên) ---
-
-  Future<bool> _showConfirmationDialog() async {
-    // ... (Code cũ của bạn giữ nguyên)
-    return await showDialog<bool>(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Xác nhận nộp bài'),
-                content: const Text('Bạn có chắc chắn muốn nộp bài không?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Hủy'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Nộp bài'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-  }
-
-  Future<void> _showResultDialog(Map<String, dynamic> result) async {
-    final int xpGained = result['xpGained'] as int? ?? 0;
-    final int coinsGained = result['coinsGained'] as int? ?? 0;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Nộp bài thành công!'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kết quả của bạn:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Số câu đúng: ${result['correctCount']} / ${result['totalQuestions']}',
-                ),
-                Text('Điểm số: ${result['score']} / 10'),
-                const Divider(height: 20), // Thêm đường phân cách
-                // ✅ HIỂN THỊ XP VÀ COIN
-                Text(
-                  '✨ Kinh nghiệm (XP) cộng thêm: +$xpGained',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                Text(
-                  '💰 Coin nhận được: +$coinsGained',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Future<void> _showErrorDialog(String error) async {
-    // ... (Code cũ của bạn giữ nguyên)
-    await showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Nộp bài thất bại'),
-            content: Text('Đã xảy ra lỗi: $error'),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
     );
   }
 }

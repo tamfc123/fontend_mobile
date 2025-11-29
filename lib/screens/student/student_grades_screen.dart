@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/data/models/grade_summary_model.dart';
 import 'package:mobile/services/student/student_grade_service.dart';
+import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:provider/provider.dart';
 
 class StudentGradesScreen extends StatefulWidget {
@@ -39,20 +39,9 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF0F172A),
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue.shade100.withOpacity(0.3),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
+          child: Container(height: 1, color: Colors.grey.shade200),
         ),
       ),
       body: _buildBody(service),
@@ -62,148 +51,26 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
   Widget _buildBody(StudentGradeService service) {
     if (service.isLoading) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation(Colors.blue.shade600),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Đang tải dữ liệu...',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+        child: CircularProgressIndicator(color: Colors.blue.shade600),
       );
     }
 
     if (service.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(
-                  Icons.error_outline_rounded,
-                  size: 40,
-                  color: Colors.red.shade600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Lỗi tải dữ liệu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red.shade700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                service.error!,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
-      );
+      return Center(child: Text('Lỗi: ${service.error}'));
     }
 
     if (service.summary == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.inbox_rounded,
-                size: 40,
-                color: Colors.blue.shade400,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Chưa có dữ liệu',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Hãy hoàn thành bài luyện tập để xem kết quả',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-            ),
-          ],
-        ),
-      );
+      return const Center(child: Text("Chưa có dữ liệu"));
     }
 
     final summary = service.summary!;
 
-    if (summary.averageAccuracy == 0 && summary.averageFluency == 0) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade50, Colors.blue.shade100],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.trending_up_rounded,
-                size: 40,
-                color: Colors.blue.shade600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Bắt đầu luyện tập',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Hoàn thành các bài luyện tập để xem thống kê chi tiết',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    // Nếu chưa làm bài nào cả
+    if (summary.overallSkills.isEmpty && summary.averageAccuracy == 0) {
+      return const CommonEmptyState(
+        title: "Chưa có dữ liệu",
+        subtitle: "Hãy hoàn thành các bài luyện tập để xem đánh giá năng lực.",
+        icon: Icons.bar_chart_rounded,
       );
     }
 
@@ -212,78 +79,65 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Biểu đồ Radar
-          _buildRadarChartCard(summary),
+          // 1. BIỂU ĐỒ RADAR TỔNG HỢP (5 KỸ NĂNG)
+          if (summary.overallSkills.isNotEmpty)
+            _buildRadarChartCard(summary.overallSkills),
+
           const SizedBox(height: 32),
 
-          // Tiêu đề "Điểm chi tiết"
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 0, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Điểm chi tiết',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                  ),
+          // 2. CHI TIẾT KỸ NĂNG NÓI (SPEAKING)
+          if (summary.averageAccuracy > 0) ...[
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Text(
+                'Chi tiết Kỹ năng Nói (Speaking)',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade600, Colors.blue.shade400],
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-
-          // Các thẻ điểm
-          _buildScoreCard(
-            icon: Icons.track_changes_rounded,
-            title: 'Độ chính xác',
-            subtitle: 'Accuracy',
-            score: summary.averageAccuracy,
-            color: Colors.blue.shade600,
-            lightColor: Colors.blue.shade50,
-          ),
-          const SizedBox(height: 12),
-          _buildScoreCard(
-            icon: Icons.flash_on_rounded,
-            title: 'Độ lưu loát',
-            subtitle: 'Fluency',
-            score: summary.averageFluency,
-            color: Colors.cyan.shade600,
-            lightColor: Colors.cyan.shade50,
-          ),
-          const SizedBox(height: 12),
-          _buildScoreCard(
-            icon: Icons.check_circle_rounded,
-            title: 'Độ đầy đủ',
-            subtitle: 'Completeness',
-            score: summary.averageCompleteness,
-            color: Colors.teal.shade600,
-            lightColor: Colors.teal.shade50,
-          ),
+            _buildScoreCard(
+              icon: Icons.track_changes_rounded,
+              title: 'Độ chính xác',
+              subtitle: 'Accuracy',
+              score: summary.averageAccuracy,
+              color: Colors.blue.shade600,
+              lightColor: Colors.blue.shade50,
+            ),
+            const SizedBox(height: 12),
+            _buildScoreCard(
+              icon: Icons.flash_on_rounded,
+              title: 'Độ lưu loát',
+              subtitle: 'Fluency',
+              score: summary.averageFluency,
+              color: Colors.cyan.shade600,
+              lightColor: Colors.cyan.shade50,
+            ),
+            const SizedBox(height: 12),
+            _buildScoreCard(
+              icon: Icons.check_circle_rounded,
+              title: 'Độ đầy đủ',
+              subtitle: 'Completeness',
+              score: summary.averageCompleteness,
+              color: Colors.teal.shade600,
+              lightColor: Colors.teal.shade50,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // Biểu đồ Radar trong thẻ
-  Widget _buildRadarChartCard(GradeSummaryModel summary) {
+  // Widget chứa biểu đồ Radar
+  Widget _buildRadarChartCard(Map<String, double> skills) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      height: 480,
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.shade100.withOpacity(0.3),
@@ -293,99 +147,100 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Tổng quan Kỹ năng Phát âm',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
+          const Center(
+            child: Text(
+              "Biểu đồ năng lực toàn diện",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Phân tích chi tiết các khía cạnh của phát âm của bạn',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey.shade500,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: _buildRadarChart(skills),
             ),
           ),
-          const SizedBox(height: 24),
-          AspectRatio(aspectRatio: 1.3, child: _buildRadarChart(summary)),
+          _buildChartNote(),
         ],
       ),
     );
   }
 
-  // Widget Biểu đồ Radar (UI mềm hơn, tinh tế hơn)
-  Widget _buildRadarChart(GradeSummaryModel summary) {
+  // Vẽ biểu đồ Radar từ Map dữ liệu
+  Widget _buildRadarChart(Map<String, double> skills) {
+    final keys = skills.keys.toList();
+    final values = skills.values.toList();
+
+    if (keys.length < 3) {
+      return const Center(
+        child: Text("Cần làm ít nhất 3 loại bài tập để hiện biểu đồ"),
+      );
+    }
+
     return RadarChart(
       RadarChartData(
         radarBackgroundColor: Colors.transparent,
         radarShape: RadarShape.polygon,
-        // Viền ngoài rất nhẹ, gần như mờ
         radarBorderData: BorderSide(
           color: Colors.blue.shade100.withOpacity(0.5),
           width: 1.2,
         ),
-        //radarTouchData: ,
-        // Lưới mảnh và nhẹ, màu xanh nhạt hơn
         gridBorderData: BorderSide(
           color: Colors.blue.shade50.withOpacity(0.8),
           width: 0.8,
         ),
         tickBorderData: const BorderSide(color: Colors.transparent),
-        // Ít vòng hơn để UI không quá rối
         tickCount: 4,
-        ticksTextStyle: TextStyle(
-          color: Colors.transparent,
-          fontSize: 9,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.3,
-        ),
-        // Tiêu đề trục nhỏ, nhẹ nhàng
+        ticksTextStyle: const TextStyle(color: Colors.transparent),
+
+        // Style chữ các đỉnh
         titleTextStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 12,
           color: Color(0xFF1E293B),
-          letterSpacing: 0.2,
         ),
 
         getTitle: (index, angle) {
-          switch (index) {
-            case 0:
-              return const RadarChartTitle(text: 'Chính xác');
-            case 1:
-              return const RadarChartTitle(text: 'Lưu loát');
-            case 2:
-              return const RadarChartTitle(text: 'Đầy đủ');
-            default:
-              return const RadarChartTitle(text: '');
+          if (index < keys.length) {
+            // ✅ VIỆT HÓA TÊN KỸ NĂNG
+            String label = keys[index];
+            if (label == 'Reading')
+              label = 'Đọc';
+            else if (label == 'Listening')
+              label = 'Nghe';
+            else if (label == 'Writing')
+              label = 'Viết';
+            else if (label == 'Speaking')
+              label = 'Nói';
+            else if (label == 'Grammar')
+              label = 'Ngữ pháp';
+
+            return RadarChartTitle(
+              text: "$label\n${values[index].toInt()}",
+              angle: 0,
+            );
           }
+          return const RadarChartTitle(text: '');
         },
+
         dataSets: [
           RadarDataSet(
-            // Màu fill rất nhẹ, trong suốt cao
-            fillColor: Colors.blue.shade300.withOpacity(0.14),
-            // Viền xanh mềm mại với bo tròn
-            borderColor: Colors.blue.shade500,
-            borderWidth: 1,
-            // Làm điểm mềm hơn: chấm nhỏ + hiệu ứng bóng nhẹ
-            entryRadius: 2.8,
-            dataEntries: [
-              RadarEntry(value: summary.averageAccuracy),
-              RadarEntry(value: summary.averageFluency),
-              RadarEntry(value: summary.averageCompleteness),
-            ],
+            fillColor: Colors.blue.shade500.withOpacity(0.2),
+            borderColor: Colors.blue.shade600,
+            borderWidth: 2,
+            entryRadius: 3,
+            dataEntries: values.map((v) => RadarEntry(value: v)).toList(),
           ),
         ],
       ),
     );
   }
 
-  // Thẻ điểm số tân tiến
+  // Thẻ điểm số (Giữ nguyên)
   Widget _buildScoreCard({
     required IconData icon,
     required String title,
@@ -430,10 +285,10 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0F172A),
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -479,6 +334,50 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
               minHeight: 6,
               backgroundColor: color.withOpacity(0.1),
               valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartNote() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min, // Co lại vừa nội dung
+        children: [
+          // Giải thích vùng màu xanh
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.2),
+              border: Border.all(color: Colors.blue),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Text(
+            "Vùng kỹ năng",
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+
+          const SizedBox(width: 20), // Khoảng cách
+          // Giải thích con số
+          const Icon(Icons.onetwothree, size: 20, color: Colors.black87),
+          const SizedBox(width: 4),
+          const Text(
+            "Điểm TB (0-100)",
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

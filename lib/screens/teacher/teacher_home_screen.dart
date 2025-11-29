@@ -135,11 +135,6 @@ class _SidebarMenu extends StatelessWidget {
                   label: 'Lịch học',
                   path: '/teacher/schedules',
                 ),
-                item(
-                  icon: Icons.library_music_rounded, // Icon cho Thư viện Media
-                  label: 'Thư viện Media',
-                  path: '/teacher/media', // Đường dẫn đã đăng ký
-                ),
               ],
             ),
           ),

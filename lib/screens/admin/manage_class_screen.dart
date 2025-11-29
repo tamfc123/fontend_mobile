@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/class_model.dart';
 import 'package:mobile/services/admin/admin_class_service.dart';

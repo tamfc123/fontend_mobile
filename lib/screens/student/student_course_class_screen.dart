@@ -41,13 +41,9 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1F2937),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: const Text(
           "Chọn lớp học",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       ),
       body: Column(

@@ -8,8 +8,13 @@ class ApiClient {
   ApiClient() : _dio = Dio() {
     _dio.options = BaseOptions(
       baseUrl: ApiConfig.baseUrl,
-      connectTimeout: Duration(seconds: 10),
-      receiveTimeout: Duration(seconds: 10),
+      connectTimeout: const Duration(
+        seconds: 30,
+      ), // Thời gian chờ kết nối server
+      receiveTimeout: const Duration(
+        seconds: 120,
+      ), // Thời gian chờ AI xử lý (QUAN TRỌNG)
+      sendTimeout: const Duration(seconds: 30), // Thời gian gửi file lên
       headers: {'Content-Type': 'application/json'},
     );
 

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/data/models/class_model.dart';
 import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/data/models/lesson_model.dart';
 import 'package:mobile/data/models/module_details_model.dart';
 import 'package:mobile/data/models/module_model.dart';
 import 'package:mobile/data/models/student_class_model.dart';
+import 'package:mobile/data/models/teacher_class_model.dart';
 import 'package:mobile/data/models/user_model.dart';
 import 'package:mobile/data/models/vocabulary_levels_model.dart';
 import 'package:mobile/data/models/vocabulary_modules_model.dart';
 import 'package:mobile/screens/admin/admin_dash_board_screen.dart';
+import 'package:mobile/screens/admin/admin_media_screen.dart';
+import 'package:mobile/screens/admin/admin_quiz_detail_screen.dart';
+import 'package:mobile/screens/admin/admin_quiz_list_screen.dart';
 import 'package:mobile/screens/admin/bulk_schedule_screen.dart';
 import 'package:mobile/screens/admin/manage_course_screen.dart';
 import 'package:mobile/screens/admin/manage_lesson_screen.dart';
@@ -51,7 +56,7 @@ import 'package:mobile/screens/admin/manage_class_screen.dart';
 import 'package:mobile/screens/teacher/manage_teacher_class_screen.dart';
 import 'package:mobile/screens/teacher/manage_teacher_schedule_screen.dart';
 import 'package:mobile/screens/teacher/student_list_screen.dart';
-import 'package:mobile/screens/teacher/teacher_media_screen.dart';
+import 'package:mobile/screens/teacher/teacher_quit_list_screen.dart';
 import 'package:mobile/widgets/admin/admin_create_user_screen.dart';
 import 'package:mobile/widgets/admin/admin_edit_user_screen.dart';
 
@@ -347,34 +352,20 @@ final appRouter = GoRouter(
                         body: Center(child: Text('Lỗi: Data khóa học bị null')),
                       );
 
-                    // 👇 BƯỚC TIẾP THEO CHÚNG TA SẼ TẠO MÀN HÌNH NÀY
-                    // return AdminQuizListScreen(course: course);
-                    return Scaffold(
-                      appBar: AppBar(
-                        title: Text("Quản lý Quiz: ${course.name}"),
-                      ),
-                      body: const Center(
-                        child: Text(
-                          "Màn hình AdminQuizListScreen sẽ hiện ở đây",
-                        ),
-                      ),
-                    );
+                    return AdminQuizListScreen(course: course);
                   },
                   routes: [
                     // Route xem chi tiết/sửa Quiz
                     GoRoute(
                       path: ':quizId', // Path: /admin/courses/123/quizzes/456
                       builder: (context, state) {
-                        final course =
-                            (state.extra as Map<String, dynamic>)['course']
-                                as CourseModel;
+                        // Lấy dữ liệu truyền qua
+                        final extras = state.extra as Map<String, dynamic>;
+                        final course = extras['course'] as CourseModel;
                         final quizId = state.pathParameters['quizId']!;
-
-                        // 👇 BƯỚC TIẾP THEO SẼ TẠO
-                        // return AdminQuizDetailScreen(course: course, quizId: quizId);
-                        return Scaffold(
-                          appBar: AppBar(title: const Text("Chi tiết Quiz")),
-                          body: Center(child: Text("Quiz ID: $quizId")),
+                        return AdminQuizDetailScreen(
+                          course: course,
+                          quizId: quizId,
                         );
                       },
                     ),
@@ -399,6 +390,12 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'rooms',
               builder: (context, state) => const ManageRoomScreen(),
+            ),
+            GoRoute(
+              path: 'media', // Path: /admin/media
+              builder:
+                  (context, state) =>
+                      const AdminMediaScreen(), // 👈 Màn hình này ta sẽ tạo ở bước sau
             ),
           ],
         ),
@@ -429,15 +426,36 @@ final appRouter = GoRouter(
                     );
                   },
                 ),
+                GoRoute(
+                  path:
+                      ':classId/quizzes', // Path: /teacher/teacherClasses/123/quizzes
+                  builder: (context, state) {
+                    final extra = state.extra;
+                    ClassModel classModel;
+
+                    // ✅ FIX LỖI TYPE ERROR TẠI ĐÂY
+                    if (extra is TeacherClassModel) {
+                      // Convert TeacherClassModel -> ClassModel (Map dữ liệu cần thiết)
+                      classModel = ClassModel(
+                        id: extra.id,
+                        name: extra.name,
+                        teacherId: '',
+                        courseId: '',
+                        // ✅ Thêm courseName lấy từ TeacherClassModel (hoặc chuỗi rỗng nếu null)
+                        courseName: extra.courseName ?? '',
+                      );
+                    } else {
+                      classModel = extra as ClassModel;
+                    }
+
+                    return TeacherQuizListScreen(classModel: classModel);
+                  },
+                ),
               ],
             ),
             GoRoute(
               path: 'schedules',
               builder: (context, state) => const TeacherScheduleScreen(),
-            ),
-            GoRoute(
-              path: 'media', // 👈 Đường dẫn mới: /teacher/media
-              builder: (context, state) => const TeacherMediaScreen(),
             ),
           ],
         ),

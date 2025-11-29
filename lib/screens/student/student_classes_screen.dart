@@ -15,7 +15,7 @@ class StudentClassesScreen extends StatefulWidget {
 class _StudentClassesScreenState extends State<StudentClassesScreen> {
   // Palette màu
   static const Color primaryBlue = Color(0xFF3B82F6);
-  static const Color textDark = Color(0xFF1E293B); // Màu đen xám (Black/Slate)
+  static const Color textDark = Color(0xFF1E293B);
   static const Color bgLight = Color(0xFFF8FAFC);
 
   @override
@@ -36,16 +36,15 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true, // ✅ Căn giữa tiêu đề
+        centerTitle: true,
         title: const Text(
           "Lớp học của tôi",
           style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 20,
-            color: textDark, // ✅ Chữ màu đen (Slate 800)
+            color: textDark,
           ),
         ),
-        actions: [], // ✅ Đã bỏ nút dấu +
       ),
       body: Builder(
         builder: (context) {

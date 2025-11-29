@@ -59,20 +59,6 @@ class AdminUserRepository {
     }
   }
 
-  Future<bool> deleteUser(String id) async {
-    try {
-      final response = await _apiClient.dio.delete(ApiConfig.userById(id));
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        return true;
-      }
-
-      throw Exception(response.data?['message'] ?? 'Máy chủ từ chối yêu cầu');
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Lỗi khi xóa người dùng');
-    }
-  }
-
   Future<bool> toggleUserStatus(String id) async {
     try {
       final response = await _apiClient.dio.put(ApiConfig.userToggleStatus(id));

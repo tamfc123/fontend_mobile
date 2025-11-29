@@ -16,7 +16,6 @@ class StudentScheduleScreen extends StatefulWidget {
 class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
   final CalendarController _calendarController = CalendarController();
 
-  // 🎨 Bảng màu Blue & White Theme
   static const Color primaryBlue = Color(0xFF3B82F6);
   static const Color darkBlue = Color(0xFF1E3A8A);
   static const Color lightBlueBg = Color(0xFFEFF6FF);
@@ -52,7 +51,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
           'Thời khóa biểu',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: 16,
+            fontSize: 20,
             color: Colors.black,
           ),
         ),

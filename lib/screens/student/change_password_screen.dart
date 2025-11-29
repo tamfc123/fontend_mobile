@@ -126,11 +126,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         centerTitle: true,
         title: const Text(
           "Đổi mật khẩu",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       ),
 

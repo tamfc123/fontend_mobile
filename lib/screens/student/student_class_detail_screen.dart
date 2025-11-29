@@ -44,11 +44,11 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
         centerTitle: true,
         title: const Text(
           'Chi tiết lớp học',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: textDark,
+          ),
         ),
       ),
       body: SingleChildScrollView(

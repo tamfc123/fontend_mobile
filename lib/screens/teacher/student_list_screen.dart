@@ -1,12 +1,18 @@
-import 'dart:async'; // Cho Timer debouncer
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/models/student_in_class_model.dart';
 import 'package:mobile/services/teacher/teacher_class_service.dart';
 import 'package:mobile/shared_widgets/avatar_widget.dart';
+import 'package:mobile/shared_widgets/admin/base_admin_table.dart'; // ✅ Import bảng chuẩn
+import 'package:mobile/shared_widgets/admin/common_table_cell.dart'; // ✅ Import cell chuẩn
+import 'package:mobile/shared_widgets/admin/action_icon_button.dart'; // ✅ Import nút chuẩn
+import 'package:mobile/shared_widgets/admin/common_empty_state.dart'; // ✅ Import Empty State chuẩn
+import 'package:mobile/widgets/teacher/student_info_dialog.dart';
+import 'package:mobile/widgets/teacher/student_skill_dialog.dart';
 import 'package:provider/provider.dart';
 
-// Enum cho sort sinh viên (tương tự ManageTeacherClassScreen)
+// Enum cho sort sinh viên
 enum SortOptionStudent { nameAsc, nameDesc, expAsc, expDesc }
 
 class StudentListScreen extends StatefulWidget {
@@ -29,7 +35,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
   Timer? _debounce;
   List<StudentInClassModel> _allStudents = []; // Lưu data gốc để filter/sort
 
-  // MÀU CHỦ ĐẠO (ĐỒNG NHẤT VỚI MANAGE CLASS)
+  // MÀU CHỦ ĐẠO
   static const Color primaryBlue = Colors.blue;
   static const Color backgroundBlue = Color(0xFFF3F8FF);
   static const Color surfaceBlue = Color(0xFFE3F2FD);
@@ -49,33 +55,33 @@ class _StudentListScreenState extends State<StudentListScreen> {
     super.dispose();
   }
 
-  // Debouncer cho search: trigger rebuild sau khi gõ
+  // Debouncer
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
-        setState(() {}); // Trigger rebuild để tính filtered mới
+        setState(() {});
       }
     });
   }
 
-  // Xử lý sort change: update sort và trigger rebuild
   void _onSortChanged(SortOptionStudent? option) {
     setState(() => _selectedSort = option);
   }
 
-  // Clear search: clear text và trigger rebuild
   void _clearSearch() {
     _searchController.clear();
-    setState(() {}); // Trigger rebuild
+    setState(() {});
   }
 
-  // Pure function: Lọc và sắp xếp data (gọi trong build)
+  // Lọc và sắp xếp data
   List<StudentInClassModel> _getFilteredStudents() {
-    var students = _allStudents;
+    var students = List<StudentInClassModel>.from(
+      _allStudents,
+    ); // Clone list để sort không ảnh hưởng gốc
     final query = _searchController.text.toLowerCase();
 
-    // Filter theo search (tên hoặc email)
+    // Filter
     if (query.isNotEmpty) {
       students =
           students
@@ -87,7 +93,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
               .toList();
     }
 
-    // Sort theo option
+    // Sort
     if (_selectedSort != null) {
       switch (_selectedSort!) {
         case SortOptionStudent.nameAsc:
@@ -108,7 +114,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
           break;
       }
     }
-
     return students;
   }
 
@@ -140,15 +145,17 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
           // No data
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState(
-              isSearchActive: _searchController.text.isNotEmpty,
+            return Center(
+              child: CommonEmptyState(
+                title: 'Chưa có sinh viên',
+                subtitle: 'Lớp học này hiện chưa có sinh viên nào.',
+                icon: Icons.people_outline,
+              ),
             );
           }
 
-          // Có data: cập nhật _allStudents (không setState, vì FutureBuilder sẽ rebuild)
+          // Có data
           _allStudents = snapshot.data!;
-
-          // Tính filtered students (pure function)
           final filteredStudents = _getFilteredStudents();
 
           return Center(
@@ -175,12 +182,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
                       ),
                       child: Column(
                         children: [
-                          // HEADER ROW VỚI BACK BUTTON
+                          // HEADER ROW
                           Padding(
                             padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                             child: Row(
                               children: [
-                                // NÚT BACK BÊN TRÁI
+                                // NÚT BACK
                                 IconButton(
                                   onPressed: () => context.pop(),
                                   icon: const Icon(
@@ -212,15 +219,14 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 16),
-
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      const Text(
                                         'Danh sách sinh viên',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
                                           color: Color(0xFF1E3A8A),
@@ -228,7 +234,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                       ),
                                       Text(
                                         'Lớp: ${widget.className}',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 15,
                                           color: Colors.grey,
                                           fontWeight: FontWeight.w500,
@@ -241,171 +247,131 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             ),
                           ),
 
-                          // SEARCH + FILTER + STATS
+                          // SEARCH + SORT
                           Padding(
                             padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                            child: Column(
+                            child: Row(
                               children: [
-                                // SEARCH
+                                Expanded(
+                                  child: Container(
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: surfaceBlue,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: TextField(
+                                      controller: _searchController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Tìm kiếm theo tên/email...',
+                                        hintStyle: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        prefixIcon: const Icon(
+                                          Icons.search,
+                                          color: primaryBlue,
+                                        ),
+                                        suffixIcon:
+                                            _searchController.text.isNotEmpty
+                                                ? IconButton(
+                                                  icon: Icon(
+                                                    Icons.clear,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  onPressed: _clearSearch,
+                                                )
+                                                : null,
+                                        border: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // SORT DROPDOWN
                                 Container(
                                   height: 48,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: surfaceBlue,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: TextField(
-                                    controller: _searchController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Tìm kiếm theo tên/email...',
-                                      hintStyle: TextStyle(
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.search,
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<SortOptionStudent>(
+                                      value: _selectedSort,
+                                      icon: const Icon(
+                                        Icons.sort,
                                         color: primaryBlue,
                                       ),
-                                      suffixIcon:
-                                          _searchController.text.isNotEmpty
-                                              ? IconButton(
-                                                icon: Icon(
-                                                  Icons.clear,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                                onPressed: _clearSearch,
-                                              )
-                                              : null,
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-
-                                // FILTER (SORT)
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildDropdown<SortOptionStudent>(
-                                        value: _selectedSort,
-                                        items: const [
-                                          DropdownMenuItem(
-                                            value: SortOptionStudent.nameAsc,
-                                            child: Text('Tên A→Z'),
-                                          ),
-                                          DropdownMenuItem(
-                                            value: SortOptionStudent.nameDesc,
-                                            child: Text('Tên Z→A'),
-                                          ),
-                                          DropdownMenuItem(
-                                            value: SortOptionStudent.expAsc,
-                                            child: Text('EXP tăng dần'),
-                                          ),
-                                          DropdownMenuItem(
-                                            value: SortOptionStudent.expDesc,
-                                            child: Text('EXP giảm dần'),
-                                          ),
-                                        ],
-                                        onChanged: _onSortChanged,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-
-                                // STATS
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Tìm thấy ${filteredStudents.length} sinh viên',
-                                    style: TextStyle(
-                                      color: primaryBlue,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                                      hint: const Text("Sắp xếp"),
+                                      items: const [
+                                        DropdownMenuItem(
+                                          value: SortOptionStudent.nameAsc,
+                                          child: Text('Tên A→Z'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: SortOptionStudent.nameDesc,
+                                          child: Text('Tên Z→A'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: SortOptionStudent.expDesc,
+                                          child: Text('EXP Cao nhất'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: SortOptionStudent.expAsc,
+                                          child: Text('EXP Thấp nhất'),
+                                        ),
+                                      ],
+                                      onChanged: _onSortChanged,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
+
+                          // STATS TEXT
+                          if (filteredStudents.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Hiển thị ${filteredStudents.length} sinh viên',
+                                  style: const TextStyle(
+                                    color: primaryBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
 
-                    // === DANH SÁCH SINH VIÊN ===
+                    // === DANH SÁCH SINH VIÊN (DẠNG BẢNG) ===
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child:
-                              filteredStudents.isEmpty
-                                  ? _buildEmptyState(
-                                    isSearchActive:
-                                        _searchController.text.isNotEmpty,
-                                  )
-                                  : ListView.builder(
-                                    padding: const EdgeInsets.all(16),
-                                    itemCount: filteredStudents.length,
-                                    itemBuilder: (context, index) {
-                                      final student = filteredStudents[index];
-                                      return Card(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        elevation: 1,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: ListTile(
-                                          leading: AvatarWidget(
-                                            avatarUrl: student.avatarUrl,
-                                            name: student.studentName,
-                                          ),
-                                          title: Text(
-                                            student.studentName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          subtitle: Text(student.email),
-                                          trailing: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text(
-                                                'EXP: ${student.experiencePoints}',
-                                                style: TextStyle(
-                                                  color: primaryBlue,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              if (student.level != null)
-                                                Text('Level: ${student.level}'),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                        ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (filteredStudents.isEmpty) {
+                            return CommonEmptyState(
+                              title: "Không tìm thấy kết quả",
+                              subtitle: "Thử tìm kiếm với từ khóa khác",
+                              icon: Icons.search_off,
+                            );
+                          }
+                          // ✅ Gọi hàm xây dựng bảng
+                          return _buildStudentTable(
+                            filteredStudents,
+                            constraints.maxWidth,
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -418,53 +384,128 @@ class _StudentListScreenState extends State<StudentListScreen> {
     );
   }
 
-  Widget _buildEmptyState({required bool isSearchActive}) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people_outline, size: 72, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            isSearchActive
-                ? 'Không tìm thấy sinh viên nào'
-                : 'Lớp này chưa có sinh viên',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.grey,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isSearchActive ? 'Thử từ khóa khác' : '',
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
+  // ✅ HÀM XÂY DỰNG BẢNG CHUẨN ADMIN
+  Widget _buildStudentTable(
+    List<StudentInClassModel> students,
+    double maxWidth,
+  ) {
+    // Cấu hình độ rộng cột
+    final colWidths = {
+      0: maxWidth * 0.05, // STT
+      1: maxWidth * 0.30, // Sinh viên (Avatar + Tên)
+      2: maxWidth * 0.25, // Email
+      3: maxWidth * 0.10, // Level
+      4: maxWidth * 0.10, // EXP
+      5: maxWidth * 0.20, // Hành động (Nút mới ở đây)
+    };
 
-  Widget _buildDropdown<T>({
-    required T? value,
-    required List<DropdownMenuItem<T>> items,
-    required Function(T?) onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButton<T>(
-        value: value,
-        items: items,
-        isExpanded: true,
-        underline: const SizedBox(),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: primaryBlue),
-        onChanged: onChanged,
-      ),
+    final colHeaders = ['#', 'Sinh viên', 'Email', 'Level', 'EXP', 'Hành động'];
+
+    final dataRows =
+        students.asMap().entries.map((entry) {
+          final index = entry.key + 1;
+          final student = entry.value;
+
+          return TableRow(
+            children: [
+              // 1. STT
+              CommonTableCell('$index', align: TextAlign.center, bold: true),
+
+              // 2. Sinh viên (Avatar + Tên)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    AvatarWidget(
+                      avatarUrl: student.avatarUrl,
+                      name: student.studentName,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        student.studentName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E3A8A), // Màu xanh Admin
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 3. Email
+              CommonTableCell(student.email),
+
+              // 4. Level
+              CommonTableCell(
+                'Lv.${student.level}',
+                align: TextAlign.center,
+                color: Colors.orange.shade800,
+                bold: true,
+              ),
+
+              // 5. EXP
+              CommonTableCell(
+                '${student.experiencePoints}',
+                align: TextAlign.center,
+              ),
+
+              // 6. Hành động (Thêm nút Analytics)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Nút xem chi tiết (Info)
+                    ActionIconButton(
+                      icon: Icons.info_outline_rounded,
+                      color: Colors.grey,
+                      tooltip: 'Thông tin cá nhân',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (_) => StudentInfoDialog(
+                                classId: widget.classId,
+                                studentId: student.studentId,
+                              ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ActionIconButton(
+                      icon: Icons.analytics_rounded,
+                      color: primaryBlue,
+                      tooltip: 'Đánh giá năng lực',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (_) => StudentSkillDialog(
+                                classId: widget.classId,
+                                studentId: student.studentId,
+                                studentName: student.studentName,
+                                avatarUrl: student.avatarUrl,
+                              ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }).toList();
+
+    return BaseAdminTable(
+      columnWidths: colWidths.map((k, v) => MapEntry(k, FixedColumnWidth(v))),
+      columnHeaders: colHeaders,
+      dataRows: dataRows,
     );
   }
 }

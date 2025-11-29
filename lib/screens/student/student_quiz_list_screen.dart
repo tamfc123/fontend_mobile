@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/data/models/student_quiz_list_model.dart';
+import 'package:mobile/data/models/student_quiz_models.dart';
 import 'package:mobile/services/student/student_quiz_service.dart';
+import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizListScreen extends StatefulWidget {
@@ -19,123 +20,127 @@ class StudentQuizListScreen extends StatefulWidget {
 }
 
 class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
+  static const Color primaryColor = Color(0xFF3B82F6);
+  static const Color textDark = Color(0xFF1E293B);
+  final List<Map<String, String>> _filters = [
+    {'label': 'Tất cả', 'value': 'ALL'},
+    {'label': 'Đọc hiểu', 'value': 'READING'},
+    {'label': 'Nghe', 'value': 'LISTENING'},
+    {'label': 'Điền từ', 'value': 'WRITING'},
+    {'label': 'Viết luận', 'value': 'ESSAY'},
+    {'label': 'Ngữ pháp', 'value': 'GRAMMAR'},
+  ];
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StudentQuizService>().fetchQuizList(widget.classId);
+      context.read<StudentQuizService>().fetchQuizList(
+        widget.classId,
+        filter: 'ALL',
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final quizService = context.watch<StudentQuizService>();
+    final quizzes = quizService.quizzes;
+    final isLoading = quizService.isLoadingList;
+    final currentFilter = quizService.currentFilter;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Danh sách bài tập',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                color: textDark,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1F2937),
-        centerTitle: true,
-        title: Text(
-          widget.className,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
+        foregroundColor: textDark,
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE5E7EB), height: 1),
-        ),
+        centerTitle: true,
       ),
-      body: Consumer<StudentQuizService>(
-        builder: (context, service, child) {
-          if (service.isLoadingList) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (service.listError != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Lỗi tải danh sách:\n${service.listError}',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => service.fetchQuizList(widget.classId),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (service.quizzes.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.quiz_outlined,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Không có bài tập nào trong lớp này.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // ✅ SỬ DỤNG ListView.builder ĐỂ CÓ INDEX CHO ANIMATION
-          return RefreshIndicator(
-            onRefresh: () => service.fetchQuizList(widget.classId),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              // +1 để dành chỗ cho cái Header Text "Danh sách bài tập"
-              itemCount: service.quizzes.length + 1,
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _filters.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
-                // Item đầu tiên là Header Text
-                if (index == 0) {
-                  return const Padding(
-                    padding: EdgeInsets.only(bottom: 12, left: 4),
-                    child: Text(
-                      'Danh sách bài tập',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  );
-                }
+                final filter = _filters[index];
+                final isSelected = filter['value'] == currentFilter;
 
-                // Các item tiếp theo là Quiz Card
-                final quizIndex = index - 1;
-                final quiz = service.quizzes[quizIndex];
-
-                // ✅ BỌC TRONG WIDGET ANIMATION TỰ TẠO (SlideInAnimation)
-                return SlideInAnimation(
-                  index: quizIndex, // Truyền index để tính độ trễ
-                  child: _buildQuizCard(context, quiz),
+                return ChoiceChip(
+                  label: Text(filter['label']!),
+                  selected: isSelected,
+                  showCheckmark: false,
+                  selectedColor: primaryColor.withOpacity(0.1),
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: isSelected ? primaryColor : Colors.grey.shade300,
+                    width: 1.5,
+                  ),
+                  labelStyle: TextStyle(
+                    color: isSelected ? primaryColor : Colors.grey.shade700,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                  onSelected: (selected) {
+                    if (selected) {
+                      // Gọi Service để lọc lại danh sách
+                      context.read<StudentQuizService>().fetchQuizList(
+                        widget.classId,
+                        filter: filter['value']!,
+                      );
+                    }
+                  },
                 );
               },
             ),
-          );
-        },
+          ),
+
+          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+
+          Expanded(
+            child:
+                isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(color: primaryColor),
+                    )
+                    : quizzes.isEmpty
+                    ? const CommonEmptyState(
+                      title: 'Không có bài tập',
+                      subtitle: 'Không tìm thấy bài tập nào cho mục này.',
+                      icon: Icons.filter_list_off, // Icon filter trống
+                    )
+                    : ListView.separated(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: quizzes.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final quiz = quizzes[index];
+                        // Dùng hàm _buildQuizCard có sẵn của bạn
+                        return SlideInAnimation(
+                          index: index,
+                          child: _buildQuizCard(context, quiz),
+                        );
+                      },
+                    ),
+          ),
+        ],
       ),
     );
   }
@@ -146,21 +151,40 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
     Color color;
 
     switch (skillType.toUpperCase()) {
+      // 1. NGHE
       case 'LISTENING':
         iconData = Icons.headphones_rounded;
-        tooltip = 'Bài tập Nghe';
+        tooltip = 'Luyện Nghe (Listening)';
         color = Colors.purple.shade600;
         break;
+
+      // 2. VIẾT LUẬN (AI CHẤM) - Quan trọng
+      case 'ESSAY':
+        iconData = Icons.history_edu_rounded; // Icon cây bút lông/viết
+        tooltip = 'Viết Luận (Essay)';
+        color = Colors.pink.shade600; // Màu hồng đậm cho nổi bật
+        break;
+
+      // 3. VIẾT ĐIỀN TỪ
       case 'WRITING':
       case 'DICTATION':
         iconData = Icons.edit_note_rounded;
-        tooltip = 'Bài tập Viết';
+        tooltip = 'Điền từ (Writing)';
         color = Colors.orange.shade700;
         break;
+
+      // 4. NGỮ PHÁP
+      case 'GRAMMAR':
+        iconData = Icons.spellcheck_rounded; // Icon kiểm tra chính tả/ngữ pháp
+        tooltip = 'Ngữ pháp (Grammar)';
+        color = Colors.teal.shade600; // Màu xanh cổ vịt
+        break;
+
+      // 5. ĐỌC HIỂU (Mặc định)
       case 'READING':
       default:
         iconData = Icons.menu_book_rounded;
-        tooltip = 'Bài tập Đọc / Ngữ pháp';
+        tooltip = 'Đọc hiểu (Reading)';
         color = Colors.blue.shade600;
         break;
     }
@@ -172,6 +196,9 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+          ), // Thêm viền nhẹ cho đẹp
         ),
         child: Icon(iconData, color: color, size: 24),
       ),
@@ -342,39 +369,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
     StudentQuizListModel quiz,
     bool isSubmitted,
   ) {
-    if (isSubmitted) {
+    // TRƯỜNG HỢP 1: CHƯA LÀM -> Hiện nút "Làm bài"
+    if (!isSubmitted) {
       return SizedBox(
-        height: 32,
-        child: OutlinedButton(
-          onPressed: () {
-            context.pushNamed(
-              'student-quiz-review',
-              extra: {'classId': widget.classId, 'quizId': quiz.id},
-            );
-          },
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            side: BorderSide(color: Colors.grey.shade300),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text(
-            'Xem lại',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      );
-    } else {
-      return SizedBox(
-        height: 32,
+        height: 34,
         child: ElevatedButton(
-          onPressed: () {
-            context.pushNamed(
+          onPressed: () async {
+            await context.pushNamed(
               'student-quiz-taking',
               extra: {
                 'classId': widget.classId,
@@ -384,21 +385,95 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(255, 58, 116, 241),
+            backgroundColor: const Color(0xFF3B82F6), // Primary Blue
             foregroundColor: Colors.white,
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
           child: const Text(
             'Làm bài',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       );
     }
+
+    // TRƯỜNG HỢP 2: ĐÃ LÀM -> Hiện 2 nút "Xem lại" và "Làm lại"
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Nút Xem lại (Nhẹ nhàng)
+        InkWell(
+          onTap: () async {
+            await context.pushNamed(
+              'student-quiz-review',
+              extra: {'classId': widget.classId, 'quizId': quiz.id},
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Xem lại',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // Nút Làm lại (Nổi bật hơn chút)
+        InkWell(
+          onTap: () {
+            // Chuyển hướng sang làm bài (như mới)
+            context.pushNamed(
+              'student-quiz-taking',
+              extra: {
+                'classId': widget.classId,
+                'quizId': quiz.id,
+                'quizTitle': quiz.title,
+              },
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF), // Xanh rất nhạt
+              border: Border.all(
+                color: const Color(0xFFBFDBFE),
+              ), // Viền xanh nhạt
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.refresh_rounded, size: 14, color: Color(0xFF2563EB)),
+                SizedBox(width: 4),
+                Text(
+                  'Làm lại',
+                  style: TextStyle(
+                    color: Color(0xFF2563EB), // Xanh đậm
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

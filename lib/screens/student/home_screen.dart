@@ -313,231 +313,174 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
         slivers: [
           // IMPROVED: AppBar với layout cân đối hơn
           SliverAppBar(
-            expandedHeight: 120,
+            expandedHeight: 130, // Tăng chiều cao chút cho thoáng
             floating: true,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            //backgroundColor: const Color(0xFF3B82F6), // Xanh chuẩn Tailwind
             elevation: 0,
-            centerTitle: false,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primary.withBlue(220),
-                    ],
+                    colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Avatar
+                        // 1. AVATAR (Có viền trắng + Bóng đổ)
                         Container(
-                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: Colors.white,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.blue.shade100,
+                            radius: 28,
+                            backgroundColor: Colors.grey.shade200,
                             backgroundImage:
                                 user.avatarUrl != null &&
                                         user.avatarUrl!.isNotEmpty
                                     ? NetworkImage(user.avatarUrl!)
-                                    : null,
-                            child:
-                                user.avatarUrl == null ||
-                                        user.avatarUrl!.isEmpty
-                                    ? const Icon(
-                                      Icons.person_outline,
-                                      color: AppColors.primary,
-                                      size: 28,
-                                    )
-                                    : null,
+                                    : const AssetImage(
+                                          "assets/images/avatar.png",
+                                        )
+                                        as ImageProvider,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Name và Badges
+                        const SizedBox(width: 16),
+
+                        // 2. THÔNG TIN (Tên + Level Badge)
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user.name,
+                                "Xin chào, ${user.name.split(' ').last}!", // Chỉ lấy tên cho thân mật
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  // Level Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.25),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.stars_rounded,
-                                          color: Colors.white,
-                                          size: 14,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Lv ${user.level}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+
+                              // Level Badge (Màu cam nổi bật trên nền xanh)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1,
                                   ),
-                                  const SizedBox(width: 8),
-                                  // Coins Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.stars_rounded,
+                                      color: Colors.amberAccent,
+                                      size: 16,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.3),
-                                      borderRadius: BorderRadius.circular(12),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "Level ${user.level}",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.monetization_on,
-                                          color: Colors.white,
-                                          size: 14,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${user.coins}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        // Right Icons
-                        Row(
+
+                        // 3. CỤM STATS BÊN PHẢI (Coin + Streak)
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            // Streak Icon với animation
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () {
-                                // TODO: Show streak popup
-                              },
-                              icon: Stack(
-                                clipBehavior: Clip.none,
+                            // Coin Badge (Nền trắng, chữ vàng)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
                                 children: [
                                   const Icon(
-                                        Icons.local_fire_department,
-                                        color: Colors.white,
-                                        size: 28,
-                                      )
-                                      .animate(
-                                        onPlay:
-                                            (controller) => controller.repeat(),
-                                      )
-                                      .shimmer(
-                                        duration: 2000.ms,
-                                        color: Colors.orange.withOpacity(0.5),
-                                      ),
-                                  Positioned(
-                                    bottom: -2,
-                                    right: -2,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.danger,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        user.currentStreak.toString(),
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                    Icons.monetization_on_rounded,
+                                    color: Colors.amber,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "${user.coins}",
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            // Notification Icon
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () {
-                                // TODO: Open notifications
-                              },
-                              icon: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  const Icon(
-                                    Icons.notifications_outlined,
+                            const SizedBox(height: 8),
+
+                            // Streak Badge (Lửa)
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.local_fire_department_rounded,
+                                  color: Colors.orangeAccent,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "${user.currentStreak} ngày",
+                                  style: const TextStyle(
                                     color: Colors.white,
-                                    size: 26,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
                                   ),
-                                  Positioned(
-                                    top: -2,
-                                    right: -2,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.danger,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -644,13 +587,13 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         color: AppColors.success,
                         onTap: () => context.go('/student/grades'),
                       ),
-                      _buildQuickActionButton(
-                        icon: Icons.store_rounded,
-                        title: 'Cửa hàng',
-                        subtitle: 'Đổi xu thành vật phẩm',
-                        color: Colors.pink.shade600,
-                        onTap: () => context.go('/student/store'),
-                      ),
+                      // _buildQuickActionButton(
+                      //   icon: Icons.store_rounded,
+                      //   title: 'Cửa hàng',
+                      //   subtitle: 'Đổi xu thành vật phẩm',
+                      //   color: Colors.pink.shade600,
+                      //   onTap: () => context.go('/student/store'),
+                      // ),
                       _buildQuickActionButton(
                         icon: Icons.leaderboard_rounded,
                         title: 'Bảng xếp hạng',

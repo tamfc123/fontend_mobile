@@ -131,28 +131,6 @@ class AdminUserService extends ChangeNotifier {
     }
   }
 
-  //ham delete user
-  Future<bool> deleteUser(String userId) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      final success = await _userRepository.deleteUser(userId);
-      if (success) {
-        ToastHelper.showSuccess('Xóa tài khoản thành công');
-        await fetchUsers(page: _currentPage);
-      }
-      return success;
-    } catch (e) {
-      ToastHelper.showError(
-        'Xóa tài khoản thất bại: ${e.toString().replaceFirst('Exception: ', '')}',
-      );
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   //ham khoa/mo user
   Future<bool> toggleUserStatus(String id) async {
     _isLoading = true;

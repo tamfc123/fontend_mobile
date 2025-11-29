@@ -4,7 +4,7 @@ import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/data/models/quiz_models.dart';
 import 'package:mobile/services/admin/admin_quiz_service.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
-import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AdminQuizDetailScreen extends StatefulWidget {
@@ -104,11 +104,11 @@ class _AdminQuizDetailScreenState extends State<AdminQuizDetailScreen> {
                           quiz.readingPassage != null &&
                           quiz.readingPassage!.isNotEmpty)
                         _buildReadingPassageCard(quiz.readingPassage!),
-
-                      // TODO: Nếu là Listening và có MediaUrl chung thì hiện Player ở đây
+                      if (quiz.skillType == 'LISTENING' &&
+                          quiz.mediaUrl != null &&
+                          quiz.mediaUrl!.isNotEmpty)
+                        _buildAudioInfoCard(quiz.mediaUrl!),
                       const SizedBox(height: 24),
-
-                      // 3. DANH SÁCH CÂU HỎI
                       Row(
                         children: [
                           const Icon(Icons.list_alt, color: primaryBlue),
@@ -133,8 +133,6 @@ class _AdminQuizDetailScreenState extends State<AdminQuizDetailScreen> {
                           final question = entry.value;
                           return _buildQuestionCard(index + 1, question);
                         }),
-
-                      // Khoảng trống dưới cùng
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -439,6 +437,49 @@ class _AdminQuizDetailScreenState extends State<AdminQuizDetailScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAudioInfoCard(String url) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purple.shade200),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.audio_file, color: Colors.purple),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "File Âm Thanh (Audio Source):",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  url,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    decoration: TextDecoration.underline,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

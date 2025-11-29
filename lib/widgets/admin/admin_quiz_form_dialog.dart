@@ -55,7 +55,12 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
         assetPath = 'assets/templates/quiz_template_writing.xlsx';
         fileName = 'mau_writing.xlsx';
         break;
+      case 'ESSAY':
+        assetPath = 'assets/templates/writing_essay_template.xlsx';
+        fileName = 'mau_writing_essay.xlsx';
+        break;
       case 'READING':
+      case 'GRAMMAR':
       default:
         assetPath = 'assets/templates/quiz_template_reading.xlsx';
         fileName = 'mau_reading_grammar.xlsx';
@@ -245,15 +250,23 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
                   items: const [
                     DropdownMenuItem(
                       value: 'READING',
-                      child: Text('📖 Reading (Đọc hiểu / Ngữ pháp)'),
+                      child: Text('Reading (Đọc hiểu đoạn văn)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'GRAMMAR',
+                      child: Text('Grammar (Ngữ pháp / Từ vựng)'),
                     ),
                     DropdownMenuItem(
                       value: 'LISTENING',
-                      child: Text('🎧 Listening (Nghe)'),
+                      child: Text('Listening (Nghe)'),
                     ),
                     DropdownMenuItem(
                       value: 'WRITING',
-                      child: Text('✍️ Writing (Viết / Điền từ)'),
+                      child: Text('Writing (Viết / Điền từ)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'ESSAY',
+                      child: Text('Writing Essay (Viết luận - AI Chấm)'),
                     ),
                   ],
                   onChanged: (value) {
@@ -272,10 +285,7 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
                     maxLines: 5,
                   ),
                 ],
-
-                // ❌ ĐÃ BỎ Ô NHẬP MEDIA URL TẠI ĐÂY
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('3. Ngân hàng câu hỏi'),
                 const SizedBox(height: 8),
 

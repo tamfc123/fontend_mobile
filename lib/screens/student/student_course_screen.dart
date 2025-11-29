@@ -52,7 +52,7 @@ class _CourseStudentScreenState extends State<CourseStudentScreen> {
         centerTitle: true,
         title: const Text(
           "Khóa học",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       ),
 

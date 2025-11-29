@@ -138,10 +138,10 @@ class _EditProfileStudentScreenState extends State<EditProfileStudentScreen> {
           centerTitle: true,
           title: const Text(
             "Chỉnh sửa thông tin",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const Icon(Icons.arrow_back),
             onPressed: _showDiscardDialog,
           ),
         ),

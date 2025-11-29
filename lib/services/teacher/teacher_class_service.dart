@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data/models/class_skill_overview_model.dart';
+import 'package:mobile/data/models/student_detail_model.dart';
 import 'package:mobile/data/models/student_in_class_model.dart';
 import 'package:mobile/data/models/teacher_class_model.dart';
 import 'package:mobile/data/models/paged_result_model.dart';
@@ -20,6 +22,9 @@ class TeacherAdminClassService extends ChangeNotifier {
 
   List<TeacherClassModel> _classes = [];
   PagedResultModel<TeacherClassModel>? _pagedResult;
+
+  List<ClassSkillOverviewModel> _skillOverviews = [];
+  List<ClassSkillOverviewModel> get skillOverviews => _skillOverviews;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -72,18 +77,6 @@ class TeacherAdminClassService extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateTeacherClass(String id, String name) async {
-    try {
-      await _teacherClassRepository.updateTeacherClass(id, name);
-      await fetchTeacherClasses(pageNumber: currentPage);
-      ToastHelper.showSuccess('Cập nhật thành công');
-      return true;
-    } catch (e) {
-      ToastHelper.showError(e.toString().replaceFirst('Exception: ', ''));
-      return false;
-    }
-  }
-
   Future<List<StudentInClassModel>> getStudentsInClass(String classId) async {
     try {
       final students = await _teacherClassRepository.getStudentsInClass(
@@ -97,15 +90,40 @@ class TeacherAdminClassService extends ChangeNotifier {
           'Lỗi khi tải danh sách sinh viên: ',
         ),
       );
-      return []; // Trả về rỗng để UI không bị crash
+      return [];
     }
   }
 
-  // ================== CÁC PHƯƠG THỨC FILTER/SORT ==================
+  Future<void> fetchClassSkills(String classId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _skillOverviews = await _teacherClassRepository.getClassSkills(classId);
+    } catch (e) {
+      String msg = e.toString().replaceFirst('Exception: ', '');
+      ToastHelper.showError(msg);
+      _skillOverviews = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<StudentDetailModel?> fetchStudentDetail(
+    String classId,
+    String studentId,
+  ) async {
+    try {
+      return await _teacherClassRepository.getStudentDetail(classId, studentId);
+    } catch (e) {
+      ToastHelper.showError(e.toString().replaceFirst('Exception: ', ''));
+      return null;
+    }
+  }
 
   Future<void> applySearch(String searchTerm) async {
     _currentSearch = searchTerm.trim().isEmpty ? null : searchTerm.trim();
-    // 6.1 Luôn về trang 1 khi search
     await fetchTeacherClasses(pageNumber: 1);
   }
 
@@ -142,7 +160,7 @@ class TeacherAdminClassService extends ChangeNotifier {
 
   Future<void> clearFiltersAndSort() async {
     _currentSearch = null;
-    _currentSortType = ClassSortType.nameAsc; // Reset về mặc định
+    _currentSortType = ClassSortType.nameAsc;
     _currentSortBy = 'name';
     _currentSortOrder = 'asc';
     await fetchTeacherClasses(pageNumber: 1);

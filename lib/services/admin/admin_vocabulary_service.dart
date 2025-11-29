@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/vocabulary_model.dart';
-// ✅ 1. Import PagedResultModel
 import 'package:mobile/data/models/paged_result_model.dart';
 import 'package:mobile/domain/repositories/admin_vocabulary_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
@@ -9,7 +8,6 @@ class AdminVocabularyService extends ChangeNotifier {
   final AdminVocabularyRepository _vocabRepository;
   AdminVocabularyService(this._vocabRepository);
 
-  // ✅ 2. NÂNG CẤP STATE
   List<VocabularyModel> _vocabularies = [];
   PagedResultModel<VocabularyModel>? _pagedResult;
 
@@ -17,10 +15,12 @@ class AdminVocabularyService extends ChangeNotifier {
   String? _errorMessage;
   String? _currentSearchQuery;
 
-  // ✅ 3. NÂNG CẤP GETTERS
+  bool _showDeleted = false;
+
   List<VocabularyModel> get vocabularies => _vocabularies;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get showDeleted => _showDeleted;
 
   int get totalCount => _pagedResult?.totalCount ?? 0;
   int get totalPages => _pagedResult?.totalPages ?? 0;
@@ -28,6 +28,15 @@ class AdminVocabularyService extends ChangeNotifier {
   bool get hasNextPage => _pagedResult?.hasNextPage ?? false;
   bool get hasPreviousPage => _pagedResult?.hasPreviousPage ?? false;
   String? get currentSearchQuery => _currentSearchQuery;
+
+  void toggleShowDeleted(String lessonId) {
+    _showDeleted = !_showDeleted;
+    fetchVocabularies(
+      lessonId: lessonId,
+      pageNumber: 1,
+      searchQuery: _currentSearchQuery,
+    );
+  }
 
   // ✅ 4. SỬA HÀM FETCH
   Future<void> fetchVocabularies({
@@ -46,6 +55,7 @@ class AdminVocabularyService extends ChangeNotifier {
         pageNumber: pageNumber,
         pageSize: 5,
         searchQuery: searchQuery,
+        returnDeleted: _showDeleted,
       );
 
       _vocabularies = result.items;
@@ -65,6 +75,7 @@ class AdminVocabularyService extends ChangeNotifier {
     try {
       await _vocabRepository.createVocabulary(vocab);
       ToastHelper.showSuccess('Thêm từ vựng thành công');
+      if (_showDeleted) _showDeleted = false;
       await fetchVocabularies(
         lessonId: vocab.lessonId,
         pageNumber: 1,
@@ -98,7 +109,7 @@ class AdminVocabularyService extends ChangeNotifier {
   Future<bool> deleteVocabulary(String id, String lessonId) async {
     try {
       await _vocabRepository.deleteVocabulary(id);
-      ToastHelper.showSuccess('Xóa từ vựng thành công');
+      ToastHelper.showSuccess('Đã chuyển vào thùng rác');
       await fetchVocabularies(
         lessonId: lessonId,
         pageNumber: 1,
@@ -108,6 +119,24 @@ class AdminVocabularyService extends ChangeNotifier {
     } catch (e) {
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       ToastHelper.showError(errorMessage);
+      return false;
+    }
+  }
+
+  Future<bool> restoreVocabulary(String id, String lessonId) async {
+    try {
+      await _vocabRepository.restoreVocabulary(id);
+      ToastHelper.showSuccess('Khôi phục từ vựng thành công');
+
+      await fetchVocabularies(
+        lessonId: lessonId,
+        pageNumber: currentPage,
+        searchQuery: _currentSearchQuery,
+      );
+      return true;
+    } catch (e) {
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      ToastHelper.showError('Khôi phục thất bại: $errorMessage');
       return false;
     }
   }

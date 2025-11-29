@@ -15,14 +15,17 @@ class StudentLeaderboardService extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  // Trạng thái filter
-  String _selectedMetric = 'xp'; // 'xp' or 'coins'
+  // Trạng thái filter: 'xp', 'coins', hoặc 'streak'
+  String _selectedMetric = 'xp';
   String get selectedMetric => _selectedMetric;
 
+  // Period (Backend chưa hỗ trợ, nhưng giữ UI cũng được)
   String _selectedPeriod = 'all-time';
   String get selectedPeriod => _selectedPeriod;
 
   List<LeaderboardItemModel> _topRankings = [];
+
+  // Getter cho danh sách đầy đủ
   List<LeaderboardItemModel> get topRankings => _topRankings;
 
   LeaderboardItemModel? _currentUserRank;
@@ -32,18 +35,16 @@ class StudentLeaderboardService extends ChangeNotifier {
     return _authService.currentUser?.id == userId;
   }
 
-  List<LeaderboardItemModel> get top3 {
-    if (_topRankings.length >= 3) {
-      return [
-        _topRankings[1],
-        _topRankings[0],
-        _topRankings[2],
-      ]; // [Hạng 2, Hạng 1, Hạng 3]
-    }
-    return [];
+  // ✅ LOGIC MỚI: Lấy Top 3 an toàn hơn
+  // Trả về danh sách theo thứ tự bình thường [1, 2, 3]
+  // Việc sắp xếp vị trí bục (2 - 1 - 3) nên để UI (Widget) xử lý
+  List<LeaderboardItemModel> get top3Items {
+    if (_topRankings.isEmpty) return [];
+    return _topRankings.take(3).toList();
   }
 
-  List<LeaderboardItemModel> get others {
+  // ✅ LOGIC MỚI: Lấy danh sách còn lại (Từ hạng 4 trở đi)
+  List<LeaderboardItemModel> get otherItems {
     if (_topRankings.length > 3) {
       return _topRankings.sublist(3);
     }
@@ -56,6 +57,7 @@ class StudentLeaderboardService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Gọi API với metric hiện tại (xp, coins, streak)
       final response = await _repository.getLeaderboard(_selectedMetric);
 
       _topRankings = response.topRankings;
@@ -70,19 +72,18 @@ class StudentLeaderboardService extends ChangeNotifier {
     }
   }
 
-  // Được gọi khi nhấn chip "XP" hoặc "Coins"
+  // ✅ Cập nhật khi chọn Chip: XP / Coins / Streak
   void setMetric(String metric) {
     if (_selectedMetric == metric) return;
     _selectedMetric = metric;
     notifyListeners();
-    fetchLeaderboard();
+    fetchLeaderboard(); // Gọi lại API để lấy dữ liệu mới
   }
 
   void setPeriod(String period) {
     if (_selectedPeriod == period) return;
     _selectedPeriod = period;
     notifyListeners();
-    // V1 API không hỗ trợ, nên chúng ta không gọi fetchLeaderboard()
-    // Khi nâng cấp API, bạn sẽ gọi fetchLeaderboard() ở đây
+    // Backend chưa hỗ trợ filter theo tuần/tháng nên chưa gọi API lại
   }
 }

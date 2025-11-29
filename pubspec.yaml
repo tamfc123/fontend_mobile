@@ -92,7 +92,8 @@ flutter:
     - assets/templates/quiz_template_listening.xlsx
     - assets/templates/quiz_template_reading.xlsx
     - assets/templates/quiz_template_writing.xlsx
-    - assets/templates/quiz_template.xlsx
+    - assets/templates/writing_essay_template.xlsx
+    
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

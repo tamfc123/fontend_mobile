@@ -6,20 +6,19 @@ import 'package:mobile/utils/toast_helper.dart';
 
 class AdminQuizService extends ChangeNotifier {
   final AdminQuizRepository _quizRepository;
-
   AdminQuizService(this._quizRepository);
 
-  // --- STATE DANH SÁCH ---
   List<QuizListModel> _quizzes = [];
-  bool _isLoading = false; // Đổi tên cho giống CourseService
+  bool _isLoading = false;
   String? _error;
 
-  // State Phân trang & Tìm kiếm
   int _currentPage = 1;
   final int _pageSize = 5;
   int _totalCount = 0;
   int _totalPages = 0;
   String? _searchQuery;
+
+  bool _showDeleted = false;
 
   // Getters
   List<QuizListModel> get quizzes => _quizzes;
@@ -30,7 +29,8 @@ class AdminQuizService extends ChangeNotifier {
   int get totalCount => _totalCount;
   String? get searchQuery => _searchQuery;
 
-  // --- STATE CHI TIẾT (Cho màn hình Detail/Edit) ---
+  bool get showDeleted => _showDeleted;
+
   QuizDetailModel? _selectedQuiz;
   bool _isLoadingDetail = false;
   String? _detailError;
@@ -38,11 +38,14 @@ class AdminQuizService extends ChangeNotifier {
   bool get isLoadingDetail => _isLoadingDetail;
   String? get detailError => _detailError;
 
-  // =================== LẤY DANH SÁCH QUIZ ===================
+  void toggleShowDeleted(String courseId) {
+    _showDeleted = !_showDeleted;
+    fetchQuizzes(courseId, refresh: true);
+  }
+
   Future<void> fetchQuizzes(String courseId, {bool refresh = false}) async {
     if (refresh) {
       _currentPage = 1;
-      _searchQuery = null;
     }
 
     _isLoading = true;
@@ -55,16 +58,14 @@ class AdminQuizService extends ChangeNotifier {
         page: _currentPage,
         limit: _pageSize,
         search: _searchQuery,
+        returnDeleted: _showDeleted,
       );
-
       _quizzes = result['quizzes'];
       _totalCount = result['totalCount'];
-
-      // Tính tổng số trang (giống logic PagedResultModel)
       _totalPages = (_totalCount / _pageSize).ceil();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
-      _quizzes = []; // Clear list nếu lỗi
+      _quizzes = [];
       ToastHelper.showError(_error!);
     } finally {
       _isLoading = false;
@@ -72,9 +73,6 @@ class AdminQuizService extends ChangeNotifier {
     }
   }
 
-  // =================== TÌM KIẾM & PHÂN TRANG ===================
-
-  // Giống AdminCourseService: Chỉ nhận query, việc debounce để UI lo
   Future<void> applySearch(String courseId, String query) async {
     _searchQuery = query.isEmpty ? null : query;
     _currentPage = 1;
@@ -87,7 +85,6 @@ class AdminQuizService extends ChangeNotifier {
     await fetchQuizzes(courseId);
   }
 
-  // =================== LẤY CHI TIẾT ===================
   Future<void> fetchQuizDetails(String courseId, String quizId) async {
     _isLoadingDetail = true;
     _detailError = null;
@@ -105,7 +102,6 @@ class AdminQuizService extends ChangeNotifier {
     }
   }
 
-  // =================== TẠO QUIZ ===================
   Future<bool> createQuiz({
     required String courseId,
     required String title,
@@ -114,9 +110,8 @@ class AdminQuizService extends ChangeNotifier {
     required PlatformFile platformFile,
     required String skillType,
     String? readingPassage,
-    // ❌ Đã xóa mediaUrl
   }) async {
-    _isLoadingDetail = true; // Tận dụng loading detail hoặc tạo loading riêng
+    _isLoadingDetail = true;
     _detailError = null;
     notifyListeners();
 
@@ -129,12 +124,11 @@ class AdminQuizService extends ChangeNotifier {
         platformFile: platformFile,
         skillType: skillType,
         readingPassage: readingPassage,
-        // mediaUrl: mediaUrl, // Xóa
       );
 
       ToastHelper.showSuccess('Tạo bài tập thành công');
 
-      // Refresh lại danh sách về trang 1 để thấy bài mới
+      if (_showDeleted) _showDeleted = false;
       _currentPage = 1;
       _searchQuery = null;
       await fetchQuizzes(courseId);
@@ -150,32 +144,39 @@ class AdminQuizService extends ChangeNotifier {
     }
   }
 
-  // =================== XÓA QUIZ ===================
   Future<void> deleteQuiz(String courseId, String quizId) async {
     try {
       await _quizRepository.deleteQuiz(courseId, quizId);
-      ToastHelper.showSuccess('Xóa bài tập thành công');
-
-      // Logic giống AdminCourseService: Load lại trang hiện tại
+      ToastHelper.showSuccess('Đã chuyển bài tập vào thùng rác');
       await fetchQuizzes(courseId);
     } catch (e) {
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      debugPrint(errorMsg);
       ToastHelper.showError(errorMsg);
     } finally {
       notifyListeners();
     }
   }
 
-  // =================== XÓA CÂU HỎI LẺ ===================
+  Future<void> restoreQuiz(String courseId, String quizId) async {
+    try {
+      await _quizRepository.restoreQuiz(courseId, quizId);
+      ToastHelper.showSuccess('Khôi phục bài tập thành công');
+      await fetchQuizzes(courseId);
+    } catch (e) {
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      ToastHelper.showError('Khôi phục thất bại: $errorMsg');
+    } finally {
+      notifyListeners();
+    }
+  }
+
   Future<void> deleteQuestion(String courseId, String questionId) async {
     try {
       await _quizRepository.deleteQuestion(courseId, questionId);
       ToastHelper.showSuccess('Đã xóa câu hỏi');
-
-      // Cập nhật UI Local ngay lập tức
       if (_selectedQuiz != null) {
         _selectedQuiz!.questions.removeWhere((q) => q.id == questionId);
-        // Trick: update lại object để UI repaint
         _selectedQuiz = _selectedQuiz!.copyWith();
       }
     } catch (e) {

@@ -10,7 +10,7 @@ import 'package:mobile/shared_widgets/admin/base_admin_table.dart';
 import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
-import 'package:mobile/shared_widgets/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:mobile/widgets/admin/module_form_dialog.dart';
 import 'package:provider/provider.dart';
 

@@ -60,8 +60,8 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
         title: Text(
           widget.lesson.title,
           style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
             color: AppColors.textPrimary,
           ),
         ),
