@@ -1,13 +1,36 @@
-import 'dart:typed_data'; // Cho Uint8List
-import 'package:dio/dio.dart'; // Cho Dio, FormData, MultipartFile
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
-import 'package:mobile/data/models/media_file_model.dart';
 import 'package:mobile/data/models/upload_response_model.dart';
 
 class UploadRepository {
   final ApiClient _apiClient;
   UploadRepository(this._apiClient);
+  Future<String> uploadImage(Uint8List bytes, String fileName) async {
+    try {
+      final formData = FormData.fromMap({
+        'File': MultipartFile.fromBytes(bytes, filename: fileName),
+      });
+
+      // Gọi API "/upload" (API dùng ImageUploadParams bạn vừa sửa)
+      final response = await _apiClient.dio.post(
+        ApiConfig.upload,
+        data: formData,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        // Backend trả về: { "url": "...", "publicId": "..." }
+        return response.data['url'] as String;
+      } else {
+        throw Exception('Upload thất bại: Phản hồi không hợp lệ');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Lỗi khi upload ảnh');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
 
   /// Trả về UploadResponse chứa url và publicId
   Future<UploadResponse?> uploadFileWeb(

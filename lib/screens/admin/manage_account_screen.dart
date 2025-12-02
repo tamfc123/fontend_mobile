@@ -12,9 +12,9 @@ import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
 import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart'; // Import pagination mới
-import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 // ✅ 2. (GỢI Ý) Di chuyển file này
 import 'package:mobile/widgets/admin/comfirm_toggle_status.dart';
+import 'package:mobile/widgets/admin/user_redemption_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ManageAccountScreen extends StatefulWidget {
@@ -97,11 +97,6 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final userService = context.watch<AdminUserService>();
     final users = userService.users;
     final isLoading = userService.isLoading;
-
-    // ❌ BỎ LỌC CLIENT-SIDE
-    // final filteredUsers = ...
-
-    // ✅ XÂY DỰNG BODYCONTENT
     Widget bodyContent;
     if (isLoading && users.isEmpty) {
       // Dùng `users`
@@ -509,6 +504,18 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       color: Colors.orange.shade600,
                       tooltip: user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
                       onPressed: () => _handleToggleUserStatus(user),
+                    ),
+                    const SizedBox(width: 8),
+                    ActionIconButton(
+                      icon: Icons.card_giftcard,
+                      color: Colors.pink,
+                      tooltip: 'Trao quà',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => UserRedemptionDialog(user: user),
+                        );
+                      },
                     ),
                   ],
                 ),

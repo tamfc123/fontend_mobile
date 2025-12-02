@@ -16,6 +16,7 @@ import 'package:mobile/screens/admin/admin_quiz_detail_screen.dart';
 import 'package:mobile/screens/admin/admin_quiz_list_screen.dart';
 import 'package:mobile/screens/admin/bulk_schedule_screen.dart';
 import 'package:mobile/screens/admin/manage_course_screen.dart';
+import 'package:mobile/screens/admin/manage_gift_screen.dart';
 import 'package:mobile/screens/admin/manage_lesson_screen.dart';
 import 'package:mobile/screens/admin/manage_module_screen.dart';
 import 'package:mobile/screens/admin/manage_room_screen.dart';
@@ -33,6 +34,7 @@ import 'package:mobile/screens/student/student_course_screen.dart';
 import 'package:mobile/screens/student/student_edit_profile_screen.dart';
 import 'package:mobile/screens/student/home_screen.dart';
 import 'package:mobile/screens/student/main_home_screen.dart';
+import 'package:mobile/screens/student/student_gift_store_screen.dart';
 import 'package:mobile/screens/student/student_grades_screen.dart';
 import 'package:mobile/screens/student/student_profile_screen.dart';
 import 'package:mobile/screens/student/settings_screen.dart';
@@ -44,7 +46,6 @@ import 'package:mobile/screens/student/student_quiz_list_screen.dart';
 import 'package:mobile/screens/student/student_quiz_review_screen.dart';
 import 'package:mobile/screens/student/student_quiz_taking_screen.dart';
 import 'package:mobile/screens/student/student_schedule_screen.dart';
-import 'package:mobile/screens/student/student_store_screen.dart';
 import 'package:mobile/screens/student/student_vocabulary_screen.dart';
 import 'package:mobile/screens/student/vocabulary_level_content_screen.dart';
 import 'package:mobile/screens/student/vocabulary_module_details_screen.dart';
@@ -165,8 +166,8 @@ final appRouter = GoRouter(
               builder: (context, state) => const StudentLeaderboardScreen(),
             ),
             GoRoute(
-              path: 'store',
-              builder: (context, state) => const StudentStoreScreen(),
+              path: 'gift-store',
+              builder: (context, state) => const StudentGiftStoreScreen(),
             ),
             GoRoute(
               path: 'grades',
@@ -396,6 +397,10 @@ final appRouter = GoRouter(
               builder:
                   (context, state) =>
                       const AdminMediaScreen(), // 👈 Màn hình này ta sẽ tạo ở bước sau
+            ),
+            GoRoute(
+              path: 'gifts', // /admin/gifts
+              builder: (context, state) => const ManageGiftScreen(),
             ),
           ],
         ),

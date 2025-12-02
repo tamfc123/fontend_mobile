@@ -18,7 +18,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // MÀU SẮC
   static const Color primaryBlue = Colors.blue;
   static const Color backgroundBlue = Color(0xFFF3F8FF);
   static const Color surfaceBlue = Color(0xFFE3F2FD);
@@ -53,7 +52,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ✅ 3. SỬ DỤNG BaseDashboardCard
                 const DashboardHeader(
                   icon: Icons.dashboard_rounded,
                   title: 'Tổng quan',
@@ -90,12 +88,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const Center(child: Text('Không có dữ liệu thống kê.'));
     }
 
-    // ✅ 5. SỬ DỤNG StatCard DÙNG CHUNG
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          // 👈 Bọc card 1
           child: StatCard(
             title: 'Tổng Người Dùng',
             value: stats.totalUsers.toString(),

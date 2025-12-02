@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrl =
-      'https://you-coupon-pledge-able.trycloudflare.com/api';
+      'https://exist-executive-extreme-influence.trycloudflare.com/api';
 
   // upload
   static const String upload = "/upload";
@@ -71,8 +71,6 @@ class ApiConfig {
   // --- ADMIN LESSON
   static const String adminLessons = '$baseUrl/admin/lessons';
   static String adminLessonById(String id) => '$baseUrl/admin/lessons/$id';
-
-  // Không thêm /api vì baseUrl đã có /api
   static const String uploadContentImage = '$baseUrl/upload-content-image';
 
   // --- ADMIN VOCABULARY
@@ -84,13 +82,20 @@ class ApiConfig {
 
   // POST: /api/admin/media/upload-audio
   static const String adminUploadAudio = "/admin/media/upload-audio";
-
-  // GET: /api/admin/media?page=1&limit=20
   static String adminGetAllMedia({int page = 1, int limit = 20}) =>
       "/admin/media?page=$page&limit=$limit";
-
-  // DELETE: /api/admin/media/{id}
   static String adminDeleteMedia(String id) => "/admin/media/$id";
+  // ---ADMIN: GIFT
+  static const String adminGifts = "/admin/gifts"; // GET All, POST Create
+  static String adminGiftById(String id) => "/admin/gifts/$id";
+  static String adminRestoreGift(String id) => "/admin/gifts/$id/restore";
+
+  static String adminUserRedemptions(String userId) =>
+      "/admin/gifts/student/$userId/redemptions";
+
+  // Xác nhận đã trao quà
+  static String adminConfirmRedemption(String redemptionId) =>
+      "/admin/gifts/redemptions/$redemptionId/confirm";
 
   // --- TEACHER: DASHBOARD ---
   static const String teacherDashboardSummary = '/teacher/dashboard/summary';
@@ -130,7 +135,10 @@ class ApiConfig {
       "/studentcourses/$courseId/classes";
   static String studentJoinClass(String classId) =>
       "/student/classes/join/$classId";
-
+  // --- STUDENT: GIFT STORE ---
+  static const String studentGifts = "/student/gifts";
+  static const String studentMyRedemptions = "/student/gifts/my-redemptions";
+  static String studentRedeemGift(String id) => "/student/gifts/$id/redeem";
   // --- STUDENT: CLASSES (JOINED) ---
   static const String studentJoinedClasses = "/student/classes";
   static String studentLeaveClass(String classId) =>

@@ -19,6 +19,16 @@ class AuthService extends ChangeNotifier {
   String? get authToken => _authToken;
   // kiểm tra trạng thái login
   bool get isLoggedIn => _currentUser != null;
+  Future<void> fetchCurrentUser() async {
+    try {
+      final user = await _authRepository.getProfile();
+      _currentUser = user;
+      notifyListeners(); // Báo UI cập nhật lại số dư
+    } catch (e) {
+      debugPrint('Lỗi cập nhật profile: $e');
+      // Không clear token ở đây để tránh logout oan khi mạng lag
+    }
+  }
 
   //hàm đăng kí sinh viên
   Future<bool> registerStudent({

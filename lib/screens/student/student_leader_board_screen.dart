@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/services/auth/auth_service.dart';
 import 'package:mobile/services/student/student_leaderboard_service.dart';
 import 'package:mobile/data/models/leaderboard_model.dart';
 import 'package:provider/provider.dart';
@@ -84,9 +85,6 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
       ),
       body: Column(
         children: [
-          // ❌ ĐÃ XÓA PHẦN PERIOD TABS (TUẦN/THÁNG) Ở ĐÂY
-
-          // ✅ Metric filter chips (Chọn XP / Xu / Streak)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -150,6 +148,9 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
       return const Center(child: Text('Chưa có ai trên bảng xếp hạng.'));
     }
 
+    final authService = context.watch<AuthService>();
+    final currentUserId = authService.currentUser?.id;
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -164,7 +165,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
         // Other ranks (Hạng 4 trở đi)
         ...service.otherItems.map((user) {
           // Dùng getter otherItems từ Service mới
-          final bool isCurrentUser = service.isCurrentUser(user.userId);
+          final bool isCurrentUser = user.userId == currentUserId;
           return _buildLeaderboardItem(
             user,
             isCurrentUser,

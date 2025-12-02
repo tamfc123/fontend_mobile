@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/leaderboard_model.dart';
 import 'package:mobile/domain/repositories/student_leaderboard_repository.dart';
-import 'package:mobile/services/auth/auth_service.dart';
 
 class StudentLeaderboardService extends ChangeNotifier {
   final StudentLeaderboardRepository _repository;
-  final AuthService _authService;
 
-  StudentLeaderboardService(this._repository, this._authService);
+  StudentLeaderboardService(this._repository);
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -30,10 +28,6 @@ class StudentLeaderboardService extends ChangeNotifier {
 
   LeaderboardItemModel? _currentUserRank;
   LeaderboardItemModel? get currentUserRank => _currentUserRank;
-
-  bool isCurrentUser(String userId) {
-    return _authService.currentUser?.id == userId;
-  }
 
   // ✅ LOGIC MỚI: Lấy Top 3 an toàn hơn
   // Trả về danh sách theo thứ tự bình thường [1, 2, 3]

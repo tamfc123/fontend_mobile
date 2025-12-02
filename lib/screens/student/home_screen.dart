@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/services/auth/auth_service.dart'; // ✅ Thay thế StudentProfileService bằng AuthService
 import 'package:mobile/services/student/student_leaderboard_service.dart';
-import 'package:mobile/services/student/student_profile_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -35,7 +35,8 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StudentProfileService>().loadProfile();
+      // ✅ [SỬA] Gọi AuthService để lấy thông tin User mới nhất (đồng bộ với Gift Store)
+      context.read<AuthService>().fetchCurrentUser();
       context.read<StudentLeaderboardService>().fetchLeaderboard();
     });
     _startBannerTimer();
@@ -279,14 +280,18 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms);
   }
 
   @override
   Widget build(BuildContext context) {
-    final profileService = context.watch<StudentProfileService>();
+    // ✅ [SỬA] Watch AuthService để cập nhật Coin/Level ngay lập tức khi có thay đổi
+    final authService = context.watch<AuthService>();
     final leaderboardService = context.watch<StudentLeaderboardService>();
-    final user = profileService.profile;
+
+    // ✅ [SỬA] Lấy user từ AuthService thay vì ProfileService
+    final user = authService.currentUser;
+
     if (user == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -587,13 +592,13 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         color: AppColors.success,
                         onTap: () => context.go('/student/grades'),
                       ),
-                      // _buildQuickActionButton(
-                      //   icon: Icons.store_rounded,
-                      //   title: 'Cửa hàng',
-                      //   subtitle: 'Đổi xu thành vật phẩm',
-                      //   color: Colors.pink.shade600,
-                      //   onTap: () => context.go('/student/store'),
-                      // ),
+                      _buildQuickActionButton(
+                        icon: Icons.store_rounded,
+                        title: 'Đổi quà',
+                        subtitle: 'Đổi xu thành vật phẩm',
+                        color: Colors.pink.shade600,
+                        onTap: () => context.go('/student/gift-store'),
+                      ),
                       _buildQuickActionButton(
                         icon: Icons.leaderboard_rounded,
                         title: 'Bảng xếp hạng',
