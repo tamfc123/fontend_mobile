@@ -1,96 +1,110 @@
-import 'package:mobile/core/di/service_locator.dart';
-import 'package:mobile/domain/repositories/admin_class_repository.dart';
-import 'package:mobile/domain/repositories/admin_course_repository.dart';
-import 'package:mobile/domain/repositories/admin_dashboard_repository.dart';
-import 'package:mobile/domain/repositories/admin_gift_repository.dart';
-import 'package:mobile/domain/repositories/admin_lesson_repository.dart';
-import 'package:mobile/domain/repositories/admin_media_repository.dart'
-    show AdminMediaRepository;
-import 'package:mobile/domain/repositories/admin_module_repository.dart';
-import 'package:mobile/domain/repositories/admin_quiz_repository.dart';
-import 'package:mobile/domain/repositories/admin_redemption_repository.dart';
-import 'package:mobile/domain/repositories/admin_room_repository.dart';
-import 'package:mobile/domain/repositories/admin_schedule_repository.dart';
-import 'package:mobile/domain/repositories/admin_user_repository.dart';
-import 'package:mobile/domain/repositories/admin_vocabulary_repository.dart';
-import 'package:mobile/services/admin/admin_class_service.dart';
-import 'package:mobile/services/admin/admin_course_service.dart';
-import 'package:mobile/services/admin/admin_dashboard_service.dart';
-import 'package:mobile/services/admin/admin_gift_service.dart';
-import 'package:mobile/services/admin/admin_lesson_service.dart';
-import 'package:mobile/services/admin/admin_media_service.dart';
-import 'package:mobile/services/admin/admin_module_service.dart';
-import 'package:mobile/services/admin/admin_quiz_service.dart';
-import 'package:mobile/services/admin/admin_redemption_service.dart';
-import 'package:mobile/services/admin/admin_room_service.dart';
-import 'package:mobile/services/admin/admin_schedule_service.dart';
-import 'package:mobile/services/admin/admin_user_service.dart';
-import 'package:mobile/services/admin/admin_vocabulary_service.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/di/service_locator.dart';
+
+// Repositories
+import 'package:mobile/domain/repositories/admin/admin_dashboard_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_user_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_course_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_room_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_schedule_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_module_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_lesson_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_vocabulary_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_quiz_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_media_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_gift_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_redemption_repository.dart';
+
+// ViewModels
+import 'package:mobile/screens/admin/dashboard/admin_dashboard_view_model.dart';
+import 'package:mobile/screens/admin/manage_account/manage_account_view_model.dart';
+import 'package:mobile/screens/admin/manage_account/user_redemption_view_model.dart';
+import 'package:mobile/screens/admin/manage_class/manage_class_view_model.dart';
+import 'package:mobile/screens/admin/manage_course/manage_course_view_model.dart';
+import 'package:mobile/screens/admin/manage_gift/manage_gift_view_model.dart';
+import 'package:mobile/screens/admin/manage_lesson/manage_lesson_view_model.dart';
+import 'package:mobile/screens/admin/manage_media/manage_media_view_model.dart';
+import 'package:mobile/screens/admin/manage_module/manage_module_view_model.dart';
+import 'package:mobile/screens/admin/manage_quiz/manage_quiz_view_model.dart';
+import 'package:mobile/screens/admin/manage_quiz/quiz_detail_view_model.dart';
+import 'package:mobile/screens/admin/manage_room/manage_room_view_model.dart';
+import 'package:mobile/screens/admin/manage_schedule/manage_schedule_view_model.dart';
+import 'package:mobile/screens/admin/manage_schedule/bulk_schedule_view_model.dart';
+import 'package:mobile/screens/admin/manage_vocabulary/manage_vocabulary_view_model.dart';
 
 final adminProviders = [
-  // User Service
-  ChangeNotifierProvider<AdminUserService>(
-    create: (_) => AdminUserService(getIt<AdminUserRepository>()),
+  // Dashboard
+  ChangeNotifierProvider<AdminDashboardViewModel>(
+    create: (_) => AdminDashboardViewModel(getIt<AdminDashboardRepository>()),
   ),
 
-  // Course Service
-  ChangeNotifierProvider<AdminCourseService>(
-    create: (_) => AdminCourseService(getIt<AdminCourseRepository>()),
+  // Account & Redemption
+  ChangeNotifierProvider<ManageAccountViewModel>(
+    create: (_) => ManageAccountViewModel(getIt<AdminUserRepository>()),
+  ),
+  ChangeNotifierProvider<UserRedemptionViewModel>(
+    create: (_) => UserRedemptionViewModel(getIt<AdminRedemptionRepository>()),
   ),
 
-  // Module Service
-  ChangeNotifierProvider<AdminModuleService>(
-    create: (_) => AdminModuleService(getIt<AdminModuleRepository>()),
+  // Course & Class
+  ChangeNotifierProvider<ManageCourseViewModel>(
+    create: (_) => ManageCourseViewModel(getIt<AdminCourseRepository>()),
+  ),
+  ChangeNotifierProvider<ManageClassViewModel>(
+    create:
+        (_) => ManageClassViewModel(
+          getIt<AdminClassRepository>(),
+          getIt<AdminUserRepository>(),
+          getIt<AdminCourseRepository>(),
+        ),
   ),
 
-  // Class Service
-  ChangeNotifierProvider<AdminClassService>(
-    create: (_) => AdminClassService(getIt<AdminClassRepository>()),
+  // Module & Lesson & Vocabulary
+  ChangeNotifierProvider<ManageModuleViewModel>(
+    create: (_) => ManageModuleViewModel(getIt<AdminModuleRepository>()),
+  ),
+  ChangeNotifierProvider<ManageLessonViewModel>(
+    create: (_) => ManageLessonViewModel(getIt<AdminLessonRepository>()),
+  ),
+  ChangeNotifierProvider<ManageVocabularyViewModel>(
+    create:
+        (_) => ManageVocabularyViewModel(getIt<AdminVocabularyRepository>()),
   ),
 
-  // Room Service
-  ChangeNotifierProvider<AdminRoomService>(
-    create: (_) => AdminRoomService(getIt<AdminRoomRepository>()),
+  // Quiz
+  ChangeNotifierProvider<ManageQuizViewModel>(
+    create: (_) => ManageQuizViewModel(getIt<AdminQuizRepository>()),
+  ),
+  ChangeNotifierProvider<QuizDetailViewModel>(
+    create: (_) => QuizDetailViewModel(getIt<AdminQuizRepository>()),
   ),
 
-  // Schedule Service
-  ChangeNotifierProvider<AdminScheduleService>(
-    create: (_) => AdminScheduleService(getIt<AdminScheduleRepository>()),
+  // Room & Schedule
+  ChangeNotifierProvider<ManageRoomViewModel>(
+    create: (_) => ManageRoomViewModel(getIt<AdminRoomRepository>()),
+  ),
+  ChangeNotifierProvider<ManageScheduleViewModel>(
+    create:
+        (_) => ManageScheduleViewModel(
+          getIt<AdminScheduleRepository>(),
+          getIt<AdminRoomRepository>(),
+        ),
+  ),
+  ChangeNotifierProvider<BulkScheduleViewModel>(
+    create:
+        (_) => BulkScheduleViewModel(
+          getIt<AdminScheduleRepository>(),
+          getIt<AdminClassRepository>(),
+          getIt<AdminRoomRepository>(),
+        ),
   ),
 
-  // Lesson Service
-  ChangeNotifierProvider<AdminLessonService>(
-    create: (_) => AdminLessonService(getIt<AdminLessonRepository>()),
+  // Media & Gift
+  ChangeNotifierProvider<ManageMediaViewModel>(
+    create: (_) => ManageMediaViewModel(getIt<AdminMediaRepository>()),
   ),
-
-  // Vocabulary Service
-  ChangeNotifierProvider<AdminVocabularyService>(
-    create: (_) => AdminVocabularyService(getIt<AdminVocabularyRepository>()),
-  ),
-
-  // Quiz Service
-  ChangeNotifierProvider<AdminQuizService>(
-    create: (_) => AdminQuizService(getIt<AdminQuizRepository>()),
-  ),
-
-  // Media Service
-  ChangeNotifierProvider<AdminMediaService>(
-    create: (_) => AdminMediaService(getIt<AdminMediaRepository>()),
-  ),
-
-  // Gift Service
-  ChangeNotifierProvider<AdminGiftService>(
-    create: (_) => AdminGiftService(getIt<AdminGiftRepository>()),
-  ),
-
-  // Redemption Service
-  ChangeNotifierProvider<AdminRedemptionService>(
-    create: (_) => AdminRedemptionService(getIt<AdminRedemptionRepository>()),
-  ),
-
-  // Dashboard Service (Đã fix)
-  ChangeNotifierProvider<AdminDashboardService>(
-    create: (_) => AdminDashboardService(getIt<AdminDashboardRepository>()),
+  ChangeNotifierProvider<ManageGiftViewModel>(
+    create: (_) => ManageGiftViewModel(getIt<AdminGiftRepository>()),
   ),
 ];

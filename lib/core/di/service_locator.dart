@@ -3,45 +3,45 @@ import 'package:mobile/core/api/api_client.dart';
 
 // --- Import Repositories ---
 // Auth & Common
-import 'package:mobile/domain/repositories/auth_repository.dart';
-import 'package:mobile/domain/repositories/upload_repository.dart';
+import 'package:mobile/domain/repositories/auth/auth_repository.dart';
+import 'package:mobile/domain/repositories/common/upload_repository.dart';
 
 // Admin
-import 'package:mobile/domain/repositories/admin_class_repository.dart';
-import 'package:mobile/domain/repositories/admin_course_repository.dart';
-import 'package:mobile/domain/repositories/admin_dashboard_repository.dart';
-import 'package:mobile/domain/repositories/admin_gift_repository.dart';
-import 'package:mobile/domain/repositories/admin_lesson_repository.dart';
-import 'package:mobile/domain/repositories/admin_media_repository.dart';
-import 'package:mobile/domain/repositories/admin_module_repository.dart';
-import 'package:mobile/domain/repositories/admin_quiz_repository.dart';
-import 'package:mobile/domain/repositories/admin_redemption_repository.dart';
-import 'package:mobile/domain/repositories/admin_room_repository.dart';
-import 'package:mobile/domain/repositories/admin_schedule_repository.dart';
-import 'package:mobile/domain/repositories/admin_user_repository.dart';
-import 'package:mobile/domain/repositories/admin_vocabulary_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_course_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_dashboard_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_gift_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_lesson_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_media_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_module_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_quiz_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_redemption_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_room_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_schedule_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_user_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_vocabulary_repository.dart';
 
 // Teacher
-import 'package:mobile/domain/repositories/teaacher_dashboard_repository.dart';
-import 'package:mobile/domain/repositories/teacher_class_repository.dart';
-import 'package:mobile/domain/repositories/teacher_quiz_repository.dart';
-import 'package:mobile/domain/repositories/teacher_schedule_repository.dart';
+import 'package:mobile/domain/repositories/teacher/teaacher_dashboard_repository.dart';
+import 'package:mobile/domain/repositories/teacher/teacher_class_repository.dart';
+import 'package:mobile/domain/repositories/teacher/teacher_quiz_repository.dart';
+import 'package:mobile/domain/repositories/teacher/teacher_schedule_repository.dart';
 
 // Student
-import 'package:mobile/domain/repositories/student_class_repository.dart';
-import 'package:mobile/domain/repositories/student_course_repository.dart';
-import 'package:mobile/domain/repositories/student_flashcard_repository.dart';
-import 'package:mobile/domain/repositories/student_gift_repository.dart';
-import 'package:mobile/domain/repositories/student_grade_repository.dart';
-import 'package:mobile/domain/repositories/student_leaderboard_repository.dart';
-import 'package:mobile/domain/repositories/student_lesson_repository.dart';
-import 'package:mobile/domain/repositories/student_module_repository.dart';
-import 'package:mobile/domain/repositories/student_profile_repository.dart';
-import 'package:mobile/domain/repositories/student_quiz_repository.dart';
-import 'package:mobile/domain/repositories/student_schedule_repository.dart';
-import 'package:mobile/domain/repositories/student_vocabulary_lesson_repository.dart';
-import 'package:mobile/domain/repositories/student_vocabulary_level_repository.dart';
-import 'package:mobile/domain/repositories/student_vocabulary_module_repository.dart';
+import 'package:mobile/domain/repositories/student/student_class_repository.dart';
+import 'package:mobile/domain/repositories/student/student_course_repository.dart';
+import 'package:mobile/domain/repositories/student/student_flashcard_repository.dart';
+import 'package:mobile/domain/repositories/student/student_gift_repository.dart';
+import 'package:mobile/domain/repositories/student/student_grade_repository.dart';
+import 'package:mobile/domain/repositories/student/student_leaderboard_repository.dart';
+import 'package:mobile/domain/repositories/student/student_lesson_repository.dart';
+import 'package:mobile/domain/repositories/student/student_module_repository.dart';
+import 'package:mobile/domain/repositories/student/student_profile_repository.dart';
+import 'package:mobile/domain/repositories/student/student_quiz_repository.dart';
+import 'package:mobile/domain/repositories/student/student_schedule_repository.dart';
+import 'package:mobile/domain/repositories/student/student_vocabulary_lesson_repository.dart';
+import 'package:mobile/domain/repositories/student/student_vocabulary_level_repository.dart';
+import 'package:mobile/domain/repositories/student/student_vocabulary_module_repository.dart';
 
 // Lưu ý: Đã xóa toàn bộ Import Service vì Service không thuộc về GetIt nữa.
 

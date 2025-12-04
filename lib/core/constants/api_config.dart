@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrl =
-      'https://exist-executive-extreme-influence.trycloudflare.com/api';
+      'https://drops-guidance-synthesis-game.trycloudflare.com/api';
 
   // upload
   static const String upload = "/upload";

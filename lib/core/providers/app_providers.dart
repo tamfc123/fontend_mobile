@@ -1,6 +1,6 @@
 import 'package:mobile/core/di/service_locator.dart';
 import 'package:mobile/core/providers/auth_providers.dart';
-import 'package:mobile/domain/repositories/upload_repository.dart';
+import 'package:mobile/domain/repositories/common/upload_repository.dart';
 import 'package:provider/provider.dart';
 import 'admin_providers.dart';
 import 'teacher_providers.dart';

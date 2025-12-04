@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/lesson_model.dart';
-import 'package:mobile/domain/repositories/student_lesson_repository.dart';
+import 'package:mobile/domain/repositories/student/student_lesson_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
 
 class StudentLessonService extends ChangeNotifier {

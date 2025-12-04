@@ -10,56 +10,56 @@ import 'package:mobile/data/models/teacher_class_model.dart';
 import 'package:mobile/data/models/user_model.dart';
 import 'package:mobile/data/models/vocabulary_levels_model.dart';
 import 'package:mobile/data/models/vocabulary_modules_model.dart';
-import 'package:mobile/screens/admin/admin_dash_board_screen.dart';
-import 'package:mobile/screens/admin/admin_media_screen.dart';
-import 'package:mobile/screens/admin/admin_quiz_detail_screen.dart';
-import 'package:mobile/screens/admin/admin_quiz_list_screen.dart';
-import 'package:mobile/screens/admin/bulk_schedule_screen.dart';
-import 'package:mobile/screens/admin/manage_course_screen.dart';
-import 'package:mobile/screens/admin/manage_gift_screen.dart';
-import 'package:mobile/screens/admin/manage_lesson_screen.dart';
-import 'package:mobile/screens/admin/manage_module_screen.dart';
-import 'package:mobile/screens/admin/manage_room_screen.dart';
-import 'package:mobile/screens/admin/manage_schedule_screen.dart';
-import 'package:mobile/screens/admin/manage_vocabulary_screen.dart';
-import 'package:mobile/screens/login/forgotpassword_screen.dart';
-import 'package:mobile/screens/login/resetpassword_screen.dart';
-import 'package:mobile/screens/login/signup_screen.dart';
-import 'package:mobile/screens/login/splash_screen.dart';
-import 'package:mobile/screens/login/login_screen.dart';
-import 'package:mobile/screens/login/web_login_screen.dart';
-import 'package:mobile/screens/student/change_password_screen.dart';
-import 'package:mobile/screens/student/lesson_flashcards_screen.dart';
-import 'package:mobile/screens/student/student_course_screen.dart';
-import 'package:mobile/screens/student/student_edit_profile_screen.dart';
-import 'package:mobile/screens/student/home_screen.dart';
-import 'package:mobile/screens/student/main_home_screen.dart';
-import 'package:mobile/screens/student/student_gift_store_screen.dart';
-import 'package:mobile/screens/student/student_grades_screen.dart';
-import 'package:mobile/screens/student/student_profile_screen.dart';
-import 'package:mobile/screens/student/settings_screen.dart';
-import 'package:mobile/screens/student/student_classes_screen.dart';
-import 'package:mobile/screens/student/student_course_class_screen.dart';
-import 'package:mobile/screens/student/student_leader_board_screen.dart';
-import 'package:mobile/screens/student/student_class_detail_screen.dart';
-import 'package:mobile/screens/student/student_quiz_list_screen.dart';
-import 'package:mobile/screens/student/student_quiz_review_screen.dart';
-import 'package:mobile/screens/student/student_quiz_taking_screen.dart';
-import 'package:mobile/screens/student/student_schedule_screen.dart';
-import 'package:mobile/screens/student/student_vocabulary_screen.dart';
-import 'package:mobile/screens/student/vocabulary_level_content_screen.dart';
-import 'package:mobile/screens/student/vocabulary_module_details_screen.dart';
-import 'package:mobile/screens/teacher/teacher_dashboard_screen.dart.dart';
-import 'package:mobile/screens/teacher/teacher_home_screen.dart';
-import 'package:mobile/screens/admin/admin_home_screen.dart';
-import 'package:mobile/screens/admin/manage_account_screen.dart';
-import 'package:mobile/screens/admin/manage_class_screen.dart';
-import 'package:mobile/screens/teacher/manage_teacher_class_screen.dart';
-import 'package:mobile/screens/teacher/manage_teacher_schedule_screen.dart';
-import 'package:mobile/screens/teacher/student_list_screen.dart';
-import 'package:mobile/screens/teacher/teacher_quit_list_screen.dart';
-import 'package:mobile/widgets/admin/admin_create_user_screen.dart';
-import 'package:mobile/widgets/admin/admin_edit_user_screen.dart';
+import 'package:mobile/screens/admin/dashboard/admin_dashboard_screen.dart';
+import 'package:mobile/screens/admin/manage_media/manage_media_screen.dart';
+import 'package:mobile/screens/admin/manage_quiz/manage_quiz_screen.dart';
+import 'package:mobile/screens/admin/manage_quiz/quiz_detail_screen.dart';
+import 'package:mobile/screens/admin/manage_course/manage_course_screen.dart';
+import 'package:mobile/screens/admin/manage_gift/manage_gift_screen.dart';
+import 'package:mobile/screens/admin/manage_lesson/manage_lesson_screen.dart';
+import 'package:mobile/screens/admin/manage_module/manage_module_screen.dart';
+import 'package:mobile/screens/admin/manage_room/manage_room_screen.dart';
+import 'package:mobile/screens/admin/manage_schedule/bulk_schedule_screen.dart';
+import 'package:mobile/screens/admin/manage_schedule/manage_schedule_screen.dart';
+import 'package:mobile/screens/admin/manage_vocabulary/manage_vocabulary_screen.dart';
+import 'package:mobile/screens/auth/forgotpassword/forgotpassword_screen.dart';
+import 'package:mobile/screens/auth/resetpassword/resetpassword_screen.dart';
+import 'package:mobile/screens/auth/signup/signup_screen.dart';
+import 'package:mobile/screens/auth/splash/splash_screen.dart';
+import 'package:mobile/screens/auth/login/login_screen.dart';
+import 'package:mobile/screens/auth/loginweb/web_login_screen.dart';
+import 'package:mobile/screens/student/flashcards/lesson_flashcards_screen.dart';
+import 'package:mobile/screens/student/grades/student_grades_screen.dart';
+import 'package:mobile/screens/student/leaderboard/student_leader_board_screen.dart';
+import 'package:mobile/screens/student/home/home_screen.dart';
+import 'package:mobile/screens/student/profile/change_password_screen.dart';
+import 'package:mobile/screens/student/profile/settings_screen.dart';
+import 'package:mobile/screens/student/profile/student_edit_profile_screen.dart';
+import 'package:mobile/screens/student/profile/student_profile_screen.dart';
+import 'package:mobile/screens/student/student_layout.dart';
+import 'package:mobile/screens/student/gift_store/student_gift_store_screen.dart';
+import 'package:mobile/screens/student/classes/student_classes_screen.dart';
+import 'package:mobile/screens/student/course/student_course_class_screen.dart';
+import 'package:mobile/screens/student/classes/student_class_detail_screen.dart';
+import 'package:mobile/screens/student/quiz/student_quiz_list_screen.dart';
+import 'package:mobile/screens/student/quiz/student_quiz_review_screen.dart';
+import 'package:mobile/screens/student/quiz/student_quiz_taking_screen.dart';
+import 'package:mobile/screens/student/schedule/student_schedule_screen.dart';
+import 'package:mobile/screens/student/course/student_course_screen.dart';
+import 'package:mobile/screens/student/vocabulary/student_vocabulary_screen.dart';
+import 'package:mobile/screens/student/vocabulary/vocabulary_level_content_screen.dart';
+import 'package:mobile/screens/student/vocabulary/vocabulary_module_details_screen.dart';
+import 'package:mobile/screens/teacher/dashboard/teacher_dashboard_screen.dart';
+import 'package:mobile/screens/teacher/teacher_layout.dart';
+import 'package:mobile/screens/admin/admin_layout.dart';
+import 'package:mobile/screens/admin/manage_account/manage_account_screen.dart';
+import 'package:mobile/screens/admin/manage_class/manage_class_screen.dart';
+import 'package:mobile/screens/teacher/manage_class/manage_teacher_class_screen.dart';
+import 'package:mobile/screens/teacher/manage_schedule/manage_teacher_schedule_screen.dart';
+import 'package:mobile/screens/teacher/manage_class/student_list_screen.dart';
+import 'package:mobile/screens/teacher/manage_class/teacher_quiz_list_screen.dart';
+import 'package:mobile/screens/admin/manage_account/create_user_screen.dart';
+import 'package:mobile/screens/admin/manage_account/admin_edit_user_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final appRouter = GoRouter(
@@ -95,7 +95,7 @@ final appRouter = GoRouter(
           currentIndex = 3;
         }
 
-        return MainHomeScreen(currentIndex: currentIndex, child: child);
+        return StudentLayout(currentIndex: currentIndex, child: child);
       },
       routes: [
         GoRoute(
@@ -255,11 +255,11 @@ final appRouter = GoRouter(
 
     // Khu vực Admin dùng ShellRoute để giữ layout chung
     ShellRoute(
-      builder: (context, state, child) => AdminHomeScreen(child: child),
+      builder: (context, state, child) => AdminLayout(child: child),
       routes: [
         GoRoute(
           path: '/admin', // ShellRoute root
-          builder: (context, state) => const DashboardScreen(),
+          builder: (context, state) => const AdminDashboardScreen(),
           routes: [
             GoRoute(
               path: 'users',
@@ -269,7 +269,7 @@ final appRouter = GoRouter(
                   path: 'create', // Sẽ khớp với /admin/users/create
                   name:
                       'adminCreateUser', // Tên bạn dùng trong context.pushNamed
-                  builder: (context, state) => const AdminCreateUserScreen(),
+                  builder: (context, state) => const CreateUserScreen(),
                 ),
                 GoRoute(
                   path: 'update', // Path: /admin/users/update
@@ -287,7 +287,7 @@ final appRouter = GoRouter(
                       );
                     }
                     // 3. Nếu có, mở màn hình Edit
-                    return AdminEditUserScreen(user: user);
+                    return EditUserScreen(user: user);
                   },
                 ),
               ],
@@ -353,7 +353,7 @@ final appRouter = GoRouter(
                         body: Center(child: Text('Lỗi: Data khóa học bị null')),
                       );
 
-                    return AdminQuizListScreen(course: course);
+                    return ManageQuizScreen(course: course);
                   },
                   routes: [
                     // Route xem chi tiết/sửa Quiz
@@ -364,10 +364,7 @@ final appRouter = GoRouter(
                         final extras = state.extra as Map<String, dynamic>;
                         final course = extras['course'] as CourseModel;
                         final quizId = state.pathParameters['quizId']!;
-                        return AdminQuizDetailScreen(
-                          course: course,
-                          quizId: quizId,
-                        );
+                        return QuizDetailScreen(course: course, quizId: quizId);
                       },
                     ),
                   ],
@@ -396,7 +393,7 @@ final appRouter = GoRouter(
               path: 'media', // Path: /admin/media
               builder:
                   (context, state) =>
-                      const AdminMediaScreen(), // 👈 Màn hình này ta sẽ tạo ở bước sau
+                      const ManageMediaScreen(), // 👈 Màn hình này ta sẽ tạo ở bước sau
             ),
             GoRoute(
               path: 'gifts', // /admin/gifts
@@ -408,7 +405,7 @@ final appRouter = GoRouter(
     ),
     // Khu vực Teacher dùng ShellRoute để giữ layout chung
     ShellRoute(
-      builder: (context, state, child) => TeacherHomeScreen(child: child),
+      builder: (context, state, child) => TeacherLayout(child: child),
       routes: [
         GoRoute(
           path: '/teacher', // ShellRoute root
