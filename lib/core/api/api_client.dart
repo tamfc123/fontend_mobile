@@ -16,7 +16,10 @@ class ApiClient {
         seconds: 120,
       ), // Thời gian chờ AI xử lý (QUAN TRỌNG)
       sendTimeout: const Duration(seconds: 30), // Thời gian gửi file lên
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
     );
 
     _dio.interceptors.add(

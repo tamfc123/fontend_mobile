@@ -254,7 +254,7 @@ class BaseAdminScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         // Bảng
-                        Expanded(child: body),
+                        Expanded(child: ClipRect(child: body)),
                         // Thanh phân trang
                         paginationControls,
                       ],

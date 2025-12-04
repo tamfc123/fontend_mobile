@@ -31,55 +31,64 @@ class _BaseAdminTableState extends State<BaseAdminTable> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Scrollbar(
-        controller: _horizontalController,
-        thumbVisibility: true,
-        trackVisibility: true,
-        child: SingleChildScrollView(
-          controller: _horizontalController,
-          scrollDirection: Axis.horizontal,
-          child: IntrinsicWidth(
-            child: Table(
-              columnWidths: widget.columnWidths,
-              border: TableBorder(
-                bottom: const BorderSide(color: BaseAdminTable.surfaceBlue),
-                horizontalInside: BorderSide(
-                  color: Colors.grey.shade200,
-                  width: 0.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight),
+          child: SingleChildScrollView(
+            child: Scrollbar(
+              controller: _horizontalController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: SingleChildScrollView(
+                controller: _horizontalController,
+                scrollDirection: Axis.horizontal,
+                child: IntrinsicWidth(
+                  child: Table(
+                    columnWidths: widget.columnWidths,
+                    border: TableBorder(
+                      bottom: const BorderSide(
+                        color: BaseAdminTable.surfaceBlue,
+                      ),
+                      horizontalInside: BorderSide(
+                        color: Colors.grey.shade200,
+                        width: 0.5,
+                      ),
+                    ),
+                    children: [
+                      // 1. Header Row (Tự động tạo)
+                      TableRow(
+                        decoration: const BoxDecoration(
+                          color: BaseAdminTable.surfaceBlue,
+                        ),
+                        children:
+                            widget.columnHeaders
+                                .map(
+                                  (title) => Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: BaseAdminTable.primaryBlue,
+                                        fontSize: 16,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                      ),
+                      // 2. Data Rows (Được truyền từ bên ngoài)
+                      ...widget.dataRows,
+                    ],
+                  ),
                 ),
               ),
-              children: [
-                // 1. Header Row (Tự động tạo)
-                TableRow(
-                  decoration: const BoxDecoration(
-                    color: BaseAdminTable.surfaceBlue,
-                  ),
-                  children:
-                      widget.columnHeaders
-                          .map(
-                            (title) => Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: BaseAdminTable.primaryBlue,
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                ),
-                // 2. Data Rows (Được truyền từ bên ngoài)
-                ...widget.dataRows,
-              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

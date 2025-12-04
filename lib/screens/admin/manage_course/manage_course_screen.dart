@@ -106,21 +106,7 @@ class _ManageCourseScreenState extends State<ManageCourseScreen> {
           isLoading: isLoading,
           totalCount: viewModel.totalCount,
           countLabel: 'K.học',
-          body: LayoutBuilder(
-            builder: (context, constraints) {
-              final double tableWidth =
-                  constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
-              return ManageCourseContent(
-                viewModel: viewModel,
-                searchController: _searchController,
-                maxWidth: tableWidth,
-                onEdit: (course) => _showCourseForm(context, course: course),
-                onDelete: (course) => _confirmDelete(context, course),
-                onManageModules: (course) => _goToModules(course),
-                onManageQuizzes: (course) => _goToQuizzes(course),
-              );
-            },
-          ),
+          body: _buildBodyContent(context, viewModel),
           paginationControls: PaginationControls(
             currentPage: viewModel.currentPage,
             totalPages: viewModel.totalPages,
@@ -130,6 +116,27 @@ class _ManageCourseScreenState extends State<ManageCourseScreen> {
               viewModel.goToPage(page);
             },
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBodyContent(
+    BuildContext context,
+    ManageCourseViewModel viewModel,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double tableWidth =
+            constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
+        return ManageCourseContent(
+          viewModel: viewModel,
+          searchController: _searchController,
+          maxWidth: tableWidth,
+          onEdit: (course) => _showCourseForm(context, course: course),
+          onDelete: (course) => _confirmDelete(context, course),
+          onManageModules: (course) => _goToModules(course),
+          onManageQuizzes: (course) => _goToQuizzes(course),
         );
       },
     );

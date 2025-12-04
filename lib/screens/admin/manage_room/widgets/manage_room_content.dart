@@ -53,10 +53,10 @@ class ManageRoomContent extends StatelessWidget {
     double maxWidth,
   ) {
     final colWidths = {
-      0: maxWidth * 0.40,
+      0: maxWidth * 0.35,
       1: maxWidth * 0.20,
       2: maxWidth * 0.20,
-      3: maxWidth * 0.20,
+      3: maxWidth * 0.25,
     };
     final colHeaders = ['Tên phòng', 'Sức chứa', 'Trạng thái', 'Hành động'];
 

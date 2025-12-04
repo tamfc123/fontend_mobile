@@ -1,11 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/api/api_client.dart';
-
-// --- Import Repositories ---
 // Auth & Common
 import 'package:mobile/domain/repositories/auth/auth_repository.dart';
 import 'package:mobile/domain/repositories/common/upload_repository.dart';
-
 // Admin
 import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_course_repository.dart';
@@ -20,13 +17,11 @@ import 'package:mobile/domain/repositories/admin/admin_room_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_schedule_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_user_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_vocabulary_repository.dart';
-
 // Teacher
 import 'package:mobile/domain/repositories/teacher/teaacher_dashboard_repository.dart';
 import 'package:mobile/domain/repositories/teacher/teacher_class_repository.dart';
 import 'package:mobile/domain/repositories/teacher/teacher_quiz_repository.dart';
 import 'package:mobile/domain/repositories/teacher/teacher_schedule_repository.dart';
-
 // Student
 import 'package:mobile/domain/repositories/student/student_class_repository.dart';
 import 'package:mobile/domain/repositories/student/student_course_repository.dart';
@@ -43,10 +38,7 @@ import 'package:mobile/domain/repositories/student/student_vocabulary_lesson_rep
 import 'package:mobile/domain/repositories/student/student_vocabulary_level_repository.dart';
 import 'package:mobile/domain/repositories/student/student_vocabulary_module_repository.dart';
 
-// Lưu ý: Đã xóa toàn bộ Import Service vì Service không thuộc về GetIt nữa.
-
 final getIt = GetIt.instance;
-
 void setupLocator() {
   // ===========================================================================
   // 1. CORE & EXTERNAL (Singleton)

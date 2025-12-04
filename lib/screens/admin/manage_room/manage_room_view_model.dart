@@ -27,7 +27,7 @@ class ManageRoomViewModel extends ChangeNotifier {
   int _totalCount = 0;
   int get totalCount => _totalCount;
 
-  final int _pageSize = 10;
+  final int _pageSize = 5;
 
   Future<void> fetchRooms() async {
     _isLoading = true;

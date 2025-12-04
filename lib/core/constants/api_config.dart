@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrl =
-      'https://drops-guidance-synthesis-game.trycloudflare.com/api';
+      'https://semibiographic-unnaove-chelsey.ngrok-free.dev/api';
 
   // upload
   static const String upload = "/upload";
