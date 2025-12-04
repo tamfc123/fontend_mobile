@@ -88,7 +88,7 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
                   label: Text(filter['label']!),
                   selected: isSelected,
                   showCheckmark: false,
-                  selectedColor: primaryColor.withOpacity(0.1),
+                  selectedColor: primaryColor.withValues(alpha: 0.1),
                   backgroundColor: Colors.white,
                   side: BorderSide(
                     color: isSelected ? primaryColor : Colors.grey.shade300,
@@ -194,10 +194,10 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
           ), // Thêm viền nhẹ cho đẹp
         ),
         child: Icon(iconData, color: color, size: 24),
@@ -216,12 +216,12 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.05),
+            color: Colors.blue.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
@@ -350,13 +350,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
   Widget _buildInfoChip(IconData icon, String text, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: color.withOpacity(0.7)),
+        Icon(icon, size: 16, color: color.withValues(alpha: 0.7)),
         const SizedBox(width: 4),
         Text(
           text,
           style: TextStyle(
             fontSize: 13,
-            color: color.withOpacity(0.9),
+            color: color.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
         ),

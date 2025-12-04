@@ -69,7 +69,7 @@ class _VocabularyLevelContentScreenState
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.1),
+                  AppColors.primary.withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
               ),
@@ -210,7 +210,7 @@ class _VocabularyLevelContentScreenState
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -225,7 +225,7 @@ class _VocabularyLevelContentScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -259,7 +259,7 @@ class _VocabularyLevelContentScreenState
               Text(
                 'Tiến độ Module',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -280,7 +280,7 @@ class _VocabularyLevelContentScreenState
             child: LinearProgressIndicator(
               value: overallProgress,
               minHeight: 8,
-              backgroundColor: Colors.black.withOpacity(0.15),
+              backgroundColor: Colors.black.withValues(alpha: 0.15),
               valueColor: const AlwaysStoppedAnimation(Colors.white),
             ),
           ),
@@ -304,7 +304,7 @@ class _VocabularyLevelContentScreenState
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white.withOpacity(0.8), size: 16),
+        Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 16),
         const SizedBox(width: 6),
         Text(
           text,
@@ -346,7 +346,7 @@ class _VocabularyLevelContentScreenState
                   child:
                       isFirst
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withOpacity(0.3)),
+                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
                 ),
 
                 _buildTimelineNode(number, isCompleted, color, nodeSize),
@@ -355,7 +355,7 @@ class _VocabularyLevelContentScreenState
                   child:
                       isLast
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withOpacity(0.3)),
+                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
                 ),
               ],
             ),
@@ -393,10 +393,10 @@ class _VocabularyLevelContentScreenState
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: AppColors.cardBackground,
-        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -503,12 +503,12 @@ class _AnimatedModuleCardState extends State<_AnimatedModuleCard>
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.color.withOpacity(0.15),
+              color: widget.color.withValues(alpha: 0.15),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -539,7 +539,7 @@ class _AnimatedModuleCardState extends State<_AnimatedModuleCard>
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
@@ -582,7 +582,7 @@ class _AnimatedModuleCardState extends State<_AnimatedModuleCard>
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.1),
+                      color: widget.color.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

@@ -63,7 +63,7 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -178,14 +178,15 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
           if (index < keys.length) {
             // ✅ VIỆT HÓA CHUẨN 4 KỸ NĂNG
             String label = keys[index];
-            if (label == 'Reading')
+            if (label == 'Reading') {
               label = 'Đọc';
-            else if (label == 'Listening')
+            } else if (label == 'Listening') {
               label = 'Nghe';
-            else if (label == 'Writing')
+            } else if (label == 'Writing') {
               label = 'Viết';
-            else if (label == 'Speaking')
+            } else if (label == 'Speaking') {
               label = 'Nói';
+            }
             // Grammar đã gộp vào Reading nên không cần care nữa
 
             return RadarChartTitle(
@@ -199,7 +200,7 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
 
         dataSets: [
           RadarDataSet(
-            fillColor: Colors.blue.withOpacity(0.3),
+            fillColor: Colors.blue.withValues(alpha: 0.3),
             borderColor: Colors.blue.shade600,
             entryRadius: 4,
             borderWidth: 3,
@@ -214,7 +215,11 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 12, height: 12, color: Colors.blue.withOpacity(0.3)),
+        Container(
+          width: 12,
+          height: 12,
+          color: Colors.blue.withValues(alpha: 0.3),
+        ),
         const SizedBox(width: 8),
         const Text(
           "Điểm trung bình (0-100)",

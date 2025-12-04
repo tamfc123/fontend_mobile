@@ -112,7 +112,6 @@ class StudentFlashcardViewModel extends ChangeNotifier {
         await _audioPlayer.setUrl(currentCard!.sampleAudioUrl!);
         await _audioPlayer.play();
       } catch (e) {
-        print("Lỗi just_audio: $e");
         ToastHelper.showError("Không thể phát âm thanh.");
       }
     }
@@ -146,7 +145,6 @@ class StudentFlashcardViewModel extends ChangeNotifier {
             '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.wav';
         await _recorder.start(config, path: _audioPath);
       } catch (e) {
-        print("Lỗi bắt đầu thu âm: $e");
         ToastHelper.showError("Lỗi bắt đầu thu âm: $e");
         _isRecording = false;
         notifyListeners();

@@ -21,7 +21,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
   static const Color lightBlueBg = Color(0xFFEFF6FF);
 
   // Màu nền cho khối lịch Ngày/Tuần (Xanh nhạt theo yêu cầu)
-  static final Color blockBgColor = primaryBlue.withOpacity(0.1);
+  static final Color blockBgColor = primaryBlue.withValues(alpha: 0.1);
 
   CalendarView _currentView = CalendarView.schedule;
 
@@ -65,7 +65,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
             decoration: BoxDecoration(
               color: lightBlueBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: primaryBlue.withOpacity(0.1)),
+              border: Border.all(color: primaryBlue.withValues(alpha: 0.1)),
             ),
             child: IconButton(
               icon: const Icon(Icons.today_rounded, color: primaryBlue),
@@ -123,7 +123,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
                               side: BorderSide(
                                 color:
                                     isSelected
-                                        ? primaryBlue.withOpacity(0.3)
+                                        ? primaryBlue.withValues(alpha: 0.3)
                                         : Colors.grey.shade200,
                               ),
                             ),
@@ -225,7 +225,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
                       todayHighlightColor: primaryBlue,
 
                       selectionDecoration: BoxDecoration(
-                        color: primaryBlue.withOpacity(0.15),
+                        color: primaryBlue.withValues(alpha: 0.15),
                         border: Border.all(color: primaryBlue, width: 2),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -266,7 +266,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF64748B).withOpacity(0.05),
+            color: const Color(0xFF64748B).withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -422,7 +422,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
               child: Text(
                 model!.room!,
                 style: TextStyle(
-                  color: primaryBlue.withOpacity(0.8),
+                  color: primaryBlue.withValues(alpha: 0.8),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
@@ -549,7 +549,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 4,
-                        shadowColor: primaryBlue.withOpacity(0.4),
+                        shadowColor: primaryBlue.withValues(alpha: 0.4),
                       ),
                       child: const Text(
                         'Đóng',
@@ -580,7 +580,7 @@ class _StudentScheduleScreenState extends State<StudentScheduleScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 20, color: iconColor),

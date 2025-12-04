@@ -238,7 +238,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
       selectedColor: color,
       checkmarkColor: Colors.white,
       side: BorderSide(
-        color: isSelected ? color : color.withOpacity(0.2),
+        color: isSelected ? color : color.withValues(alpha: 0.2),
         width: 1.5,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -262,7 +262,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -374,7 +374,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
           height: height,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: medalColor.withOpacity(0.2),
+            color: medalColor.withValues(alpha: 0.2),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
             border: Border(top: BorderSide(color: medalColor, width: 3)),
           ),
@@ -384,7 +384,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w900,
-              color: medalColor.withOpacity(0.4),
+              color: medalColor.withValues(alpha: 0.4),
             ),
           ),
         ),
@@ -407,7 +407,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
         border: isCurrentUser ? Border.all(color: Colors.blue.shade300) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -454,7 +454,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: (levelConfig['color'] as Color).withOpacity(0.1),
+                        color: (levelConfig['color'] as Color).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

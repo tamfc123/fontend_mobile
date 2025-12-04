@@ -92,10 +92,11 @@ class _VocabularyStudentScreenState extends State<VocabularyStudentScreen> {
     );
 
     if (currentUserIndex == -1) {
-      if (data.currentUserLevel <= 1)
+      if (data.currentUserLevel <= 1) {
         currentUserIndex = 0;
-      else
+      } else {
         currentUserIndex = data.levels.length - 1;
+      }
     }
 
     return CustomScrollView(
@@ -283,7 +284,7 @@ class _LevelCardState extends State<_LevelCard>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: displayColor.withOpacity(isLocked ? 0.1 : 0.2),
+                  color: displayColor.withValues(alpha: isLocked ? 0.1 : 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -300,7 +301,7 @@ class _LevelCardState extends State<_LevelCard>
                     child: Icon(
                       iconData,
                       size: 120,
-                      color: displayColor.withOpacity(0.05),
+                      color: displayColor.withValues(alpha: 0.05),
                     ),
                   ),
 
@@ -324,7 +325,9 @@ class _LevelCardState extends State<_LevelCard>
                                     ? []
                                     : [
                                       BoxShadow(
-                                        color: displayColor.withOpacity(0.4),
+                                        color: displayColor.withValues(
+                                          alpha: 0.4,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -351,7 +354,9 @@ class _LevelCardState extends State<_LevelCard>
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: displayColor.withOpacity(0.1),
+                                      color: displayColor.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -372,7 +377,9 @@ class _LevelCardState extends State<_LevelCard>
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
+                                        color: Colors.orange.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Text(

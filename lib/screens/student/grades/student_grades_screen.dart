@@ -142,7 +142,7 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.shade100.withOpacity(0.3),
+            color: Colors.blue.shade100.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -188,11 +188,11 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
         radarBackgroundColor: Colors.transparent,
         radarShape: RadarShape.polygon,
         radarBorderData: BorderSide(
-          color: Colors.blue.shade100.withOpacity(0.5),
+          color: Colors.blue.shade100.withValues(alpha: 0.5),
           width: 1.2,
         ),
         gridBorderData: BorderSide(
-          color: Colors.blue.shade50.withOpacity(0.8),
+          color: Colors.blue.shade50.withValues(alpha: 0.8),
           width: 0.8,
         ),
         tickBorderData: const BorderSide(color: Colors.transparent),
@@ -210,16 +210,17 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
           if (index < keys.length) {
             // ✅ VIỆT HÓA TÊN KỸ NĂNG
             String label = keys[index];
-            if (label == 'Reading')
+            if (label == 'Reading') {
               label = 'Đọc';
-            else if (label == 'Listening')
+            } else if (label == 'Listening') {
               label = 'Nghe';
-            else if (label == 'Writing')
+            } else if (label == 'Writing') {
               label = 'Viết';
-            else if (label == 'Speaking')
+            } else if (label == 'Speaking') {
               label = 'Nói';
-            else if (label == 'Grammar')
+            } else if (label == 'Grammar') {
               label = 'Ngữ pháp';
+            }
 
             return RadarChartTitle(
               text: "$label\n${values[index].toInt()}",
@@ -231,7 +232,7 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
 
         dataSets: [
           RadarDataSet(
-            fillColor: Colors.blue.shade500.withOpacity(0.2),
+            fillColor: Colors.blue.shade500.withValues(alpha: 0.2),
             borderColor: Colors.blue.shade600,
             borderWidth: 2,
             entryRadius: 3,
@@ -258,10 +259,10 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.1), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -334,7 +335,7 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
             child: LinearProgressIndicator(
               value: percentage / 100,
               minHeight: 6,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -359,7 +360,7 @@ class _StudentGradesScreenState extends State<StudentGradesScreen> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
+              color: Colors.blue.withValues(alpha: 0.2),
               border: Border.all(color: Colors.blue),
               shape: BoxShape.circle,
             ),

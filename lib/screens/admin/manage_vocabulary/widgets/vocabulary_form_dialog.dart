@@ -116,7 +116,7 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: primaryBlue.withOpacity(0.1),
+              color: primaryBlue.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -208,7 +208,9 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: primaryBlue.withOpacity(0.5)),
+                          side: BorderSide(
+                            color: primaryBlue.withValues(alpha: 0.5),
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -289,7 +291,7 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
             border: Border.all(color: surfaceBlue),
             boxShadow: [
               BoxShadow(
-                color: primaryBlue.withOpacity(0.05),
+                color: primaryBlue.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -340,7 +342,7 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryBlue.withOpacity(0.05),
+                color: primaryBlue.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),

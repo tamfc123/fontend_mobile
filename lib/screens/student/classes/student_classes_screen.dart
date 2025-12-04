@@ -85,7 +85,7 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: primaryBlue.withOpacity(0.3),
+                                color: primaryBlue.withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
                               ),
@@ -96,7 +96,7 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -123,7 +123,7 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
                                     'Lớp đang tham gia',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -299,7 +299,7 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: primaryBlue.withOpacity(0.1),
+                  color: primaryBlue.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -338,7 +338,7 @@ class _StudentClassesScreenState extends State<StudentClassesScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 4,
-              shadowColor: primaryBlue.withOpacity(0.4),
+              shadowColor: primaryBlue.withValues(alpha: 0.4),
             ),
           ),
         ],

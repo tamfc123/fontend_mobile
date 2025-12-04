@@ -31,7 +31,7 @@ class ClassCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF64748B).withOpacity(0.08),
+            color: const Color(0xFF64748B).withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -55,7 +55,7 @@ class ClassCard extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: primaryBlue.withOpacity(0.1),
+                        color: primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -183,7 +183,7 @@ class ClassCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: primaryBlue.withOpacity(0.1),
+                            color: primaryBlue.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

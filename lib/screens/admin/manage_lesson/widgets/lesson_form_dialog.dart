@@ -301,8 +301,9 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
                                                         await _onImageInsert(
                                                           context,
                                                         );
-                                                    if (url != null)
+                                                    if (url != null) {
                                                       _insertImage(url);
+                                                    }
                                                   },
                                                 ),
                                               ],
@@ -354,7 +355,7 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
                               if (_isUploading)
                                 Container(
                                   alignment: Alignment.center,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   child: const Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [

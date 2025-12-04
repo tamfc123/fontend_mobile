@@ -83,7 +83,7 @@ class RecentTeachersList extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.blue.withOpacity(0.12),
+            backgroundColor: Colors.blue.withValues(alpha: 0.12),
             child: Text(
               teacher.name.isNotEmpty ? teacher.name[0].toUpperCase() : 'T',
               style: const TextStyle(

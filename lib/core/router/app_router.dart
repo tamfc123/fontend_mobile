@@ -348,10 +348,11 @@ final appRouter = GoRouter(
                   path: ':courseId/quizzes', // Path: /admin/courses/123/quizzes
                   builder: (context, state) {
                     final course = state.extra as CourseModel?;
-                    if (course == null)
+                    if (course == null) {
                       return const Scaffold(
                         body: Center(child: Text('Lỗi: Data khóa học bị null')),
                       );
+                    }
 
                     return ManageQuizScreen(course: course);
                   },

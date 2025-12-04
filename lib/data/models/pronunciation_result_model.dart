@@ -87,9 +87,12 @@ class PhonemeResultModel {
 
   Color get color {
     // 1. Nếu API báo lỗi cụ thể -> Màu lỗi
-    if (errorType == 'Mispronunciation') return Colors.orange.shade700;
-    if (errorType == 'Omission' || errorType == 'Insertion')
+    if (errorType == 'Mispronunciation') {
+      return Colors.orange.shade700;
+    }
+    if (errorType == 'Omission' || errorType == 'Insertion') {
       return Colors.red.shade700;
+    }
 
     // 2. Nếu API báo "None" (Không lỗi), phải check tiếp ĐIỂM SỐ
     // Azure có thể trả về None nhưng điểm thấp (phát âm chưa chuẩn hẳn)

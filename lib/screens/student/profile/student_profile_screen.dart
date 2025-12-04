@@ -129,7 +129,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                   ),
                                   child: CircleAvatar(
                                     radius: 50,
@@ -156,7 +156,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(
+                                            color: Colors.black.withValues(alpha: 
                                               0.1,
                                             ),
                                             blurRadius: 6,
@@ -189,7 +189,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -223,7 +223,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.08),
+                              color: Colors.blue.withValues(alpha: 0.08),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -235,7 +235,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: levelConfig['color'].withOpacity(0.1),
+                                color: levelConfig['color'].withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(

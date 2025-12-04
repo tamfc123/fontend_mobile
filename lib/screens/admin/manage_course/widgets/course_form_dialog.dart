@@ -209,8 +209,9 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
                             ),
                           ),
                           onChanged: (value) {
-                            if (value != null)
+                            if (value != null) {
                               setState(() => _requiredLevel = value);
+                            }
                           },
                           decoration: InputDecoration(
                             filled: true,

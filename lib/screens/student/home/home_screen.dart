@@ -81,13 +81,13 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [color.withOpacity(0.03), Colors.transparent],
+          colors: [color.withValues(alpha: 0.03), Colors.transparent],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.1), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.1), width: 1),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.05),
+            color: color.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -109,7 +109,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
+                        color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(icon, color: color, size: 26),
@@ -173,7 +173,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   size: 18,
                 ),
               ],
@@ -207,8 +207,8 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.blue.shade900.withOpacity(0.7),
-                    Colors.blue.shade600.withOpacity(0.3),
+                    Colors.blue.shade900.withValues(alpha: 0.7),
+                    Colors.blue.shade600.withValues(alpha: 0.3),
                   ],
                 ),
               ),
@@ -222,14 +222,14 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       shadows: [
                         Shadow(
                           offset: const Offset(0, 1),
                           blurRadius: 2,
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                         ),
                       ],
                     ),
@@ -246,7 +246,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         Shadow(
                           offset: const Offset(0, 2),
                           blurRadius: 4,
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                         ),
                       ],
                     ),
@@ -347,7 +347,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                             border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -394,10 +394,10 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -441,7 +441,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -545,7 +545,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                                 color:
                                     _currentBannerIndex == index
                                         ? Colors.white
-                                        : Colors.white.withOpacity(0.4),
+                                        : Colors.white.withValues(alpha: 0.4),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -713,10 +713,10 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -727,7 +727,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),

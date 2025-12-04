@@ -72,8 +72,8 @@ class _UserRedemptionDialogState extends State<UserRedemptionDialog> {
                             decoration: BoxDecoration(
                               color:
                                   isPending
-                                      ? Colors.amber.withOpacity(0.1)
-                                      : Colors.green.withOpacity(0.1),
+                                      ? Colors.amber.withValues(alpha: 0.1)
+                                      : Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(

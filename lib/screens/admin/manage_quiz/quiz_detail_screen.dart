@@ -152,7 +152,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.08),
+            color: Colors.blue.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -254,7 +254,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -354,7 +354,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               decoration: BoxDecoration(
                 color:
                     isCorrect
-                        ? Colors.green.withOpacity(0.1)
+                        ? Colors.green.withValues(alpha: 0.1)
                         : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -521,9 +521,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

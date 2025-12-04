@@ -383,8 +383,14 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
     final quiz = service.currentQuiz;
     final isLoading = service.isLoadingDetail;
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (await _onWillPop()) {
+          if (context.mounted) context.pop();
+        }
+      },
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
@@ -444,7 +450,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
                           color: Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             ),
@@ -547,7 +553,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: primaryBlue.withOpacity(0.1),
+                  color: primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -670,7 +676,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
                   decoration: BoxDecoration(
                     color:
                         isSelected
-                            ? primaryBlue.withOpacity(0.05)
+                            ? primaryBlue.withValues(alpha: 0.05)
                             : Colors.white,
                     border: Border.all(
                       color: isSelected ? primaryBlue : Colors.grey.shade300,

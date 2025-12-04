@@ -122,7 +122,7 @@ class _SkillDistributionChartState extends State<SkillDistributionChart> {
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             blurRadius: 2,
                           ),
                         ],

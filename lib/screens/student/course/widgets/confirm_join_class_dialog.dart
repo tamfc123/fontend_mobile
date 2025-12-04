@@ -24,7 +24,7 @@ class ConfirmJoinClassDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -37,7 +37,7 @@ class ConfirmJoinClassDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: levelColor.withOpacity(0.1),
+                color: levelColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.school_rounded, size: 32, color: levelColor),
@@ -116,7 +116,7 @@ class ConfirmJoinClassDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      shadowColor: levelColor.withOpacity(0.4),
+                      shadowColor: levelColor.withValues(alpha: 0.4),
                     ),
                     child: const Text(
                       'Tham gia',

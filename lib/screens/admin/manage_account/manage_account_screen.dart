@@ -48,7 +48,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -157,7 +157,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),

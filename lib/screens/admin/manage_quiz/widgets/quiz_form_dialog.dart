@@ -258,8 +258,9 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
                     ),
                   ],
                   onChanged: (value) {
-                    if (value != null)
+                    if (value != null) {
                       setState(() => _selectedSkillType = value);
+                    }
                   },
                 ),
                 if (_selectedSkillType == 'READING') ...[

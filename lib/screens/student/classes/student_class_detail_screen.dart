@@ -89,9 +89,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
                           title: 'Điểm danh',
                           color: const Color(0xFF10B981), // Green
                           delay: 100, // Xuất hiện sau header chút xíu
-                          onTap: () {
-                            // TODO: Navigate to Attendance
-                          },
+                          onTap: () {},
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -171,7 +169,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryBlue.withOpacity(0.3),
+            color: primaryBlue.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -186,7 +184,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
@@ -213,7 +211,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
                     Text(
                       widget.studentClassModel.courseName,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 14,
                       ),
                     ),
@@ -226,7 +224,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -305,7 +303,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -424,7 +422,7 @@ class _AnimatedActionCardState extends State<_AnimatedActionCard>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -437,7 +435,7 @@ class _AnimatedActionCardState extends State<_AnimatedActionCard>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: widget.color.withOpacity(0.1),
+                    color: widget.color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(widget.icon, color: widget.color, size: 28),
@@ -448,7 +446,7 @@ class _AnimatedActionCardState extends State<_AnimatedActionCard>
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B).withOpacity(0.8),
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.8),
                   ),
                 ),
               ],

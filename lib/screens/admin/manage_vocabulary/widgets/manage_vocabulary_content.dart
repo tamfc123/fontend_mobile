@@ -263,7 +263,7 @@ class _ManageVocabularyContentState extends State<ManageVocabularyContent> {
   Widget _buildPlayButton(String url, bool isPlaying) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.12),
+        color: Colors.blue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(

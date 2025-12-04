@@ -79,7 +79,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.1),
+                  AppColors.primary.withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
               ),
@@ -131,7 +131,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.1),
+                color: AppColors.danger.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(
@@ -274,7 +274,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
                 color: AppColors.primaryXLight,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -314,7 +314,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
         border: Border.all(color: AppColors.borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -341,7 +341,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
                   decoration: BoxDecoration(
                     color: _getScoreColor(
                       result.accuracyScore,
-                    ).withOpacity(0.1),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -424,10 +424,10 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: phoneme.color.withOpacity(0.1),
+                                      color: phoneme.color.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: phoneme.color.withOpacity(0.3),
+                                        color: phoneme.color.withValues(alpha: 0.3),
                                         width: 1,
                                       ),
                                     ),
@@ -489,13 +489,13 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
           colors:
               isBack
                   ? [AppColors.primaryXLight, AppColors.background]
-                  : [Colors.white, AppColors.background.withOpacity(0.3)],
+                  : [Colors.white, AppColors.background.withValues(alpha: 0.3)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -523,10 +523,10 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -544,11 +544,11 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
               const SizedBox(height: 28),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -602,7 +602,7 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),
@@ -756,7 +756,7 @@ class _RewardDialogState extends State<_RewardDialog>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),

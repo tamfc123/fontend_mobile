@@ -209,7 +209,7 @@ class _VocabularyModuleDetailsScreenState
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -224,7 +224,7 @@ class _VocabularyModuleDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -260,7 +260,7 @@ class _VocabularyModuleDetailsScreenState
                   Text(
                     'Tiến độ chủ đề',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -281,7 +281,7 @@ class _VocabularyModuleDetailsScreenState
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  backgroundColor: Colors.black.withOpacity(0.1),
+                  backgroundColor: Colors.black.withValues(alpha: 0.1),
                   valueColor: const AlwaysStoppedAnimation(Colors.white),
                 ),
               ),
@@ -310,18 +310,18 @@ class _VocabularyModuleDetailsScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.1),
+        color: Colors.black.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white.withOpacity(0.9), size: 16),
+          Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 16),
           const SizedBox(width: 6),
           Text(
             text,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -358,14 +358,14 @@ class _VocabularyModuleDetailsScreenState
                   child:
                       isFirst
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withOpacity(0.3)),
+                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
                 ),
                 _buildTimelineNode(number, isCompleted, color, nodeSize),
                 Expanded(
                   child:
                       isLast
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withOpacity(0.3)),
+                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
                 ),
               ],
             ),
@@ -404,10 +404,10 @@ class _VocabularyModuleDetailsScreenState
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: AppColors.cardBackground,
-        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -518,12 +518,12 @@ class _AnimatedLessonCardState extends State<_AnimatedLessonCard>
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.color.withOpacity(0.15),
+              color: widget.color.withValues(alpha: 0.15),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -552,7 +552,7 @@ class _AnimatedLessonCardState extends State<_AnimatedLessonCard>
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(

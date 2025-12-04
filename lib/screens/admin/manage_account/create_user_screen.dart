@@ -121,7 +121,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -254,10 +254,14 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                           hint: 'Nhập email',
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
-                            if (value == null || value.isEmpty)
+                            if (value == null || value.isEmpty) {
                               return 'Không được để trống';
-                            if (!value.contains('@'))
+                            }
+
+                            if (!value.contains('@')) {
                               return 'Email không hợp lệ';
+                            }
+
                             return null;
                           },
                         ),
