@@ -58,46 +58,121 @@ class _DashboardTeacherScreenState extends State<DashboardTeacherScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Dãy StatCard (Giữ nguyên)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.class_,
-                      title: 'Tổng số lớp',
-                      value: stats?.totalClasses.toString() ?? '...',
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.people,
-                      title: 'Tổng số học viên',
-                      value: stats?.totalStudents.toString() ?? '...',
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.quiz,
-                      title: 'Tổng số bài quiz',
-                      value: stats?.totalQuizzes.toString() ?? '...',
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: StatCard(
-                      icon: Icons.calendar_today,
-                      title: 'Lịch dạy hôm nay',
-                      value: stats?.todayClasses.toString() ?? '...',
-                      color: Colors.purple,
-                    ),
-                  ),
-                ],
+              // Dãy StatCard (Responsive)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Large screen: Use Row (cards expand to fill width)
+                  if (constraints.maxWidth >= 1000) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            icon: Icons.class_,
+                            title: 'Tổng số lớp',
+                            value: stats?.totalClasses.toString() ?? '...',
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: StatCard(
+                            icon: Icons.people,
+                            title: 'Tổng số học viên',
+                            value: stats?.totalStudents.toString() ?? '...',
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: StatCard(
+                            icon: Icons.quiz,
+                            title: 'Tổng số bài quiz',
+                            value: stats?.totalQuizzes.toString() ?? '...',
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: StatCard(
+                            icon: Icons.calendar_today,
+                            title: 'Lịch dạy hôm nay',
+                            value: stats?.todayClasses.toString() ?? '...',
+                            color: Colors.purple,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  // Small screen: Use Wrap (cards wrap to new lines)
+                  return Wrap(
+                    spacing: 20,
+                    runSpacing: 20,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: 200,
+                          maxWidth:
+                              constraints.maxWidth < 600
+                                  ? double.infinity
+                                  : (constraints.maxWidth - 20) / 2,
+                        ),
+                        child: StatCard(
+                          icon: Icons.class_,
+                          title: 'Tổng số lớp',
+                          value: stats?.totalClasses.toString() ?? '...',
+                          color: Colors.blue,
+                        ),
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: 200,
+                          maxWidth:
+                              constraints.maxWidth < 600
+                                  ? double.infinity
+                                  : (constraints.maxWidth - 20) / 2,
+                        ),
+                        child: StatCard(
+                          icon: Icons.people,
+                          title: 'Tổng số học viên',
+                          value: stats?.totalStudents.toString() ?? '...',
+                          color: Colors.green,
+                        ),
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: 200,
+                          maxWidth:
+                              constraints.maxWidth < 600
+                                  ? double.infinity
+                                  : (constraints.maxWidth - 20) / 2,
+                        ),
+                        child: StatCard(
+                          icon: Icons.quiz,
+                          title: 'Tổng số bài quiz',
+                          value: stats?.totalQuizzes.toString() ?? '...',
+                          color: Colors.orange,
+                        ),
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: 200,
+                          maxWidth:
+                              constraints.maxWidth < 600
+                                  ? double.infinity
+                                  : (constraints.maxWidth - 20) / 2,
+                        ),
+                        child: StatCard(
+                          icon: Icons.calendar_today,
+                          title: 'Lịch dạy hôm nay',
+                          value: stats?.todayClasses.toString() ?? '...',
+                          color: Colors.purple,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 32),
 

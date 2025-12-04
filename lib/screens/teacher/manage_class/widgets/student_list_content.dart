@@ -130,7 +130,7 @@ class StudentListContent extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     ActionIconButton(
                       icon: Icons.analytics_rounded,
                       color: primaryBlue,
