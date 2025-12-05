@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data/models/class_model.dart';
 import 'package:mobile/data/models/class_schedule_model.dart';
 import 'package:mobile/data/models/room_model.dart';
+import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_room_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_schedule_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
@@ -8,11 +10,17 @@ import 'package:mobile/utils/toast_helper.dart';
 class ManageScheduleViewModel extends ChangeNotifier {
   final AdminScheduleRepository _scheduleRepository;
   final AdminRoomRepository _roomRepository;
+  final AdminClassRepository _classRepository;
 
-  ManageScheduleViewModel(this._scheduleRepository, this._roomRepository);
+  ManageScheduleViewModel(
+    this._scheduleRepository,
+    this._roomRepository,
+    this._classRepository,
+  );
 
   List<ClassScheduleModel> _schedules = [];
   List<RoomModel> _activeRooms = [];
+  List<ClassModel> _classes = [];
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -22,6 +30,7 @@ class ManageScheduleViewModel extends ChangeNotifier {
 
   List<ClassScheduleModel> get schedules => _schedules;
   List<RoomModel> get activeRooms => _activeRooms;
+  List<ClassModel> get classes => _classes;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String get searchTeacher => _searchTeacher;
@@ -33,7 +42,11 @@ class ManageScheduleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.wait([_fetchSchedules(), _fetchActiveRooms()]);
+      await Future.wait([
+        _fetchSchedules(),
+        _fetchActiveRooms(),
+        _fetchActiveClasses(),
+      ]);
     } catch (e) {
       _errorMessage =
           'Lỗi khi tải dữ liệu: ${e.toString().replaceFirst('Exception: ', '')}';
@@ -53,6 +66,10 @@ class ManageScheduleViewModel extends ChangeNotifier {
 
   Future<void> _fetchActiveRooms() async {
     _activeRooms = await _roomRepository.getAllActiveRooms();
+  }
+
+  Future<void> _fetchActiveClasses() async {
+    _classes = await _classRepository.getAllActiveClasses();
   }
 
   void updateSearchTeacher(String value) {
@@ -75,6 +92,7 @@ class ManageScheduleViewModel extends ChangeNotifier {
     try {
       await _fetchSchedules();
     } catch (e) {
+      debugPrint(e.toString());
       ToastHelper.showError('Lỗi tải lịch học: ${e.toString()}');
     } finally {
       _isLoading = false;

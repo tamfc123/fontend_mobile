@@ -35,12 +35,12 @@ class ManageTeacherClassContent extends StatelessWidget {
       bodyContent = _buildEmptyStateWidget(currentSearchQuery);
     } else {
       bodyContent = LayoutBuilder(
-        builder:
-            (context, constraints) => _buildResponsiveTableWidget(
-              context,
-              classes,
-              constraints.maxWidth,
-            ),
+        builder: (context, constraints) {
+          // Ensure minimum table width for horizontal scroll on small screens
+          final double tableWidth =
+              constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
+          return _buildResponsiveTableWidget(context, classes, tableWidth);
+        },
       );
     }
 
@@ -95,11 +95,12 @@ class ManageTeacherClassContent extends StatelessWidget {
     List<TeacherClassModel> classes,
     double maxWidth,
   ) {
+    // Adjust column widths to prevent action button overflow
     final colWidths = {
-      0: maxWidth * 0.35,
-      1: maxWidth * 0.25,
-      2: maxWidth * 0.15,
-      3: maxWidth * 0.25,
+      0: maxWidth * 0.32, // Tên lớp (reduced from 0.35)
+      1: maxWidth * 0.24, // Khóa học (reduced from 0.25)
+      2: maxWidth * 0.14, // Số sinh viên (reduced from 0.15)
+      3: maxWidth * 0.30, // Thao tác (increased from 0.25 for 2 buttons)
     };
     final colHeaders = ['Tên lớp', 'Khóa học', 'Số sinh viên', 'Thao tác'];
 

@@ -26,7 +26,9 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
     _capacityController = TextEditingController(
       text: widget.room?.capactity.toString() ?? '',
     );
-    _status = widget.room?.status ?? 'Active';
+    // Normalize status to match dropdown values (capitalize first letter)
+    final status = widget.room?.status ?? 'Active';
+    _status = status[0].toUpperCase() + status.substring(1).toLowerCase();
   }
 
   @override
@@ -88,8 +90,7 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color:
-                    isEditing ? Colors.orange.shade600 : Colors.blue.shade600,
+                color: Colors.blue.shade600,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -173,15 +174,11 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
                         items: const [
                           DropdownMenuItem(
                             value: 'Active',
-                            child: Text('Active'),
+                            child: Text('Hoạt động'),
                           ),
                           DropdownMenuItem(
                             value: 'Inactive',
-                            child: Text('Inactive'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Maintenance',
-                            child: Text('Maintenance'),
+                            child: Text('Ngưng hoạt động'),
                           ),
                         ],
                         onChanged: (val) => setState(() => _status = val!),
@@ -207,10 +204,7 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _handleSubmit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    isEditing
-                                        ? Colors.orange.shade600
-                                        : Colors.blue.shade600,
+                                backgroundColor: Colors.blue.shade600,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,

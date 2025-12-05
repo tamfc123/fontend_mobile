@@ -60,14 +60,14 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
               ),
               const SizedBox(width: 12),
               Text(
-                showDeleted ? 'Đang xem Thùng Rác' : 'Kho Quà Hiện Tại',
+                showDeleted ? 'Thùng rác' : 'Kho quà',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: showDeleted ? Colors.red : primaryBlue,
                 ),
               ),
               const Spacer(),
-              const Text('Xem Thùng rác', style: TextStyle(fontSize: 14)),
+              const Text('Thùng rác', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
               Switch(
                 value: showDeleted,
@@ -104,8 +104,8 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
     bool showDeleted,
   ) {
     final colWidths = {
-      0: maxWidth * 0.05,
-      1: maxWidth * 0.10,
+      0: maxWidth * 0.07,
+      1: maxWidth * 0.12,
       2: maxWidth * 0.30,
       3: maxWidth * 0.15,
       4: maxWidth * 0.15,
@@ -156,7 +156,12 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
                   ),
                 ),
               ),
-              CommonTableCell(gift.name, bold: true, color: Colors.blue[900]),
+              CommonTableCell(
+                gift.name,
+                bold: true,
+                color: Colors.blue[900],
+                align: TextAlign.center,
+              ),
               CommonTableCell(
                 '${gift.coinPrice} xu',
                 align: TextAlign.center,

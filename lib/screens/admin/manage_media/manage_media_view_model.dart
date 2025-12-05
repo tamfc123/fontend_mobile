@@ -14,7 +14,7 @@ class ManageMediaViewModel extends ChangeNotifier {
 
   // Pagination
   int _currentPage = 1;
-  final int _pageSize = 20;
+  final int _pageSize = 5;
   int _totalCount = 0;
 
   List<MediaFileModel> get files => _files;

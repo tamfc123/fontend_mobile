@@ -53,7 +53,7 @@ class AdminMediaRepository {
   // ✅ 2. GET ALL MEDIA (Có phân trang)
   Future<Map<String, dynamic>> getAllMedia({
     int page = 1,
-    int limit = 20,
+    int limit = 5,
   }) async {
     try {
       final response = await _apiClient.dio.get(

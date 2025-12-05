@@ -84,7 +84,7 @@ class _ManageRoomScreenState extends State<ManageRoomScreen> {
           headerIcon: Icons.meeting_room,
           addLabel: 'Thêm Phòng',
           onAddPressed: () => _showAddOrEditDialog(context),
-          onBackPressed: () => Navigator.of(context).pop(),
+          onBackPressed: null,
           searchController: _searchController,
           searchHint: 'Tìm kiếm phòng...',
           isLoading: isLoading,

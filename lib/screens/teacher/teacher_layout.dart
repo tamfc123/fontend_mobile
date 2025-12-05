@@ -25,7 +25,14 @@ class TeacherLayout extends StatelessWidget {
           isDesktop
               ? null
               : AppBar(
-                title: const Text('Teacher Dashboard'),
+                title: const Text(
+                  'Tổng quan',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: true,
                 backgroundColor: Colors.white,
                 leading: Builder(
                   builder:
@@ -103,7 +110,7 @@ class _SidebarMenu extends StatelessWidget {
                     ),
                   ),
                   accountName: const Text(
-                    "Trang quản lý giáo viên",
+                    "Trang giảng viên",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   accountEmail: Text(

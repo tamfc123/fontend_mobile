@@ -59,6 +59,22 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
     widget.onConfirm();
   }
 
+  // Responsive helpers
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+
+  double _getTitleFontSize(BuildContext context) {
+    return _isMobile(context) ? 18.0 : 20.0;
+  }
+
+  double _getContentFontSize(BuildContext context) {
+    return _isMobile(context) ? 15.0 : 16.0;
+  }
+
+  double _getPadding(BuildContext context) {
+    return _isMobile(context) ? 20.0 : 24.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -72,7 +88,9 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
               backgroundColor: Colors.transparent,
               child: Container(
                 width: MediaQuery.of(context).size.width * 0.85,
-                constraints: const BoxConstraints(maxWidth: 400),
+                constraints: BoxConstraints(
+                  maxWidth: _isMobile(context) ? 400 : 500,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -89,7 +107,7 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
                   children: [
                     // Header với màu đỏ cảnh báo
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(_getPadding(context)),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Colors.red.shade400, Colors.red.shade600],
@@ -122,11 +140,13 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
                               children: [
                                 Text(
                                   widget.title,
-                                  style: const TextStyle(
-                                    fontSize: 20,
+                                  style: TextStyle(
+                                    fontSize: _getTitleFontSize(context),
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -145,7 +165,7 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
 
                     // Content
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(_getPadding(context)),
                       child: Column(
                         children: [
                           // Warning icon lớn
@@ -166,9 +186,9 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
                           // Content text
                           Text(
                             widget.content,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF424242),
+                            style: TextStyle(
+                              fontSize: _getContentFontSize(context),
+                              color: const Color(0xFF424242),
                               height: 1.5,
                             ),
                             textAlign: TextAlign.center,
@@ -251,7 +271,7 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
 
                     // Action buttons
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(_getPadding(context)),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFAFBFF),
                         borderRadius: const BorderRadius.only(

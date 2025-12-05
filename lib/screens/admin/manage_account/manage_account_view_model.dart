@@ -4,7 +4,7 @@ import 'package:mobile/data/models/user_model.dart';
 import 'package:mobile/domain/repositories/admin/admin_user_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
 
-enum UserRole { all, admin, teacher, student }
+enum UserRole { all, admin, teacher, student, staff }
 
 enum UserStatus { all, active, blocked }
 

@@ -18,8 +18,24 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
 
+  // Responsive helpers
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+
+  double _getContainerPadding(BuildContext context) {
+    return _isMobile(context) ? 20 : 32;
+  }
+
+  double _getMaxWidth(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 600) return width * 0.9; // Mobile: 90% width
+    return 420; // Desktop: fixed 420px
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobile(context);
+
     return ChangeNotifierProvider(
       create: (_) => WebLoginViewModel(context.read<AuthService>()),
       child: Consumer<WebLoginViewModel>(
@@ -28,17 +44,21 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
             backgroundColor: Colors.blueGrey[50],
             body: Center(
               child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 16 : 0,
+                  vertical: isMobile ? 24 : 0,
+                ),
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  padding: const EdgeInsets.all(32),
+                  constraints: BoxConstraints(maxWidth: _getMaxWidth(context)),
+                  padding: EdgeInsets.all(_getContainerPadding(context)),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        blurRadius: isMobile ? 12 : 20,
+                        offset: Offset(0, isMobile ? 4 : 8),
                       ),
                     ],
                   ),
@@ -49,20 +69,20 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                       children: [
                         // Logo hoặc icon admin
                         CircleAvatar(
-                          radius: 36,
+                          radius: isMobile ? 32 : 36,
                           backgroundColor: Colors.blue.shade100,
-                          child: const Icon(
+                          child: Icon(
                             Icons.admin_panel_settings,
-                            size: 40,
+                            size: isMobile ? 36 : 40,
                             color: Colors.blue,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isMobile ? 12 : 16),
 
-                        const Text(
+                        Text(
                           "Hệ thống Quản trị",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: isMobile ? 20 : 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
@@ -70,9 +90,12 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                         const SizedBox(height: 8),
                         Text(
                           "Đăng nhập để tiếp tục",
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: isMobile ? 14 : 15,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                        const SizedBox(height: 28),
+                        SizedBox(height: isMobile ? 20 : 28),
 
                         // Email input
                         TextFormField(
@@ -83,6 +106,10 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: isMobile ? 14 : 16,
+                              horizontal: 12,
+                            ),
                           ),
                           validator:
                               (value) =>
@@ -90,7 +117,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                       ? "Vui lòng nhập email"
                                       : null,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isMobile ? 12 : 16),
 
                         // Password input
                         TextFormField(
@@ -101,6 +128,10 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                             labelText: "Mật khẩu",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: isMobile ? 14 : 16,
+                              horizontal: 12,
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -122,7 +153,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                       : null,
                         ),
 
-                        const SizedBox(height: 24),
+                        SizedBox(height: isMobile ? 20 : 24),
 
                         // Button
                         SizedBox(
@@ -150,7 +181,8 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                             authService.currentUser?.role
                                                 .toLowerCase();
 
-                                        if (userRole == 'admin') {
+                                        if (userRole == 'admin' ||
+                                            userRole == 'staff') {
                                           context.go('/admin');
                                         } else if (userRole == 'teacher') {
                                           context.go('/teacher');
@@ -162,7 +194,9 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                                       }
                                     },
                             style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: EdgeInsets.symmetric(
+                                vertical: isMobile ? 14 : 16,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -170,18 +204,18 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                             ),
                             child:
                                 viewModel.isLoading
-                                    ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
+                                    ? SizedBox(
+                                      width: isMobile ? 20 : 22,
+                                      height: isMobile ? 20 : 22,
+                                      child: const CircularProgressIndicator(
                                         strokeWidth: 2.5,
                                         color: Colors.white,
                                       ),
                                     )
-                                    : const Text(
+                                    : Text(
                                       "Đăng nhập",
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: isMobile ? 15 : 16,
                                         color: Colors.white,
                                       ),
                                     ),

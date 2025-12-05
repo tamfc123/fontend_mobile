@@ -111,13 +111,21 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
     final classes = viewModel.classes;
     final isLoading = viewModel.isLoading;
 
+    // Responsive padding
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding =
+        screenWidth < 600 ? 12.0 : (screenWidth < 1024 ? 16.0 : 24.0);
+    final verticalSpacing = screenWidth < 600 ? 16.0 : 24.0;
+
     return Scaffold(
       backgroundColor: backgroundBlue,
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1600),
+          constraints: BoxConstraints(
+            maxWidth: screenWidth < 600 ? double.infinity : 1600,
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(horizontalPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -129,7 +137,7 @@ class _ManageTeacherClassScreenState extends State<ManageTeacherClassScreen> {
                   isLoading: isLoading,
                   totalCount: viewModel.totalCount,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: verticalSpacing),
 
                 // === BẢNG LỚP HỌC ===
                 ManageTeacherClassContent(

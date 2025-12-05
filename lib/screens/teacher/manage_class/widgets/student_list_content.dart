@@ -22,17 +22,38 @@ class StudentListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (students.isEmpty) {
-            return CommonEmptyState(
-              title: "Không tìm thấy kết quả",
-              subtitle: "Thử tìm kiếm với từ khóa khác",
-              icon: Icons.search_off,
-            );
-          }
-          return _buildStudentTable(context, students, constraints.maxWidth);
-        },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SingleChildScrollView(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (students.isEmpty) {
+                  return CommonEmptyState(
+                    title: "Không tìm thấy kết quả",
+                    subtitle: "Thử tìm kiếm với từ khóa khác",
+                    icon: Icons.search_off,
+                  );
+                }
+                // Ensure minimum table width for horizontal scroll on small screens
+                final double tableWidth =
+                    constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
+                return _buildStudentTable(context, students, tableWidth);
+              },
+            ),
+          ),
+        ),
       ),
     );
   }

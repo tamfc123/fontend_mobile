@@ -26,7 +26,14 @@ class AdminLayout extends StatelessWidget {
           isDesktop
               ? null
               : AppBar(
-                title: const Text('Admin Dashboard'),
+                title: const Text(
+                  'Tổng quan',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: true,
                 backgroundColor: Colors.white,
                 leading: Builder(
                   builder:
@@ -103,9 +110,12 @@ class _SidebarMenu extends StatelessWidget {
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  accountName: const Text(
+                  accountName: Text(
                     "Trang quản trị",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                   accountEmail: Text(
                     context.watch<AuthService>().currentUser?.email ??
@@ -126,18 +136,20 @@ class _SidebarMenu extends StatelessWidget {
                   path: '/admin',
                   exact: true,
                 ),
+                // Chỉ Admin mới được quản lý tài khoản
+                if (context.watch<AuthService>().currentUser?.role == 'admin')
+                  item(
+                    icon: Icons.people,
+                    label: 'Tài khoản',
+                    path: '/admin/users',
+                  ),
                 item(
-                  icon: Icons.people,
-                  label: 'Tài khoản',
-                  path: '/admin/users',
-                ),
-                item(
-                  icon: Icons.book,
+                  icon: Icons.menu_book_rounded,
                   label: 'Khóa học',
                   path: '/admin/courses',
                 ),
                 item(
-                  icon: Icons.class_,
+                  icon: Icons.groups_rounded,
                   label: 'Lớp học',
                   path: '/admin/classes',
                 ),

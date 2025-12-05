@@ -58,8 +58,7 @@ import 'package:mobile/screens/teacher/manage_class/manage_teacher_class_screen.
 import 'package:mobile/screens/teacher/manage_schedule/manage_teacher_schedule_screen.dart';
 import 'package:mobile/screens/teacher/manage_class/student_list_screen.dart';
 import 'package:mobile/screens/teacher/manage_class/teacher_quiz_list_screen.dart';
-import 'package:mobile/screens/admin/manage_account/create_user_screen.dart';
-import 'package:mobile/screens/admin/manage_account/admin_edit_user_screen.dart';
+import 'package:mobile/screens/admin/manage_account/user_form_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final appRouter = GoRouter(
@@ -269,7 +268,7 @@ final appRouter = GoRouter(
                   path: 'create', // Sẽ khớp với /admin/users/create
                   name:
                       'adminCreateUser', // Tên bạn dùng trong context.pushNamed
-                  builder: (context, state) => const CreateUserScreen(),
+                  builder: (context, state) => const UserFormScreen(),
                 ),
                 GoRoute(
                   path: 'update', // Path: /admin/users/update
@@ -286,8 +285,8 @@ final appRouter = GoRouter(
                         ),
                       );
                     }
-                    // 3. Nếu có, mở màn hình Edit
-                    return EditUserScreen(user: user);
+                    // 3. Nếu có, mở màn hình Edit với user data
+                    return UserFormScreen(user: user);
                   },
                 ),
               ],

@@ -46,14 +46,20 @@ class ManageMediaContent extends StatelessWidget {
     double maxWidth,
   ) {
     final colWidths = {
-      0: maxWidth * 0.05,
-      1: maxWidth * 0.30,
-      2: maxWidth * 0.35,
-      3: maxWidth * 0.15,
-      4: maxWidth * 0.15,
+      0: maxWidth * 0.08, // STT (Tăng lên cho rộng rãi)
+      1: maxWidth * 0.25, // Tên file
+      2: maxWidth * 0.37, // Link URL (Giảm xíu để bù cho STT)
+      3: maxWidth * 0.15, // Ngày tạo
+      4: maxWidth * 0.15, // Hành động
     };
 
-    final colHeaders = ['#', 'Tên file', 'Link (URL)', 'Ngày tạo', 'Hành động'];
+    final colHeaders = [
+      'STT',
+      'Tên file',
+      'Link (URL)',
+      'Ngày tạo',
+      'Hành động',
+    ];
 
     final int startingIndex = (viewModel.currentPage - 1) * 20;
 
@@ -69,7 +75,7 @@ class ManageMediaContent extends StatelessWidget {
                 file.fileName,
                 bold: true,
                 color: const Color(0xFF1E3A8A),
-                align: TextAlign.left,
+                align: TextAlign.center,
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(

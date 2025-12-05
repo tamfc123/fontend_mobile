@@ -36,18 +36,52 @@ class _ManageTeacherClassHeaderState extends State<ManageTeacherClassHeader> {
   static const Color primaryBlue = Colors.blue;
   static const Color surfaceBlue = Color(0xFFE3F2FD);
 
+  // Responsive helpers
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+  bool _isTablet(BuildContext context) =>
+      MediaQuery.of(context).size.width >= 600 &&
+      MediaQuery.of(context).size.width < 1024;
+
+  double _getHorizontalPadding(BuildContext context) {
+    if (_isMobile(context)) return 16.0;
+    if (_isTablet(context)) return 20.0;
+    return 24.0;
+  }
+
+  double _getTitleFontSize(BuildContext context) {
+    if (_isMobile(context)) return 18.0;
+    if (_isTablet(context)) return 20.0;
+    return 24.0;
+  }
+
+  double _getSubtitleFontSize(BuildContext context) {
+    if (_isMobile(context)) return 13.0;
+    if (_isTablet(context)) return 14.0;
+    return 15.0;
+  }
+
+  double _getIconSize(BuildContext context) {
+    if (_isMobile(context)) return 22.0;
+    if (_isTablet(context)) return 24.0;
+    return 28.0;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final horizontalPadding = _getHorizontalPadding(context);
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
         boxShadow: [
           BoxShadow(
             color: Color.fromRGBO(0, 0, 0, 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            blurRadius: isMobile ? 12 : 16,
+            offset: Offset(0, isMobile ? 4 : 6),
           ),
         ],
       ),
@@ -55,35 +89,44 @@ class _ManageTeacherClassHeaderState extends State<ManageTeacherClassHeader> {
         children: [
           // HEADER ROW
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              isMobile ? 16 : 24,
+              horizontalPadding,
+              isMobile ? 12 : 16,
+            ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(isMobile ? 10 : 12),
                   decoration: BoxDecoration(
                     color: surfaceBlue,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(isMobile ? 10 : 12),
                   ),
-                  child: const Icon(Icons.class_, color: primaryBlue, size: 28),
+                  child: Icon(
+                    Icons.class_,
+                    color: primaryBlue,
+                    size: _getIconSize(context),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                const Expanded(
+                SizedBox(width: isMobile ? 12 : 16),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Lớp tôi phụ trách',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: _getTitleFontSize(context),
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E3A8A),
+                          color: const Color(0xFF1E3A8A),
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Tất cả lớp học tôi phụ trách',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: _getSubtitleFontSize(context),
                           color: Colors.grey,
                           fontWeight: FontWeight.w500,
                         ),
@@ -97,62 +140,120 @@ class _ManageTeacherClassHeaderState extends State<ManageTeacherClassHeader> {
 
           // TÌM KIẾM + FILTER + STATS
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              0,
+              horizontalPadding,
+              isMobile ? 16 : 20,
+            ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: surfaceBlue,
-                          borderRadius: BorderRadius.circular(12),
+                // Search bar and stats - stack on mobile
+                if (isMobile) ...[
+                  Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: surfaceBlue,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: widget.searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm lớp học...',
+                        hintStyle: TextStyle(color: Colors.grey.shade600),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: primaryBlue,
                         ),
-                        child: TextField(
-                          controller: widget.searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Tìm kiếm theo tên lớp/khóa học...',
-                            hintStyle: TextStyle(color: Colors.grey.shade600),
-                            prefixIcon: const Icon(
-                              Icons.search,
-                              color: primaryBlue,
-                            ),
-                            suffixIcon:
-                                widget.searchController.text.isNotEmpty
-                                    ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      onPressed: () {
-                                        widget.searchController.clear();
-                                        context
-                                            .read<TeacherClassViewModel>()
-                                            .applySearch('');
-                                      },
-                                    )
-                                    : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                            ),
-                          ),
+                        suffixIcon:
+                            widget.searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  onPressed: () {
+                                    widget.searchController.clear();
+                                    context
+                                        .read<TeacherClassViewModel>()
+                                        .applySearch('');
+                                  },
+                                )
+                                : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    if (!widget.isLoading)
-                      Text(
+                  ),
+                  const SizedBox(height: 12),
+                  if (!widget.isLoading)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
                         "Tìm thấy: ${widget.totalCount} lớp",
                         style: const TextStyle(
                           color: primaryBlue,
                           fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: surfaceBlue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: widget.searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Tìm kiếm theo tên lớp/khóa học...',
+                              hintStyle: TextStyle(color: Colors.grey.shade600),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: primaryBlue,
+                              ),
+                              suffixIcon:
+                                  widget.searchController.text.isNotEmpty
+                                      ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        onPressed: () {
+                                          widget.searchController.clear();
+                                          context
+                                              .read<TeacherClassViewModel>()
+                                              .applySearch('');
+                                        },
+                                      )
+                                      : null,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      if (!widget.isLoading)
+                        Text(
+                          "Tìm thấy: ${widget.totalCount} lớp",
+                          style: const TextStyle(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                    ],
+                  ),
+                SizedBox(height: isMobile ? 12 : 16),
                 // FILTERS (SORT)
                 Row(
                   children: [

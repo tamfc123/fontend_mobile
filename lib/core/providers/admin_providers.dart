@@ -34,6 +34,9 @@ import 'package:mobile/screens/admin/manage_schedule/bulk_schedule_view_model.da
 import 'package:mobile/screens/admin/manage_vocabulary/manage_vocabulary_view_model.dart';
 
 final adminProviders = [
+  // Repositories (needed by screens)
+  Provider<AdminUserRepository>(create: (_) => getIt<AdminUserRepository>()),
+
   // Dashboard
   ChangeNotifierProvider<AdminDashboardViewModel>(
     create: (_) => AdminDashboardViewModel(getIt<AdminDashboardRepository>()),
@@ -89,6 +92,7 @@ final adminProviders = [
         (_) => ManageScheduleViewModel(
           getIt<AdminScheduleRepository>(),
           getIt<AdminRoomRepository>(),
+          getIt<AdminClassRepository>(),
         ),
   ),
   ChangeNotifierProvider<BulkScheduleViewModel>(

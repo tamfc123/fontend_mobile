@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/data/models/user_model.dart';
 import 'package:mobile/domain/repositories/admin/admin_user_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
@@ -12,24 +13,46 @@ class AppColors {
   static const Color surfaceBlue = Color(0xFFE3F2FD);
 }
 
-class CreateUserScreen extends StatefulWidget {
-  const CreateUserScreen({super.key});
+class UserFormScreen extends StatefulWidget {
+  final UserModel? user; // null = create mode, non-null = edit mode
+
+  const UserFormScreen({super.key, this.user});
 
   @override
-  State<CreateUserScreen> createState() => _CreateUserScreenState();
+  State<UserFormScreen> createState() => _UserFormScreenState();
 }
 
-class _CreateUserScreenState extends State<CreateUserScreen> {
+class _UserFormScreenState extends State<UserFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _phoneController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  late TextEditingController _phoneController;
 
   DateTime? _selectedBirthday;
   String _selectedRole = 'student';
   bool _isLoading = false;
+
+  // Helper getters
+  bool get isEditMode => widget.user != null;
+  bool get isCreateMode => widget.user == null;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers
+    _nameController = TextEditingController(text: widget.user?.name ?? '');
+    _emailController = TextEditingController(text: widget.user?.email ?? '');
+    _passwordController = TextEditingController();
+    _phoneController = TextEditingController(text: widget.user?.phone ?? '');
+
+    // Pre-fill data in edit mode
+    if (isEditMode) {
+      _selectedBirthday = widget.user!.birthday;
+      _selectedRole = widget.user!.role.toLowerCase();
+    }
+  }
 
   @override
   void dispose() {
@@ -52,24 +75,40 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
 
     setState(() => _isLoading = true);
 
-    final userData = {
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'password': _passwordController.text,
-      'phone': _phoneController.text,
-      'role': _selectedRole,
-      'birthday': _selectedBirthday!.toIso8601String(),
-    };
-
     try {
-      await context.read<AdminUserRepository>().createUser(userData);
-      ToastHelper.showSuccess('Tạo tài khoản thành công');
+      if (isCreateMode) {
+        // Create mode - include password and email
+        final userData = {
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'phone': _phoneController.text,
+          'role': _selectedRole,
+          'birthday': _selectedBirthday!.toIso8601String(),
+        };
+        await context.read<AdminUserRepository>().createUser(userData);
+        ToastHelper.showSuccess('Tạo tài khoản thành công');
+      } else {
+        // Edit mode - exclude password and email
+        final userData = {
+          'name': _nameController.text,
+          'phone': _phoneController.text,
+          'role': _selectedRole,
+          'birthday': _selectedBirthday!.toIso8601String(),
+        };
+        await context.read<AdminUserRepository>().updateUser(
+          widget.user!.id,
+          userData,
+        );
+        ToastHelper.showSuccess('Cập nhật tài khoản thành công');
+      }
+
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
       ToastHelper.showError(
-        'Tạo tài khoản thất bại: ${e.toString().replaceFirst('Exception: ', '')}',
+        '${isCreateMode ? "Tạo" : "Cập nhật"} tài khoản thất bại: ${e.toString().replaceFirst('Exception: ', '')}',
       );
     } finally {
       if (mounted) {
@@ -157,7 +196,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.person_add_outlined,
+                      isEditMode ? Icons.edit : Icons.person_add_outlined,
                       color: AppColors.primaryBlue,
                       size: 28,
                     ),
@@ -168,9 +207,11 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Tạo tài khoản mới',
-                          style: TextStyle(
+                        Text(
+                          isEditMode
+                              ? 'Cập nhật tài khoản'
+                              : 'Tạo tài khoản mới',
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1E3A8A),
@@ -178,7 +219,9 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Thêm người dùng mới vào hệ thống',
+                          isEditMode
+                              ? 'Chỉnh sửa thông tin người dùng'
+                              : 'Thêm người dùng mới vào hệ thống',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[600],
@@ -249,38 +292,45 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                         // Email
                         _buildTextField(
                           controller: _emailController,
-                          label: 'Email',
+                          label:
+                              isEditMode
+                                  ? 'Email (Không thể thay đổi)'
+                                  : 'Email',
                           icon: Icons.email_outlined,
                           hint: 'Nhập email',
                           keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Không được để trống';
-                            }
-
-                            if (!value.contains('@')) {
-                              return 'Email không hợp lệ';
-                            }
-
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Mật khẩu
-                        _buildTextField(
-                          controller: _passwordController,
-                          label: 'Mật khẩu',
-                          icon: Icons.lock_outline,
-                          hint: 'Nhập mật khẩu (tối thiểu 6 ký tự)',
-                          obscureText: true,
+                          readOnly: isEditMode,
                           validator:
-                              (value) =>
-                                  (value == null || value.length < 6)
-                                      ? 'Mật khẩu phải từ 6 ký tự'
-                                      : null,
+                              isCreateMode
+                                  ? (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Không được để trống';
+                                    }
+                                    if (!value.contains('@')) {
+                                      return 'Email không hợp lệ';
+                                    }
+                                    return null;
+                                  }
+                                  : null,
                         ),
                         const SizedBox(height: 20),
+
+                        // Mật khẩu (only in create mode)
+                        if (isCreateMode) ...[
+                          _buildTextField(
+                            controller: _passwordController,
+                            label: 'Mật khẩu',
+                            icon: Icons.lock_outline,
+                            hint: 'Nhập mật khẩu (tối thiểu 6 ký tự)',
+                            obscureText: true,
+                            validator:
+                                (value) =>
+                                    (value == null || value.length < 6)
+                                        ? 'Mật khẩu phải từ 6 ký tự'
+                                        : null,
+                          ),
+                          const SizedBox(height: 20),
+                        ],
 
                         // Số điện thoại
                         _buildTextField(
@@ -332,11 +382,17 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                                       ),
                                     ),
                                   )
-                                  : const Icon(
-                                    Icons.add_circle_outline_rounded,
+                                  : Icon(
+                                    isEditMode
+                                        ? Icons.save_outlined
+                                        : Icons.add_circle_outline_rounded,
                                   ),
                           label: Text(
-                            _isLoading ? 'Đang tạo...' : 'Tạo tài khoản',
+                            _isLoading
+                                ? (isEditMode ? 'Đang lưu...' : 'Đang tạo...')
+                                : (isEditMode
+                                    ? 'Lưu thay đổi'
+                                    : 'Tạo tài khoản'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -371,10 +427,12 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
+    bool readOnly = false,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
+      readOnly: readOnly,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -392,7 +450,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
         ),
         filled: true,
-        fillColor: AppColors.backgroundBlue,
+        fillColor: readOnly ? Colors.grey.shade200 : AppColors.backgroundBlue,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 14,
           horizontal: 16,
@@ -457,6 +515,27 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             icon: Icons.person_4_outlined,
           ),
         ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildRoleOption(
+            value: 'staff',
+            label: 'Nhân viên',
+            subtitle: 'Staff',
+            icon: Icons.person_4_outlined,
+          ),
+        ),
+        // Admin option - only show in edit mode
+        if (isEditMode) ...[
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildRoleOption(
+              value: 'admin',
+              label: 'Quản trị',
+              subtitle: 'Admin',
+              icon: Icons.admin_panel_settings_outlined,
+            ),
+          ),
+        ],
       ],
     );
   }

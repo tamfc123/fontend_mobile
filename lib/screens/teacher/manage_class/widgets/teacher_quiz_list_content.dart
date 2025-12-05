@@ -31,9 +31,12 @@ class TeacherQuizListContent extends StatelessWidget {
       );
     } else {
       return LayoutBuilder(
-        builder:
-            (context, constraints) =>
-                _buildResponsiveTable(context, quizzes, constraints.maxWidth),
+        builder: (context, constraints) {
+          // Ensure minimum table width for horizontal scroll on small screens
+          final double tableWidth =
+              constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
+          return _buildResponsiveTable(context, quizzes, tableWidth);
+        },
       );
     }
   }

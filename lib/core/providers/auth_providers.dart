@@ -6,7 +6,7 @@ import 'package:mobile/core/di/service_locator.dart';
 
 final authProviders = [
   ChangeNotifierProvider<AuthService>(
-    create: (_) => AuthService(getIt<AuthRepository>()),
+    create: (_) => AuthService(getIt<AuthRepository>())..tryAutoLogin(),
   ),
   ChangeNotifierProxyProvider<AuthService, SplashViewModel>(
     create:

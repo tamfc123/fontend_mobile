@@ -121,10 +121,8 @@ class AuthService extends ChangeNotifier {
       _currentUser = user;
       _authToken = token;
       notifyListeners();
-      //print('AutoLogin token: $token');
     } catch (e) {
       await TokenHelper.clearToken();
-      //print('AutoLogin failed: $e');
     }
   }
 
@@ -132,7 +130,7 @@ class AuthService extends ChangeNotifier {
     _currentUser = null;
     _authToken = null;
     notifyListeners();
-    await TokenHelper.clearToken(); // Xóa token khỏi bộ nhớ
+    await TokenHelper.clearToken();
     ToastHelper.showSuccess('Đã đăng xuất!');
   }
 }

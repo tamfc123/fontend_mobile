@@ -61,10 +61,18 @@ class AccountTable extends StatelessWidget {
                 align: TextAlign.center,
               ),
               CommonTableCell(
-                user.role,
+                user.role == 'admin'
+                    ? 'Quản trị viên'
+                    : user.role == 'staff'
+                    ? 'Nhân viên'
+                    : user.role == 'teacher'
+                    ? 'Giảng viên'
+                    : 'Học viên',
                 color:
                     user.role == 'admin'
                         ? Colors.red.shade700
+                        : user.role == 'staff'
+                        ? Colors.purple.shade700
                         : user.role == 'teacher'
                         ? Colors.green.shade700
                         : Colors.blue.shade700,
@@ -103,13 +111,16 @@ class AccountTable extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ActionIconButton(
-                      icon: Icons.edit_note_rounded,
-                      color: Colors.blue.shade600,
-                      tooltip: 'Sửa',
-                      onPressed: () => onEdit(user),
-                    ),
-                    const SizedBox(width: 8),
+                    // Only show edit button for non-admin users
+                    if (user.role.toLowerCase() != 'admin') ...[
+                      ActionIconButton(
+                        icon: Icons.edit_note_rounded,
+                        color: Colors.blue.shade600,
+                        tooltip: 'Sửa',
+                        onPressed: () => onEdit(user),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     ActionIconButton(
                       icon:
                           user.isActive ? Icons.lock_outline : Icons.lock_open,

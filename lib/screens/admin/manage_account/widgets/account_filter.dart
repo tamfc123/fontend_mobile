@@ -103,6 +103,10 @@ class _AccountFilterState extends State<AccountFilter> {
                     value: UserRole.student,
                     child: Text('Học viên'),
                   ),
+                  DropdownMenuItem(
+                    value: UserRole.staff,
+                    child: Text('Nhân viên'),
+                  ),
                 ],
                 onChanged:
                     (v) => v != null ? viewModel.updateRoleFilter(v) : null,

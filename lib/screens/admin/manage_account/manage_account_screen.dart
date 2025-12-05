@@ -28,15 +28,65 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     });
   }
 
+  // Responsive helpers
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+  bool _isTablet(BuildContext context) =>
+      MediaQuery.of(context).size.width >= 600 &&
+      MediaQuery.of(context).size.width < 1024;
+
+  double _getHorizontalPadding(BuildContext context) {
+    if (_isMobile(context)) return 12.0;
+    if (_isTablet(context)) return 16.0;
+    return 24.0;
+  }
+
+  double _getTitleFontSize(BuildContext context) {
+    if (_isMobile(context)) return 18.0;
+    if (_isTablet(context)) return 20.0;
+    return 24.0;
+  }
+
+  double _getSubtitleFontSize(BuildContext context) {
+    if (_isMobile(context)) return 13.0;
+    if (_isTablet(context)) return 14.0;
+    return 15.0;
+  }
+
+  double _getButtonFontSize(BuildContext context) {
+    if (_isMobile(context)) return 14.0;
+    return 15.0;
+  }
+
+  double _getIconSize(BuildContext context) {
+    if (_isMobile(context)) return 22.0;
+    if (_isTablet(context)) return 24.0;
+    return 28.0;
+  }
+
+  EdgeInsets _getButtonPadding(BuildContext context) {
+    if (_isMobile(context)) {
+      return const EdgeInsets.symmetric(horizontal: 12, vertical: 10);
+    }
+    if (_isTablet(context)) {
+      return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+    }
+    return const EdgeInsets.symmetric(horizontal: 22, vertical: 16);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobile(context);
+    final horizontalPadding = _getHorizontalPadding(context);
     return Scaffold(
       backgroundColor: backgroundBlue,
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1600),
+          constraints: BoxConstraints(
+            maxWidth: isMobile ? double.infinity : 1600,
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(horizontalPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -45,7 +95,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.06),
@@ -58,103 +108,39 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                     children: [
                       // HEADER ROW
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: surfaceBlue,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.people_alt,
-                                color: primaryBlue,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Quản lý Tài khoản',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1E3A8A),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Tất cả người dùng trong hệ thống',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Consumer<ManageAccountViewModel>(
-                              builder: (context, viewModel, child) {
-                                return ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final res = await context.pushNamed<bool>(
-                                      'adminCreateUser',
-                                    );
-                                    if (res == true && context.mounted) {
-                                      viewModel.fetchUsers(page: 1);
-                                    }
-                                  },
-                                  icon: const Icon(
-                                    Icons.person_add_rounded,
-                                    size: 20,
-                                  ),
-                                  label: const Text(
-                                    'Thêm Tài khoản',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryBlue,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 22,
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          horizontalPadding,
+                          horizontalPadding,
+                          isMobile ? 12 : 16,
                         ),
+                        child:
+                            isMobile
+                                ? _buildMobileHeader(context)
+                                : _buildDesktopHeader(context),
                       ),
 
                       // TÌM KIẾM + FILTER
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(24, 0, 24, 20),
-                        child: AccountFilter(),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          0,
+                          horizontalPadding,
+                          isMobile ? 16 : 20,
+                        ),
+                        child: const AccountFilter(),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: isMobile ? 16 : 24),
 
                 // === BẢNG TÀI KHOẢN ===
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
@@ -246,6 +232,167 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           isSearching
               ? 'Thử tìm kiếm bằng từ khóa khác'
               : 'Nhấn "Thêm Tài khoản" để bắt đầu',
+    );
+  }
+
+  Widget _buildMobileHeader(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: surfaceBlue,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.people_alt,
+                color: primaryBlue,
+                size: _getIconSize(context),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quản lý Tài khoản',
+                    style: TextStyle(
+                      fontSize: _getTitleFontSize(context),
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1E3A8A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tất cả người dùng trong hệ thống',
+                    style: TextStyle(
+                      fontSize: _getSubtitleFontSize(context),
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Consumer<ManageAccountViewModel>(
+          builder: (context, viewModel, child) {
+            return ElevatedButton.icon(
+              onPressed: () async {
+                final res = await context.pushNamed<bool>('adminCreateUser');
+                if (res == true && context.mounted) {
+                  viewModel.fetchUsers(page: 1);
+                }
+              },
+              icon: Icon(
+                Icons.person_add_rounded,
+                size: _isMobile(context) ? 18 : 20,
+              ),
+              label: Text(
+                'Thêm Tài khoản',
+                style: TextStyle(
+                  fontSize: _getButtonFontSize(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: _getButtonPadding(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context) {
+    final isTablet = _isTablet(context);
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(isTablet ? 10 : 12),
+          decoration: BoxDecoration(
+            color: surfaceBlue,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.people_alt,
+            color: primaryBlue,
+            size: _getIconSize(context),
+          ),
+        ),
+        SizedBox(width: isTablet ? 12 : 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Quản lý Tài khoản',
+                style: TextStyle(
+                  fontSize: _getTitleFontSize(context),
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E3A8A),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tất cả người dùng trong hệ thống',
+                style: TextStyle(
+                  fontSize: _getSubtitleFontSize(context),
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: isTablet ? 8 : 16),
+        Consumer<ManageAccountViewModel>(
+          builder: (context, viewModel, child) {
+            return ElevatedButton.icon(
+              onPressed: () async {
+                final res = await context.pushNamed<bool>('adminCreateUser');
+                if (res == true && context.mounted) {
+                  viewModel.fetchUsers(page: 1);
+                }
+              },
+              icon: Icon(Icons.person_add_rounded, size: isTablet ? 18 : 20),
+              label: Text(
+                'Thêm Tài khoản',
+                style: TextStyle(
+                  fontSize: _getButtonFontSize(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: _getButtonPadding(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

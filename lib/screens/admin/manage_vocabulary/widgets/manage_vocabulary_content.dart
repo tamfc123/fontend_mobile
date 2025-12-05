@@ -100,14 +100,14 @@ class _ManageVocabularyContentState extends State<ManageVocabularyContent> {
               ),
               const SizedBox(width: 12),
               Text(
-                showDeleted ? 'Đang xem Thùng Rác' : 'Danh sách Hiển thị',
+                showDeleted ? 'Thùng rác' : 'Danh sách',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: showDeleted ? Colors.red : Colors.blue,
                 ),
               ),
               const Spacer(),
-              const Text('Xem Thùng rác', style: TextStyle(fontSize: 14)),
+              const Text('Thùng rác', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
               Switch(
                 value: showDeleted,

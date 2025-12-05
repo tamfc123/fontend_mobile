@@ -84,7 +84,7 @@ class _ManageMediaScreenState extends State<ManageMediaScreen> {
           headerIcon: Icons.audio_file,
           addLabel: 'Upload Audio',
           onAddPressed: () => _pickAndUploadFile(context),
-          onBackPressed: () => Navigator.of(context).pop(),
+          onBackPressed: null,
           searchController: _searchController,
           searchHint: 'Tìm kiếm file media...',
           isLoading: viewModel.isLoading,

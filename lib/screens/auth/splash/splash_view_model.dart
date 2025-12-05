@@ -50,6 +50,7 @@ class SplashViewModel extends ChangeNotifier {
     final role = user.role.toLowerCase();
     switch (role) {
       case 'admin':
+      case 'staff': // Staff cũng vào trang Admin
         _nextRoute = '/admin';
         if (kDebugMode) {
           print("Role: ${user.role}");

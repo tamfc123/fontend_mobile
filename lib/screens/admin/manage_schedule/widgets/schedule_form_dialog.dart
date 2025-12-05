@@ -3,8 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:mobile/data/models/class_model.dart';
 import 'package:mobile/data/models/class_schedule_model.dart';
 import 'package:mobile/data/models/room_model.dart';
-import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
-import 'package:mobile/domain/repositories/admin/admin_room_repository.dart';
 import 'package:mobile/screens/admin/manage_schedule/manage_schedule_view_model.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +10,15 @@ import 'package:provider/provider.dart';
 class ScheduleFormDialog extends StatefulWidget {
   final ClassScheduleModel?
   schedule; // Nếu null -> Lỗi (vì ta chỉ dùng Dialog để Sửa)
-  const ScheduleFormDialog({super.key, this.schedule});
+  final List<ClassModel> classes;
+  final List<RoomModel> rooms;
+
+  const ScheduleFormDialog({
+    super.key,
+    this.schedule,
+    required this.classes,
+    required this.rooms,
+  });
 
   @override
   State<ScheduleFormDialog> createState() => _ScheduleFormDialogState();
@@ -29,9 +35,6 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
   int? _selectedDay;
   String? _selectedRoomId;
   bool _isLoading = false;
-
-  List<ClassModel> _classes = [];
-  List<RoomModel> _rooms = [];
 
   @override
   void initState() {
@@ -56,31 +59,6 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
       text:
           s?.endDate != null ? DateFormat('yyyy-MM-dd').format(s!.endDate) : '',
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _loadData();
-    });
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final classRepo = context.read<AdminClassRepository>();
-      final roomRepo = context.read<AdminRoomRepository>();
-
-      final results = await Future.wait([
-        classRepo.getAllActiveClasses(),
-        roomRepo.getAllActiveRooms(),
-      ]);
-
-      if (mounted) {
-        setState(() {
-          _classes = results[0] as List<ClassModel>;
-          _rooms = results[1] as List<RoomModel>;
-        });
-      }
-    } catch (e) {
-      ToastHelper.showError('Lỗi tải dữ liệu: $e');
-    }
   }
 
   @override
@@ -116,7 +94,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final selectedClass = _classes.firstWhere(
+      final selectedClass = widget.classes.firstWhere(
         (c) => c.id == _selectedClassId,
       );
 
@@ -151,12 +129,23 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // Responsive values
+    final dialogWidth = isMobile ? screenWidth * 0.95 : screenWidth * 0.9;
+    final maxWidth = isMobile ? double.infinity : 500.0;
+    final headerPadding = isMobile ? 16.0 : 24.0;
+    final titleFontSize = isMobile ? 18.0 : 20.0;
+    final iconSize = isMobile ? 20.0 : 24.0;
+    final formPadding = isMobile ? 16.0 : 24.0;
+
     // Chỉ hiển thị Edit mode
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 500),
+        width: dialogWidth,
+        constraints: BoxConstraints(maxWidth: maxWidth),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -166,7 +155,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(headerPadding),
               decoration: BoxDecoration(
                 color: Colors.blue.shade600,
                 borderRadius: const BorderRadius.only(
@@ -174,14 +163,14 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   topRight: Radius.circular(20),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.edit, color: Colors.white),
-                  SizedBox(width: 16),
+                  Icon(Icons.edit, color: Colors.white, size: iconSize),
+                  SizedBox(width: isMobile ? 12 : 16),
                   Text(
                     'Chỉnh sửa lịch học',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: titleFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -193,7 +182,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
             // Form
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(formPadding),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -207,7 +196,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                           filled: true,
                         ),
                         items:
-                            _classes
+                            widget.classes
                                 .map(
                                   (c) => DropdownMenuItem(
                                     value: c.id,
@@ -249,7 +238,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                           filled: true,
                         ),
                         items:
-                            _rooms
+                            widget.rooms
                                 .map(
                                   (r) => DropdownMenuItem(
                                     value: r.id,

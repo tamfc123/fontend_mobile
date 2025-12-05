@@ -19,12 +19,23 @@ class ScheduleDetailPanel extends StatelessWidget {
   static const Color primaryBlue = Colors.blue;
 
   void _openEditDialog(BuildContext context, ClassScheduleModel schedule) {
+    // Get viewModel for data
+    final viewModel = context.read<ManageScheduleViewModel>();
+
     showDialog(
       context: context,
-      builder: (_) => ScheduleFormDialog(schedule: schedule),
+      builder:
+          (dialogContext) => ChangeNotifierProvider.value(
+            value: viewModel,
+            child: ScheduleFormDialog(
+              schedule: schedule,
+              classes: viewModel.classes,
+              rooms: viewModel.activeRooms,
+            ),
+          ),
     ).then((_) {
       // Reload data after edit
-      context.read<ManageScheduleViewModel>().loadData();
+      viewModel.loadData();
     });
   }
 
