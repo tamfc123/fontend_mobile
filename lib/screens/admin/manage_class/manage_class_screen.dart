@@ -47,7 +47,7 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
         return BaseAdminScreen(
           title: 'Quản lý Lớp học',
           subtitle: 'Tất cả lớp học trong hệ thống',
-          headerIcon: Icons.class_,
+          headerIcon: Icons.groups_rounded,
           addLabel: 'Thêm Lớp học',
           onAddPressed: () => _showAddOrEditDialog(context, viewModel),
           onBackPressed: null,

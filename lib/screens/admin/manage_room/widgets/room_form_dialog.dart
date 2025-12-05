@@ -19,6 +19,11 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
   String _status = 'Active';
   bool _isLoading = false;
 
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color lightBlue = Color(0xFF42A5F5);
+  static const Color backgroundBlue = Color(0xFFF3F8FF);
+  static const Color surfaceBlue = Color(0xFFE3F2FD);
+
   @override
   void initState() {
     super.initState();
@@ -77,80 +82,85 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundBlue,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade600,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, lightBlue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      isEditing ? Icons.edit : Icons.meeting_room,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isEditing ? 'Chỉnh sửa phòng học' : 'Thêm phòng học mới',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isEditing ? Icons.edit : Icons.add_circle,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    isEditing ? 'Chỉnh sửa Phòng học' : 'Thêm Phòng học mới',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Form
-            Flexible(
-              child: SingleChildScrollView(
+              // Form Content
+              Padding(
                 padding: const EdgeInsets.all(24),
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tên phòng
-                      TextFormField(
+                      // Room Name Field
+                      _buildModernInputField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tên phòng',
-                          hintText: 'VD: A101',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.meeting_room),
-                        ),
+                        label: 'Tên phòng học',
+                        hint: 'VD: A101, Phòng thực hành...',
+                        icon: Icons.meeting_room_outlined,
                         validator:
                             (val) =>
                                 val == null || val.isEmpty
                                     ? 'Vui lòng nhập tên phòng'
                                     : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Sức chứa
-                      TextFormField(
+                      // Capacity Field
+                      _buildModernInputField(
                         controller: _capacityController,
+                        label: 'Sức chứa (Số người)',
+                        hint: 'VD: 30, 50...',
+                        icon: Icons.people_outline,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Sức chứa',
-                          hintText: 'VD: 30',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.people),
-                        ),
                         validator: (val) {
                           if (val == null || val.isEmpty) {
                             return 'Vui lòng nhập sức chứa';
@@ -161,68 +171,59 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Trạng thái
-                      DropdownButtonFormField<String>(
-                        value: _status,
-                        decoration: const InputDecoration(
-                          labelText: 'Trạng thái',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.info_outline),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Active',
-                            child: Text('Hoạt động'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Inactive',
-                            child: Text('Ngưng hoạt động'),
-                          ),
-                        ],
-                        onChanged: (val) => setState(() => _status = val!),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Actions
-                      Row(
+                      // Status Dropdown
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                              child: const Text('Hủy'),
+                          const Text(
+                            'Trạng thái',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: primaryBlue,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleSubmit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade600,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: surfaceBlue),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryBlue.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: _status,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(
+                                  Icons.info_outline,
+                                  color: lightBlue,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
                                   vertical: 16,
                                 ),
                               ),
-                              child:
-                                  _isLoading
-                                      ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                      : Text(
-                                        isEditing ? 'Lưu thay đổi' : 'Thêm mới',
-                                      ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Active',
+                                  child: Text('Hoạt động'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Inactive',
+                                  child: Text('Ngưng hoạt động'),
+                                ),
+                              ],
+                              onChanged:
+                                  (val) => setState(() => _status = val!),
                             ),
                           ),
                         ],
@@ -231,10 +232,134 @@ class _RoomFormDialogState extends State<RoomFormDialog> {
                   ),
                 ),
               ),
-            ),
-          ],
+
+              // Action Buttons
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: primaryBlue.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Hủy',
+                          style: TextStyle(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _isLoading ? null : _handleSubmit,
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      isEditing ? Icons.save : Icons.add,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isEditing ? 'Lưu' : 'Thêm',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildModernInputField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: Icon(icon, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

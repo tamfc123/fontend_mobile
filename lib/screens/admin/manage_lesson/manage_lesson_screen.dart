@@ -105,7 +105,7 @@ class _ManageLessonScreenState extends State<ManageLessonScreen> {
 
         return BaseAdminScreen(
           title: 'Quản lý Bài học',
-          subtitle: 'Module: ${widget.module.title}',
+          subtitle: 'Bài: ${widget.module.title}',
           headerIcon: Icons.class_,
           addLabel: 'Thêm Bài học',
           onAddPressed: () => _showLessonForm(context),

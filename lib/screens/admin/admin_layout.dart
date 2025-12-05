@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/services/auth/auth_service.dart';
+import 'package:mobile/shared_widgets/logout_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AdminLayout extends StatelessWidget {
   final Widget child;
   const AdminLayout({super.key, required this.child});
 
-  // HÀM ĐÃ SỬA ĐÚNG
+  // Use shared logout dialog
   void _handleLogout(BuildContext context) async {
-    final authService = context.read<AuthService>();
-    await authService.logout();
-    if (context.mounted) {
-      context.go('/login/web');
-    }
+    await showLogoutDialog(
+      context,
+      message: 'Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị?',
+      loginRoute: '/login/web',
+    );
   }
 
   @override

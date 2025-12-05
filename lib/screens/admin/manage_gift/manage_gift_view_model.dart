@@ -19,36 +19,62 @@ class ManageGiftViewModel extends ChangeNotifier {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  List<GiftModel> get filteredGifts {
-    if (_searchQuery.isEmpty) return _gifts;
-    return _gifts
-        .where((g) => g.name.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
-  }
+  int _currentPage = 1;
+  int get currentPage => _currentPage;
 
-  void applySearch(String query) {
-    _searchQuery = query;
-    notifyListeners();
-  }
+  int _totalPages = 1;
+  int get totalPages => _totalPages;
 
-  void toggleShowDeleted() {
-    _showDeleted = !_showDeleted;
-    fetchGifts();
-  }
+  int _totalCount = 0;
+  int get totalCount => _totalCount;
+
+  final int _pageSize = 5;
+  List<GiftModel> get filteredGifts => _gifts;
 
   Future<void> fetchGifts() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _gifts = await _repository.getGifts(returnDeleted: _showDeleted);
+      final result = await _repository.getGifts(
+        pageNumber: _currentPage,
+        pageSize: _pageSize,
+        searchQuery: _searchQuery,
+        returnDeleted: _showDeleted,
+      );
+      _gifts = result.items;
+      _totalCount = result.totalCount;
+      _totalPages = (_totalCount / _pageSize).ceil();
+      if (_totalPages == 0) _totalPages = 1;
     } catch (e) {
       ToastHelper.showError(e.toString().replaceFirst('Exception: ', ''));
       _gifts = [];
+      _totalCount = 0;
+      _totalPages = 1;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void applySearch(String query) {
+    if (_searchQuery == query) return;
+
+    _searchQuery = query;
+    _currentPage = 1;
+    fetchGifts();
+  }
+
+  void toggleShowDeleted() {
+    _showDeleted = !_showDeleted;
+    _currentPage = 1;
+    fetchGifts();
+  }
+
+  Future<void> goToPage(int page) async {
+    if (page < 1 || page > _totalPages || page == _currentPage) return;
+    _currentPage = page;
+    await fetchGifts();
   }
 
   Future<bool> createGift(GiftModel gift) async {

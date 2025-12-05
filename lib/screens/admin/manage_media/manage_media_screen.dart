@@ -1,9 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'dart:async';
 import 'package:mobile/data/models/media_file_model.dart';
-
 import 'package:mobile/screens/admin/manage_media/manage_media_view_model.dart';
 import 'package:mobile/screens/admin/manage_media/widgets/manage_media_content.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
@@ -21,11 +20,32 @@ class ManageMediaScreen extends StatefulWidget {
 
 class _ManageMediaScreenState extends State<ManageMediaScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    // 3. Lắng nghe sự kiện gõ phím
+    _searchController.addListener(_onSearchChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ManageMediaViewModel>().fetchMedia(refresh: true);
+    });
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel(); // Hủy Timer
+    _searchController.removeListener(_onSearchChanged); // Hủy listener
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      context.read<ManageMediaViewModel>().applySearch(_searchController.text);
+    });
   }
 
   Future<void> _pickAndUploadFile(BuildContext context) async {
@@ -67,14 +87,6 @@ class _ManageMediaScreenState extends State<ManageMediaScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ManageMediaViewModel>().fetchMedia(refresh: true);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Consumer<ManageMediaViewModel>(
       builder: (context, viewModel, child) {
@@ -82,7 +94,7 @@ class _ManageMediaScreenState extends State<ManageMediaScreen> {
           title: 'Quản lý Media',
           subtitle: 'Danh sách file audio',
           headerIcon: Icons.audio_file,
-          addLabel: 'Upload Audio',
+          addLabel: 'Tải file âm thanh',
           onAddPressed: () => _pickAndUploadFile(context),
           onBackPressed: null,
           searchController: _searchController,

@@ -238,23 +238,23 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
                   items: const [
                     DropdownMenuItem(
                       value: 'READING',
-                      child: Text('Reading (Đọc hiểu đoạn văn)'),
+                      child: Text('Reading - Đọc hiểu'),
                     ),
                     DropdownMenuItem(
                       value: 'GRAMMAR',
-                      child: Text('Grammar (Ngữ pháp / Từ vựng)'),
+                      child: Text('Grammar - Ngữ pháp'),
                     ),
                     DropdownMenuItem(
                       value: 'LISTENING',
-                      child: Text('Listening (Nghe)'),
+                      child: Text('Listening - Nghe'),
                     ),
                     DropdownMenuItem(
                       value: 'WRITING',
-                      child: Text('Writing (Viết / Điền từ)'),
+                      child: Text('Writing - Viết'),
                     ),
                     DropdownMenuItem(
                       value: 'ESSAY',
-                      child: Text('Writing Essay (Viết luận - AI Chấm)'),
+                      child: Text('Essay - Viết luận'),
                     ),
                   ],
                   onChanged: (value) {

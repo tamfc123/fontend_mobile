@@ -2,20 +2,34 @@ import 'package:dio/dio.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
 import 'package:mobile/data/models/gift_model.dart';
+import 'package:mobile/data/models/paged_result_model.dart';
 
 class AdminGiftRepository {
   final ApiClient _apiClient;
 
   AdminGiftRepository(this._apiClient);
 
-  Future<List<GiftModel>> getGifts({bool returnDeleted = false}) async {
+  Future<PagedResultModel<GiftModel>> getGifts({
+    int pageNumber = 1,
+    int pageSize = 5,
+    String searchQuery = '',
+    bool returnDeleted = false,
+  }) async {
     try {
       final response = await _apiClient.dio.get(
         ApiConfig.adminGifts,
-        queryParameters: {'returnDeleted': returnDeleted},
+        queryParameters: {
+          'pageNumber': pageNumber,
+          'pageSize': pageSize,
+          'searchQuery': searchQuery,
+          'returnDeleted': returnDeleted,
+        },
       );
-      final List<dynamic> list = response.data;
-      return list.map((e) => GiftModel.fromJson(e)).toList();
+
+      return PagedResultModel<GiftModel>.fromJson(
+        response.data,
+        (json) => GiftModel.fromJson(json),
+      );
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi tải danh sách quà');
     }

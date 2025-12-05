@@ -16,12 +16,20 @@ class ManageMediaViewModel extends ChangeNotifier {
   int _currentPage = 1;
   final int _pageSize = 5;
   int _totalCount = 0;
+  String _searchQuery = '';
 
   List<MediaFileModel> get files => _files;
   bool get isLoading => _isLoading;
   int get currentPage => _currentPage;
   int get totalCount => _totalCount;
   int get totalPages => (_totalCount / _pageSize).ceil();
+
+  void applySearch(String query) {
+    if (_searchQuery == query) return;
+    _searchQuery = query;
+    _currentPage = 1;
+    fetchMedia();
+  }
 
   Future<void> fetchMedia({bool refresh = false}) async {
     if (refresh) {
@@ -36,12 +44,17 @@ class ManageMediaViewModel extends ChangeNotifier {
       final result = await _repository.getAllMedia(
         page: _currentPage,
         limit: _pageSize,
+        searchQuery: _searchQuery,
       );
 
-      _files = result['data'];
+      final List<dynamic> listData = result['data'];
+      _files = listData.cast<MediaFileModel>();
+
       _totalCount = result['total'];
     } catch (e) {
       ToastHelper.showError(e.toString().replaceFirst('Exception: ', ''));
+      _files = [];
+      _totalCount = 0;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -82,6 +95,8 @@ class ManageMediaViewModel extends ChangeNotifier {
 
       if (_files.isEmpty && _currentPage > 1) {
         goToPage(_currentPage - 1);
+      } else if (_files.isEmpty && _currentPage == 1) {
+        await fetchMedia();
       } else {
         notifyListeners();
       }

@@ -34,6 +34,11 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
   final ScrollController _editorScrollController = ScrollController();
   bool _isUploading = false;
 
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color lightBlue = Color(0xFF42A5F5);
+  static const Color backgroundBlue = Color(0xFFF3F8FF);
+  static const Color surfaceBlue = Color(0xFFE3F2FD);
+
   @override
   void initState() {
     super.initState();
@@ -210,180 +215,408 @@ class _LessonFormDialogState extends State<LessonFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.lessonId == null ? 'Tạo Bài học mới' : 'Cập nhật Bài học',
-      ),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.8,
-        height: MediaQuery.of(context).size.height * 0.7,
-        child:
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tên Bài học',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator:
-                            (value) =>
-                                (value == null || value.isEmpty)
-                                    ? 'Vui lòng nhập tên bài học'
-                                    : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _orderController,
-                        decoration: const InputDecoration(
-                          labelText: 'Thứ tự (Order)',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Vui lòng nhập thứ tự';
-                          }
-                          if (int.tryParse(value) == null) {
-                            return 'Vui lòng nhập số';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: Stack(
+    final isEditing = widget.lessonId != null;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.85,
+        height: MediaQuery.of(context).size.height * 0.85,
+        constraints: const BoxConstraints(maxWidth: 900),
+        decoration: BoxDecoration(
+          color: backgroundBlue,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primaryBlue, lightBlue],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    isEditing ? Icons.edit : Icons.article,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isEditing ? 'Cập nhật bài học' : 'Tạo bài học mới',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Form Content
+            Expanded(
+              child:
+                  _isLoading
+                      ? const Center(
+                        child: CircularProgressIndicator(color: primaryBlue),
+                      )
+                      : SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
                             children: [
-                              Column(
+                              // Title and Order Row
+                              Row(
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      border: Border.all(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          QuillSimpleToolbar(
-                                            controller: _quillController,
-                                            config: QuillSimpleToolbarConfig(
-                                              embedButtons: [],
-                                              showClipboardPaste: true,
-                                              showAlignmentButtons: true,
-                                              customButtons: [
-                                                QuillToolbarCustomButtonOptions(
-                                                  icon: const Icon(
-                                                    Icons.image,
-                                                    size: 20,
-                                                  ),
-                                                  onPressed: () async {
-                                                    final url =
-                                                        await _onImageInsert(
-                                                          context,
-                                                        );
-                                                    if (url != null) {
-                                                      _insertImage(url);
-                                                    }
-                                                  },
-                                                ),
-                                              ],
-                                              buttonOptions:
-                                                  const QuillSimpleToolbarButtonOptions(
-                                                    base:
-                                                        QuillToolbarBaseButtonOptions(),
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildModernInputField(
+                                      controller: _titleController,
+                                      label: 'Tên bài học',
+                                      hint: 'Nhập tên bài học...',
+                                      icon: Icons.title,
+                                      validator:
+                                          (value) =>
+                                              (value == null || value.isEmpty)
+                                                  ? 'Vui lòng nhập tên bài học'
+                                                  : null,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(width: 16),
                                   Expanded(
-                                    child: QuillEditor(
-                                      focusNode: _editorFocusNode,
-                                      scrollController: _editorScrollController,
-                                      controller: _quillController,
-                                      config: QuillEditorConfig(
-                                        placeholder: 'Bắt đầu viết nội dung...',
-                                        padding: const EdgeInsets.all(8),
-                                        embedBuilders: [
-                                          ...FlutterQuillEmbeds.editorBuilders(
-                                            imageEmbedConfig:
-                                                QuillEditorImageEmbedConfig(
-                                                  imageProviderBuilder: (
-                                                    context,
-                                                    imageUrl,
-                                                  ) {
-                                                    if (imageUrl.startsWith(
-                                                      'assets/',
-                                                    )) {
-                                                      return AssetImage(
-                                                        imageUrl,
-                                                      );
-                                                    }
-                                                    return null;
-                                                  },
-                                                ),
-                                          ),
-                                        ],
-                                      ),
+                                    flex: 1,
+                                    child: _buildModernInputField(
+                                      controller: _orderController,
+                                      label: 'Thứ tự',
+                                      hint: 'Số TT',
+                                      icon: Icons.numbers,
+                                      keyboardType: TextInputType.number,
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Nhập STT';
+                                        }
+                                        if (int.tryParse(value) == null) {
+                                          return 'Phải là số';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                 ],
                               ),
-                              if (_isUploading)
-                                Container(
-                                  alignment: Alignment.center,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  child: const Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(height: 12),
-                                      Text(
-                                        'Đang tải ảnh...',
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ],
+                              const SizedBox(height: 20),
+
+                              // Rich Text Editor Section
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Nội dung bài học',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryBlue,
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    height: 400,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: surfaceBlue),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: primaryBlue.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: Stack(
+                                      children: [
+                                        Column(
+                                          children: [
+                                            // Toolbar
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: surfaceBlue,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: SingleChildScrollView(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    QuillSimpleToolbar(
+                                                      controller:
+                                                          _quillController,
+                                                      config: QuillSimpleToolbarConfig(
+                                                        embedButtons: [],
+                                                        showClipboardPaste:
+                                                            true,
+                                                        showAlignmentButtons:
+                                                            true,
+                                                        customButtons: [
+                                                          QuillToolbarCustomButtonOptions(
+                                                            icon: const Icon(
+                                                              Icons.image,
+                                                              size: 20,
+                                                            ),
+                                                            onPressed: () async {
+                                                              final url =
+                                                                  await _onImageInsert(
+                                                                    context,
+                                                                  );
+                                                              if (url != null) {
+                                                                _insertImage(
+                                                                  url,
+                                                                );
+                                                              }
+                                                            },
+                                                          ),
+                                                        ],
+                                                        buttonOptions:
+                                                            const QuillSimpleToolbarButtonOptions(
+                                                              base:
+                                                                  QuillToolbarBaseButtonOptions(),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            // Editor
+                                            Expanded(
+                                              child: QuillEditor(
+                                                focusNode: _editorFocusNode,
+                                                scrollController:
+                                                    _editorScrollController,
+                                                controller: _quillController,
+                                                config: QuillEditorConfig(
+                                                  placeholder:
+                                                      'Bắt đầu viết nội dung bài học...',
+                                                  padding: const EdgeInsets.all(
+                                                    12,
+                                                  ),
+                                                  embedBuilders: [
+                                                    ...FlutterQuillEmbeds.editorBuilders(
+                                                      imageEmbedConfig:
+                                                          QuillEditorImageEmbedConfig(
+                                                            imageProviderBuilder: (
+                                                              context,
+                                                              imageUrl,
+                                                            ) {
+                                                              if (imageUrl
+                                                                  .startsWith(
+                                                                    'assets/',
+                                                                  )) {
+                                                                return AssetImage(
+                                                                  imageUrl,
+                                                                );
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if (_isUploading)
+                                          Container(
+                                            alignment: Alignment.center,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.9,
+                                            ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const CircularProgressIndicator(
+                                                  color: primaryBlue,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                Text(
+                                                  'Đang tải ảnh...',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.grey[700],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
                       ),
-                    ],
+            ),
+
+            // Action Buttons
+            Container(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: primaryBlue.withValues(alpha: 0.5),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Hủy',
+                        style: TextStyle(
+                          color: primaryBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Hủy'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: _isLoading ? null : _submit,
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isEditing ? Icons.save : Icons.add,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isEditing ? 'Lưu' : 'Tạo',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _submit,
-          child: Text(widget.lessonId == null ? 'Tạo mới' : 'Cập nhật'),
+      ),
+    );
+  }
+
+  Widget _buildModernInputField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: Icon(icon, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
         ),
       ],
     );

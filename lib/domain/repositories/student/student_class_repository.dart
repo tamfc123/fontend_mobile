@@ -24,7 +24,6 @@ class StudentClassRepository {
     try {
       await _apiClient.dio.post(ApiConfig.studentJoinClass(classId));
     } on DioException catch (e) {
-      // Backend trả về lỗi 400 nếu chưa đủ Level hoặc đã tham gia
       throw Exception(e.response?.data['message'] ?? 'Không thể tham gia lớp');
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/screens/student/profile/student_profile_view_model.dart';
+import 'package:mobile/shared_widgets/logout_dialog.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -101,8 +102,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (profileService.error == null) {
-        ToastHelper.showSuccess("Đổi mật khẩu thành công");
-        Navigator.pop(context);
+        if (!mounted) return;
+
+        // Use shared success and logout dialog
+        await showSuccessAndLogout(
+          context,
+          message:
+              'Mật khẩu đã được thay đổi thành công.\n\nBạn sẽ được đăng xuất để đăng nhập lại với mật khẩu mới.',
+        );
       } else {
         ToastHelper.showError("Lỗi: ${profileService.error}");
       }

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/screens/student/profile/student_profile_view_model.dart';
-import 'package:mobile/services/auth/auth_service.dart';
+import 'package:mobile/shared_widgets/logout_dialog.dart';
 import 'package:mobile/utils/color_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -28,41 +28,10 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
   }
 
   void _handleLogout(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text('Đăng xuất?'),
-            content: const Text(
-              'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade50,
-                  foregroundColor: Colors.red,
-                  elevation: 0,
-                ),
-                child: const Text('Đăng xuất'),
-              ),
-            ],
-          ),
+    await showLogoutDialog(
+      context,
+      message: 'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?',
     );
-
-    if (shouldLogout == true) {
-      final authService = context.read<AuthService>();
-      await authService.logout();
-      if (!context.mounted) return;
-      context.go('/login');
-    }
   }
 
   Future<void> _pickAndUploadAvatar(BuildContext context) async {
@@ -156,8 +125,8 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 
-                                              0.1,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.1,
                                             ),
                                             blurRadius: 6,
                                           ),
@@ -235,7 +204,9 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: levelConfig['color'].withValues(alpha: 0.1),
+                                color: levelConfig['color'].withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -368,7 +339,17 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                             _buildActionRow(
                               Icons.settings_rounded,
                               "Cài đặt tài khoản",
-                              () => context.push('/student/profile/settings'),
+                              () async {
+                                final result = await context.push(
+                                  '/student/profile/settings',
+                                );
+                                // Reload only if profile was updated
+                                if (mounted && result == true) {
+                                  await context
+                                      .read<StudentProfileViewModel>()
+                                      .loadProfile();
+                                }
+                              },
                             ),
                             const Divider(height: 1, indent: 50),
                             _buildActionRow(

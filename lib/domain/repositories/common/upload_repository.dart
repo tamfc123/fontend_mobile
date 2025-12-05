@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
 import 'package:mobile/data/models/upload_response_model.dart';
+import 'package:http_parser/http_parser.dart';
 
 class UploadRepository {
   final ApiClient _apiClient;
@@ -79,11 +80,27 @@ class UploadRepository {
     String fileName,
   ) async {
     try {
+      // 1. Xác định ContentType dựa trên đuôi file (cơ bản)
+      // MP3 là phổ biến nhất, nếu app bạn hỗ trợ wav thì thêm logic check
+      MediaType? contentType;
+      if (fileName.toLowerCase().endsWith('.mp3')) {
+        contentType = MediaType('audio', 'mpeg');
+      } else if (fileName.toLowerCase().endsWith('.wav')) {
+        contentType = MediaType('audio', 'wav');
+      } else {
+        contentType = MediaType('audio', 'mpeg');
+      }
+
       FormData formData = FormData.fromMap({
-        "file": MultipartFile.fromBytes(bytes, filename: fileName),
+        "file": MultipartFile.fromBytes(
+          bytes,
+          filename: fileName,
+          contentType: contentType,
+        ),
       });
+
       final response = await _apiClient.dio.post(
-        ApiConfig.uploadRawFile, // ⬅️ Gọi API mới
+        ApiConfig.uploadRawFile,
         data: formData,
       );
 
@@ -99,7 +116,7 @@ class UploadRepository {
           e.response?.data?['message'] ?? e.message ?? "Upload thất bại";
       throw Exception(errorMessage);
     } catch (e) {
-      throw Exception("Có lỗi không xác định xảy ra khi upload file.");
+      throw Exception("Có lỗi không xác định xảy ra khi upload file: $e");
     }
   }
 }

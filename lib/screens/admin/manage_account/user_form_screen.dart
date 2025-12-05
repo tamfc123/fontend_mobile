@@ -211,6 +211,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
                           isEditMode
                               ? 'Cập nhật tài khoản'
                               : 'Tạo tài khoản mới',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -222,6 +224,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
                           isEditMode
                               ? 'Chỉnh sửa thông tin người dùng'
                               : 'Thêm người dùng mới vào hệ thống',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[600],
@@ -496,54 +500,63 @@ class _UserFormScreenState extends State<UserFormScreen> {
   }
 
   Widget _buildRoleSelector() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildRoleOption(
-            value: 'student',
-            label: 'Học viên',
-            subtitle: 'Student',
-            icon: Icons.school_outlined,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildRoleOption(
-            value: 'teacher',
-            label: 'Giảng viên',
-            subtitle: 'Teacher',
-            icon: Icons.person_4_outlined,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildRoleOption(
-            value: 'staff',
-            label: 'Nhân viên',
-            subtitle: 'Staff',
-            icon: Icons.person_4_outlined,
-          ),
-        ),
-        // Admin option - only show in edit mode
-        if (isEditMode) ...[
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildRoleOption(
-              value: 'admin',
-              label: 'Quản trị',
-              subtitle: 'Admin',
-              icon: Icons.admin_panel_settings_outlined,
-            ),
-          ),
-        ],
-      ],
-    );
+    final roles = [
+      {'value': 'student', 'label': 'Học viên', 'icon': Icons.school_outlined},
+      {
+        'value': 'teacher',
+        'label': 'Giảng viên',
+        'icon': Icons.person_4_outlined,
+      },
+      {'value': 'staff', 'label': 'Nhân viên', 'icon': Icons.badge_outlined},
+      if (isEditMode)
+        {
+          'value': 'admin',
+          'label': 'Quản trị',
+          'icon': Icons.admin_panel_settings_outlined,
+        },
+    ];
+
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    if (isMobile) {
+      // Mobile: Full width stacked vertically
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children:
+            roles.map((role) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildRoleOption(
+                  value: role['value'] as String,
+                  label: role['label'] as String,
+                  icon: role['icon'] as IconData,
+                ),
+              );
+            }).toList(),
+      );
+    } else {
+      // Desktop: Distributed horizontally
+      return Row(
+        children:
+            roles.map((role) {
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: _buildRoleOption(
+                    value: role['value'] as String,
+                    label: role['label'] as String,
+                    icon: role['icon'] as IconData,
+                  ),
+                ),
+              );
+            }).toList(),
+      );
+    }
   }
 
   Widget _buildRoleOption({
     required String value,
     required String label,
-    required String subtitle,
     required IconData icon,
   }) {
     final isSelected = _selectedRole == value;
@@ -575,12 +588,6 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 color: isSelected ? AppColors.primaryBlue : Colors.grey[600],
                 fontSize: 14,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
           ],
         ),

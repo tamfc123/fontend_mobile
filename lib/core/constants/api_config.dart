@@ -82,8 +82,7 @@ class ApiConfig {
 
   // POST: /api/admin/media/upload-audio
   static const String adminUploadAudio = "/admin/media/upload-audio";
-  static String adminGetAllMedia({int page = 1, int limit = 20}) =>
-      "/admin/media?page=$page&limit=$limit";
+  static const String adminMedia = '/admin/media';
   static String adminDeleteMedia(String id) => "/admin/media/$id";
   // ---ADMIN: GIFT
   static const String adminGifts = "/admin/gifts"; // GET All, POST Create
@@ -160,7 +159,7 @@ class ApiConfig {
   static String getQuizResult(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/result';
 
-  static const String uploadRawFile = '$baseUrl/upload';
+  static const String uploadRawFile = '$baseUrl/uploadAudioFileWeb';
   static const String studentVocabularyLevels =
       '$baseUrl/student/vocabulary-levels';
   static String studentVocabularyModules(String levelId) {

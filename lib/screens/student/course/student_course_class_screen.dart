@@ -255,7 +255,10 @@ class _CourseClassesScreenState extends State<CourseClassesScreen> {
                                       if (confirmed == true) {
                                         final success = await context
                                             .read<StudentCourseClassViewModel>()
-                                            .joinClass(cls.classId);
+                                            .joinClass(
+                                              cls.classId,
+                                              widget.course.id!,
+                                            );
 
                                         if (success && context.mounted) {
                                           // Có thể pop về hoặc reload list tùy logic

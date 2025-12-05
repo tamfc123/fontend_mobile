@@ -3,26 +3,40 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
 import 'package:mobile/data/models/media_file_model.dart';
+import 'package:http_parser/http_parser.dart';
 
 class AdminMediaRepository {
   final ApiClient _apiClient;
 
   AdminMediaRepository(this._apiClient);
 
-  // ✅ 1. UPLOAD AUDIO
   Future<MediaFileModel> uploadAudio(PlatformFile platformFile) async {
     try {
-      // Xử lý file cho cả Web (bytes) và Mobile (path)
+      // Xác định ContentType (MP3 hoặc WAV)
+      MediaType? contentType;
+      final ext = platformFile.extension?.toLowerCase() ?? '';
+      if (ext == 'mp3') {
+        contentType = MediaType('audio', 'mpeg');
+      } else if (ext == 'wav') {
+        contentType = MediaType('audio', 'wav');
+      } else if (ext == 'm4a') {
+        contentType = MediaType('audio', 'mp4');
+      }
+
       MultipartFile multipartFile;
       if (platformFile.bytes != null) {
+        // Web
         multipartFile = MultipartFile.fromBytes(
           platformFile.bytes!,
           filename: platformFile.name,
+          contentType: contentType,
         );
       } else {
+        // Mobile
         multipartFile = await MultipartFile.fromFile(
           platformFile.path!,
           filename: platformFile.name,
+          contentType: contentType,
         );
       }
 
@@ -33,13 +47,10 @@ class AdminMediaRepository {
         data: formData,
       );
 
-      // Backend trả về thông tin file vừa upload, ta map sang Model luôn
-      // Lưu ý: Backend trả về: { "url": "...", "publicId": "...", ... }
-      // Ta có thể tạo model tạm hoặc trả về map, nhưng ở đây tôi return Model chuẩn
-      // bằng cách fake ID (vì API upload trả về chưa có ID DB ngay, hoặc bạn sửa BE trả về full object)
-      // Tạm thời return kết quả thô để Service xử lý hoặc gọi reload list.
+      // Lưu ý: Backend upload xong trả về { url, publicId... } nhưng CHƯA CÓ ID của DB.
+      // Nên ta tạm để ID rỗng. Sau khi upload xong, UI nên gọi fetch lại list để có ID đầy đủ.
       return MediaFileModel(
-        id: '', // Chưa có ID từ DB trả về ở endpoint upload (nếu BE chưa sửa)
+        id: '',
         fileName: response.data['fileName'],
         url: response.data['url'],
         publicId: response.data['publicId'],
@@ -50,17 +61,21 @@ class AdminMediaRepository {
     }
   }
 
-  // ✅ 2. GET ALL MEDIA (Có phân trang)
   Future<Map<String, dynamic>> getAllMedia({
     int page = 1,
     int limit = 5,
+    String searchQuery = '',
   }) async {
     try {
       final response = await _apiClient.dio.get(
-        ApiConfig.adminGetAllMedia(page: page, limit: limit),
+        ApiConfig.adminMedia,
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          'searchQuery': searchQuery,
+        },
       );
 
-      // Cấu trúc JSON trả về: { "data": [...], "meta": { "total": 100, ... } }
       final data = response.data;
       final List<dynamic> itemsJson = data['data'] ?? [];
 

@@ -46,8 +46,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: "Thông tin cá nhân",
                 subtitle: "Chỉnh sửa thông tin của bạn",
                 color: Colors.blue,
-                onTap:
-                    () => context.go('/student/profile/settings/edit-profile'),
+                onTap: () async {
+                  final result = await context.push(
+                    '/student/profile/settings/edit-profile',
+                  );
+                  // If profile was updated, return true to settings caller
+                  if (result == true && context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                },
               ),
               _SettingItem(
                 icon: Icons.lock_outline_rounded,
@@ -350,7 +357,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withValues(alpha: 0.1) : Colors.transparent,
+        color:
+            isSelected
+                ? Colors.blue.withValues(alpha: 0.1)
+                : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected ? Colors.blue : Colors.grey.shade300,

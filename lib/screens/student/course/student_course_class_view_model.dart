@@ -37,7 +37,7 @@ class StudentCourseClassViewModel extends ChangeNotifier {
   }
 
   /// Join a class
-  Future<bool> joinClass(String classId) async {
+  Future<bool> joinClass(String classId, String courseId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -45,6 +45,8 @@ class StudentCourseClassViewModel extends ChangeNotifier {
     try {
       await _classRepository.joinClass(classId);
       ToastHelper.showSuccess('Tham gia lớp thành công');
+      // Refresh the class list to remove the joined class
+      await loadClassesForCourse(courseId);
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');

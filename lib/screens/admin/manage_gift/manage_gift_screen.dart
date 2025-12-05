@@ -6,7 +6,9 @@ import 'package:mobile/screens/admin/manage_gift/widgets/gift_form_dialog.dart';
 
 import 'package:mobile/screens/admin/manage_gift/widgets/manage_gift_content.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
+import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 class ManageGiftScreen extends StatefulWidget {
   const ManageGiftScreen({super.key});
@@ -17,11 +19,34 @@ class ManageGiftScreen extends StatefulWidget {
 
 class _ManageGiftScreenState extends State<ManageGiftScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 3. Lắng nghe thay đổi text
+    _searchController.addListener(_onSearchChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ManageGiftViewModel>().fetchGifts();
+    });
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel(); // Hủy timer
+    _searchController.removeListener(_onSearchChanged); // Hủy listener
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      context.read<ManageGiftViewModel>().applySearch(_searchController.text);
+    });
   }
 
   void _showForm(BuildContext context, {GiftModel? gift}) async {
@@ -101,14 +126,6 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ManageGiftViewModel>().fetchGifts();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Consumer<ManageGiftViewModel>(
       builder: (context, viewModel, child) {
@@ -133,7 +150,7 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
           searchController: _searchController,
           searchHint: 'Tìm theo tên quà...',
           isLoading: viewModel.isLoading,
-          totalCount: viewModel.filteredGifts.length,
+          totalCount: viewModel.totalCount,
           countLabel: 'món quà',
           body: LayoutBuilder(
             builder: (context, constraints) {
@@ -149,7 +166,15 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
               );
             },
           ),
-          paginationControls: const SizedBox.shrink(),
+          paginationControls: PaginationControls(
+            currentPage: viewModel.currentPage,
+            totalPages: viewModel.totalPages,
+            totalCount: viewModel.totalCount,
+            isLoading: viewModel.isLoading,
+            onPageChanged: (page) {
+              viewModel.goToPage(page);
+            },
+          ),
         );
       },
     );

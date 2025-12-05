@@ -152,7 +152,7 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
           subtitle:
               showDeleted
                   ? 'THÙNG RÁC - ${widget.lesson.title}'
-                  : 'Bài học: ${widget.lesson.title}',
+                  : 'Từ vựng: ${widget.lesson.title}',
           headerIcon: showDeleted ? Icons.delete_outline : Icons.menu_book,
           addLabel: 'Thêm Từ vựng',
           onAddPressed: () {

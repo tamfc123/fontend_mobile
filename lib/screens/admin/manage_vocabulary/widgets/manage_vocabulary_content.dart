@@ -156,10 +156,10 @@ class _ManageVocabularyContentState extends State<ManageVocabularyContent> {
     bool showDeleted,
   ) {
     final colWidths = {
-      0: maxWidth * 0.06,
+      0: maxWidth * 0.08,
       1: maxWidth * 0.20,
-      2: maxWidth * 0.25,
-      3: maxWidth * 0.20,
+      2: maxWidth * 0.24,
+      3: maxWidth * 0.19,
       4: maxWidth * 0.10,
       5: maxWidth * 0.19,
     };

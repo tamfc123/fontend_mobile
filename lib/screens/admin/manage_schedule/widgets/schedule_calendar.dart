@@ -60,21 +60,77 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: _goToPreviousWeek,
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 16),
-                      label: const Text('Tuần trước'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: primaryBlue,
+                    // Previous Week Button
+                    GestureDetector(
+                      onTap: _goToPreviousWeek,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: primaryBlue.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.chevron_left,
+                              color: primaryBlue,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Tuần trước',
+                              style: TextStyle(
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: _goToNextWeek,
-                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                      label: const Text('Tuần sau'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: primaryBlue,
+                    // Next Week Button
+                    GestureDetector(
+                      onTap: _goToNextWeek,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: primaryBlue.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Tuần sau',
+                              style: TextStyle(
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.chevron_right,
+                              color: primaryBlue,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

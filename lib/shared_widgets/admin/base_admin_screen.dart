@@ -212,31 +212,29 @@ class BaseAdminScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Back button (if exists)
-        if (onBackPressed != null) ...[
-          ElevatedButton.icon(
-            onPressed: onBackPressed,
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16),
-            label: const Text(
-              'Quay lại',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-
-        // Icon + Title
+        // Back button + Icon + Title in same Row
         Row(
           children: [
+            // Back button (if exists)
+            if (onBackPressed != null) ...[
+              GestureDetector(
+                onTap: onBackPressed,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: surfaceBlue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: primaryBlue,
+                    size: _getHeaderIconSize(context),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+            // Icon
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -250,6 +248,7 @@ class BaseAdminScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // Title
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,23 +317,18 @@ class BaseAdminScreen extends StatelessWidget {
       children: [
         // NÚT QUAY LẠI (Nếu có)
         if (onBackPressed != null) ...[
-          ElevatedButton.icon(
-            onPressed: onBackPressed,
-            icon: Icon(Icons.arrow_back_ios_new, size: isTablet ? 16 : 18),
-            label: Text(
-              'Quay lại',
-              style: TextStyle(
-                fontSize: _getButtonFontSize(context),
-                fontWeight: FontWeight.w600,
+          GestureDetector(
+            onTap: onBackPressed,
+            child: Container(
+              padding: EdgeInsets.all(isTablet ? 6 : 8),
+              decoration: BoxDecoration(
+                color: surfaceBlue,
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: _getButtonPadding(context),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              child: Icon(
+                Icons.arrow_back,
+                color: primaryBlue,
+                size: _getHeaderIconSize(context),
               ),
             ),
           ),

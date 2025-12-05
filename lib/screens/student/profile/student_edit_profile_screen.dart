@@ -65,7 +65,6 @@ class _EditProfileStudentScreenState extends State<EditProfileStudentScreen> {
     final error = context.read<StudentProfileViewModel>().error;
     if (error == null) {
       if (!mounted) return;
-      ToastHelper.showSuccess("Cập nhật hồ sơ thành công");
       Navigator.pop(context, true);
     } else {
       if (!mounted) return;

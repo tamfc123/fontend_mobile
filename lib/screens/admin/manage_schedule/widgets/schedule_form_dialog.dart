@@ -36,6 +36,11 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
   String? _selectedRoomId;
   bool _isLoading = false;
 
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color lightBlue = Color(0xFF42A5F5);
+  static const Color backgroundBlue = Color(0xFFF3F8FF);
+  static const Color surfaceBlue = Color(0xFFE3F2FD);
+
   @override
   void initState() {
     super.initState();
@@ -129,72 +134,68 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    // Responsive values
-    final dialogWidth = isMobile ? screenWidth * 0.95 : screenWidth * 0.9;
-    final maxWidth = isMobile ? double.infinity : 500.0;
-    final headerPadding = isMobile ? 16.0 : 24.0;
-    final titleFontSize = isMobile ? 18.0 : 20.0;
-    final iconSize = isMobile ? 20.0 : 24.0;
-    final formPadding = isMobile ? 16.0 : 24.0;
-
-    // Chỉ hiển thị Edit mode
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        width: dialogWidth,
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundBlue,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: EdgeInsets.all(headerPadding),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade600,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, lightBlue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.schedule, color: Colors.white, size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Chỉnh sửa lịch học',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.edit, color: Colors.white, size: iconSize),
-                  SizedBox(width: isMobile ? 12 : 16),
-                  Text(
-                    'Chỉnh sửa lịch học',
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Form
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(formPadding),
+              // Form Content
+              Padding(
+                padding: const EdgeInsets.all(24),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Chọn Lớp
-                      DropdownButtonFormField<String>(
+                      // Class Dropdown
+                      _buildModernDropdown<String>(
+                        label: 'Lớp học',
+                        icon: Icons.class_outlined,
                         value: _selectedClassId,
-                        decoration: const InputDecoration(
-                          labelText: "Lớp học",
-                          border: OutlineInputBorder(),
-                          filled: true,
-                        ),
                         items:
                             widget.classes
                                 .map(
@@ -207,16 +208,13 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                         onChanged:
                             (val) => setState(() => _selectedClassId = val),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Chọn Thứ
-                      DropdownButtonFormField<int>(
+                      // Day Dropdown
+                      _buildModernDropdown<int>(
+                        label: 'Thứ trong tuần',
+                        icon: Icons.calendar_today,
                         value: _selectedDay,
-                        decoration: const InputDecoration(
-                          labelText: "Thứ",
-                          border: OutlineInputBorder(),
-                          filled: true,
-                        ),
                         items:
                             List.generate(
                               7,
@@ -227,16 +225,13 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                             ).toList(),
                         onChanged: (val) => setState(() => _selectedDay = val),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Chọn Phòng
-                      DropdownButtonFormField<String>(
+                      // Room Dropdown
+                      _buildModernDropdown<String>(
+                        label: 'Phòng học',
+                        icon: Icons.meeting_room_outlined,
                         value: _selectedRoomId,
-                        decoration: const InputDecoration(
-                          labelText: "Phòng học",
-                          border: OutlineInputBorder(),
-                          filled: true,
-                        ),
                         items:
                             widget.rooms
                                 .map(
@@ -251,59 +246,22 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                         validator:
                             (val) => val == null ? 'Vui lòng chọn phòng' : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Giờ
+                      // Time Row
                       Row(
                         children: [
                           Expanded(
                             child: _buildTimeField(
                               _startTimeController,
-                              'Bắt đầu',
+                              'Giờ bắt đầu',
                             ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildTimeField(
                               _endTimeController,
-                              'Kết thúc',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Nút Save/Cancel
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                              child: const Text('Hủy'),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleSubmit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                              child:
-                                  _isLoading
-                                      ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
-                                      : const Text('Lưu thay đổi'),
+                              'Giờ kết thúc',
                             ),
                           ),
                         ],
@@ -312,24 +270,177 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
                   ),
                 ),
               ),
-            ),
-          ],
+
+              // Action Buttons
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: primaryBlue.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Hủy',
+                          style: TextStyle(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _isLoading ? null : _handleSubmit,
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.save, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Lưu',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildModernDropdown<T>({
+    required String label,
+    required IconData icon,
+    required T? value,
+    required List<DropdownMenuItem<T>> items,
+    required void Function(T?) onChanged,
+    String? Function(T?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: DropdownButtonFormField<T>(
+            value: value,
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            items: items,
+            onChanged: onChanged,
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTimeField(TextEditingController controller, String label) {
-    return TextFormField(
-      controller: controller,
-      readOnly: true,
-      onTap: () => _selectTime(controller),
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        suffixIcon: const Icon(Icons.access_time),
-      ),
-      validator: (val) => val!.isEmpty ? 'Nhập giờ' : null,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            readOnly: true,
+            onTap: () => _selectTime(controller),
+            decoration: InputDecoration(
+              hintText: 'HH:MM',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              suffixIcon: Icon(Icons.access_time, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            validator: (val) => val!.isEmpty ? 'Nhập giờ' : null,
+          ),
+        ),
+      ],
     );
   }
 

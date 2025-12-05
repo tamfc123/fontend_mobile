@@ -97,7 +97,7 @@ class _ManageCourseScreenState extends State<ManageCourseScreen> {
         return BaseAdminScreen(
           title: 'Quản lý Khóa học',
           subtitle: 'Tất cả khóa học trong hệ thống',
-          headerIcon: Icons.school_rounded,
+          headerIcon: Icons.menu_book_rounded,
           addLabel: 'Thêm Khóa học',
           onAddPressed: () => _showCourseForm(context),
           onBackPressed: null,

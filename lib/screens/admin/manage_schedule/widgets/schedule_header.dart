@@ -158,7 +158,10 @@ class ScheduleHeader extends StatelessWidget {
               context.read<ManageScheduleViewModel>().loadData();
             }
           },
-          icon: Icon(Icons.add, size: _isMobile(context) ? 18 : 20),
+          icon: Icon(
+            Icons.add_circle_outline,
+            size: _isMobile(context) ? 18 : 20,
+          ),
           label: Text(
             'Thêm Lịch học',
             style: TextStyle(
@@ -230,7 +233,7 @@ class ScheduleHeader extends StatelessWidget {
               context.read<ManageScheduleViewModel>().loadData();
             }
           },
-          icon: Icon(Icons.add, size: isTablet ? 18 : 20),
+          icon: Icon(Icons.add_circle_outline, size: isTablet ? 18 : 20),
           label: Text(
             'Thêm Lịch học',
             style: TextStyle(
