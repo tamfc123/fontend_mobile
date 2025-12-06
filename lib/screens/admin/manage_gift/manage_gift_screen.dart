@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/gift_model.dart';
-
 import 'package:mobile/screens/admin/manage_gift/manage_gift_view_model.dart';
 import 'package:mobile/screens/admin/manage_gift/widgets/gift_form_dialog.dart';
-
 import 'package:mobile/screens/admin/manage_gift/widgets/manage_gift_content.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/confirm_restore_dialog.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
@@ -35,8 +35,8 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel(); // Hủy timer
-    _searchController.removeListener(_onSearchChanged); // Hủy listener
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -69,28 +69,14 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
     showDialog(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Xác nhận ẩn quà tặng'),
-            content: Text('Bạn có chắc muốn ẩn "${gift.name}" khỏi cửa hàng?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                ),
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await context.read<ManageGiftViewModel>().deleteGift(gift.id);
-                },
-                child: const Text(
-                  'Đồng ý',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+          (_) => ConfirmDeleteDialog(
+            title: 'Ẩn quà tặng',
+            content:
+                'Bạn có chắc muốn ẩn quà tặng này khỏi cửa hàng? Bạn có thể khôi phục lại sau.',
+            itemName: gift.name,
+            onConfirm: () async {
+              await context.read<ManageGiftViewModel>().deleteGift(gift.id);
+            },
           ),
     );
   }
@@ -99,28 +85,13 @@ class _ManageGiftScreenState extends State<ManageGiftScreen> {
     showDialog(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Khôi phục quà tặng'),
-            content: Text('Bạn có chắc muốn mở bán lại "${gift.name}"?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  await context.read<ManageGiftViewModel>().restoreGift(
-                    gift.id,
-                  );
-                },
-                child: const Text(
-                  'Khôi phục',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+          (_) => ConfirmRestoreDialog(
+            title: 'Khôi phục quà tặng',
+            content: 'Bạn có chắc muốn mở bán lại quà tặng này?',
+            itemName: gift.name,
+            onConfirm: () async {
+              await context.read<ManageGiftViewModel>().restoreGift(gift.id);
+            },
           ),
     );
   }

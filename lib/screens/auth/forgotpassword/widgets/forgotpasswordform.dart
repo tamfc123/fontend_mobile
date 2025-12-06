@@ -16,6 +16,20 @@ class ForgotPassWordForm extends StatefulWidget {
 }
 
 class _ForgotPassWordFormState extends State<ForgotPassWordForm> {
+  final FocusNode _emailFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _emailFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -36,10 +50,17 @@ class _ForgotPassWordFormState extends State<ForgotPassWordForm> {
                   ),
                   TextFormField(
                     controller: widget.emailController,
+                    focusNode: _emailFocusNode,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       floatingLabelStyle: const TextStyle(color: Colors.blue),
-                      prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color:
+                            _emailFocusNode.hasFocus
+                                ? Colors.blue
+                                : Colors.grey,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

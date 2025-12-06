@@ -28,6 +28,10 @@ class ManageScheduleViewModel extends ChangeNotifier {
   String _searchTeacher = '';
   int? _filterDayOfWeek;
 
+  // Sort
+  String _sortBy = 'time';
+  String _sortOrder = 'asc';
+
   List<ClassScheduleModel> get schedules => _schedules;
   List<RoomModel> get activeRooms => _activeRooms;
   List<ClassModel> get classes => _classes;
@@ -35,6 +39,8 @@ class ManageScheduleViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get searchTeacher => _searchTeacher;
   int? get filterDayOfWeek => _filterDayOfWeek;
+  String get sortBy => _sortBy;
+  String get sortOrder => _sortOrder;
 
   Future<void> loadData() async {
     _isLoading = true;
@@ -61,6 +67,8 @@ class ManageScheduleViewModel extends ChangeNotifier {
     _schedules = await _scheduleRepository.getAllSchedules(
       teacherName: _searchTeacher.isNotEmpty ? _searchTeacher : null,
       dayOfWeek: _filterDayOfWeek,
+      sortBy: _sortBy,
+      sortOrder: _sortOrder,
     );
   }
 
@@ -84,6 +92,18 @@ class ManageScheduleViewModel extends ChangeNotifier {
       _filterDayOfWeek = dayOfWeek;
       _refreshSchedules();
     }
+  }
+
+  void updateSort(String sortBy) {
+    if (_sortBy != sortBy) {
+      _sortBy = sortBy;
+      _refreshSchedules();
+    }
+  }
+
+  void toggleSortOrder() {
+    _sortOrder = _sortOrder == 'asc' ? 'desc' : 'asc';
+    _refreshSchedules();
   }
 
   Future<void> _refreshSchedules() async {

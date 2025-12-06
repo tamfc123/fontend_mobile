@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/data/models/quiz_models.dart';
-
 import 'package:mobile/screens/admin/manage_quiz/manage_quiz_view_model.dart';
 import 'package:mobile/screens/admin/manage_quiz/widgets/manage_quiz_content.dart';
 import 'package:mobile/screens/admin/manage_quiz/widgets/quiz_form_dialog.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/confirm_restore_dialog.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
 import 'package:provider/provider.dart';
 
@@ -66,68 +67,38 @@ class _ManageQuizScreenState extends State<ManageQuizScreen> {
   void _confirmDelete(BuildContext context, QuizListModel quiz) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Chuyển vào thùng rác?'),
-          content: Text('Bạn có chắc muốn xóa bài tập "${quiz.title}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-              ),
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                await context.read<ManageQuizViewModel>().deleteQuiz(
-                  widget.course.id!,
-                  quiz.id,
-                );
-              },
-              child: const Text(
-                'Đồng ý',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+      builder:
+          (_) => ConfirmDeleteDialog(
+            title: 'Chuyển vào thùng rác',
+            content:
+                'Bạn có chắc muốn chuyển bài tập này vào thùng rác? Bạn có thể khôi phục lại sau.',
+            itemName: quiz.title,
+            onConfirm: () async {
+              await context.read<ManageQuizViewModel>().deleteQuiz(
+                widget.course.id!,
+                quiz.id,
+              );
+            },
+          ),
     );
   }
 
   void _confirmRestore(BuildContext context, QuizListModel quiz) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Khôi phục bài tập'),
-          content: Text(
-            'Bạn muốn khôi phục "${quiz.title}" trở lại danh sách khóa học?',
+      builder:
+          (_) => ConfirmRestoreDialog(
+            title: 'Khôi phục bài tập',
+            content:
+                'Bạn muốn khôi phục bài tập này trở lại danh sách khóa học?',
+            itemName: quiz.title,
+            onConfirm: () async {
+              await context.read<ManageQuizViewModel>().restoreQuiz(
+                widget.course.id!,
+                quiz.id,
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                await context.read<ManageQuizViewModel>().restoreQuiz(
-                  widget.course.id!,
-                  quiz.id,
-                );
-              },
-              child: const Text(
-                'Khôi phục',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 

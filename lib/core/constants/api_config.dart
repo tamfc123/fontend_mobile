@@ -1,6 +1,5 @@
 class ApiConfig {
-  static const String baseUrl =
-      'https://semibiographic-unnaove-chelsey.ngrok-free.dev/api';
+  static const String baseUrl = 'https://backend-english-app.onrender.com/api';
 
   // upload
   static const String upload = "/upload";
@@ -12,35 +11,34 @@ class ApiConfig {
   static const String authResetPassword = "/auth/reset-password";
 
   // Profile
-  static const String profileAvatar = "/profile/avatar";
-  static const String profileMe = "/profile/me";
-  static const String profile = "/profile";
-  static const String profileChangePassword = "/profile/change-password";
+  static const String profileAvatar = "/student/profile/avatar";
+  static const String profileMe = "/student/profile/me";
+  static const String profile = "/student/profile";
+  static const String profileChangePassword =
+      "/student/profile/change-password";
 
   // --- ADMIN: USERS ---
-  static const String users = "/users";
-  static String userById(String id) => "/users/$id";
-  static String userToggleStatus(String id) => "/users/$id/toggle-status";
-  static String usersByRole(String role) => "/users/role/$role";
-  static const String adminCreateUser = "/users/create-user";
+  static const String users = "/admin/users";
+  static String userById(String id) => "/admin/users/$id";
+  static String userToggleStatus(String id) => "/admin/users/$id/toggle-status";
+  static String usersByRole(String role) => "/admin/users/role/$role";
+  static const String adminCreateUser = "/admin/users/create-user";
 
   // --- ADMIN: COURSES ---
-  static const String courses = "/courses";
-  static String courseById(String id) => "/courses/$id";
-  static const String adminGetAllCourses = "/courses/all-active";
+  static const String adminCourses = "/admin/courses";
+  static String adminCourseById(String id) => "/admin/courses/$id";
+  static const String adminGetAllCourses = "/admin/courses/all-active";
 
   // --- ADMIN: CLASSES ---
-  static const String classes = "/classes";
-  static String classById(String id) => "/classes/$id";
-  static const String adminGetAllActiveClasses = "/classes/all-active";
+  static const String adminClasses = "/admin/classes";
+  static String adminClassById(String id) => "/admin/classes/$id";
+  static const String adminGetAllActiveClasses = "/admin/classes/all-active";
 
-  // Backend: api/admin/courses/{courseId}/quizzes
+  // --- ADMIN: QUIZZES ---
   static String adminCourseQuizzes(String courseId) =>
       "/admin/courses/$courseId/quizzes";
-  // Backend: api/admin/courses/{courseId}/quizzes/{quizId}
   static String adminCourseQuizById(String courseId, String quizId) =>
       "/admin/courses/$courseId/quizzes/$quizId";
-  // Backend: api/admin/courses/{courseId}/quizzes/questions/{questionId} (Xóa câu hỏi lẻ)
   static String adminDeleteQuestion(String courseId, String questionId) =>
       "/admin/courses/$courseId/quizzes/questions/$questionId";
   static String adminRestoreQuiz(String courseId, String quizId) =>
@@ -55,13 +53,12 @@ class ApiConfig {
   static const String adminTopStudents = "/admin/top-students";
 
   // --- ADMIN: ROOMS ---
-  static const String adminRooms = "/admin/rooms"; // Dùng cho (GET all, CREATE)
+  static const String adminRooms = "/admin/rooms";
   static String adminRoomById(String id) => "/admin/rooms/$id";
   static const String adminGetAllActiveRooms = "/admin/rooms/all-active";
 
   // --- ADMIN: SCHEDULES ---
-  static const String adminSchedules =
-      "/admin/schedules"; // Dùng cho (GET all, CREATE)
+  static const String adminSchedules = "/admin/schedules";
   static String adminScheduleById(String id) => "/admin/schedules/$id";
 
   // --- ADMIN MODULE ---

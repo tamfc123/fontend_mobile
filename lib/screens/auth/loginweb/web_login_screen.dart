@@ -18,6 +18,16 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
 
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener(() => setState(() {}));
+    _passwordFocusNode.addListener(() => setState(() {}));
+  }
+
   // Responsive helpers
   bool _isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 600;
@@ -100,11 +110,22 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                         // Email input
                         TextFormField(
                           controller: _emailController,
+                          focusNode: _emailFocusNode,
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.email_outlined),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color:
+                                  _emailFocusNode.hasFocus
+                                      ? Colors.blue
+                                      : Colors.grey,
+                            ),
                             labelText: "Email",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Colors.blue),
                             ),
                             contentPadding: EdgeInsets.symmetric(
                               vertical: isMobile ? 14 : 16,
@@ -122,9 +143,16 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                         // Password input
                         TextFormField(
                           controller: _passwordController,
+                          focusNode: _passwordFocusNode,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color:
+                                  _passwordFocusNode.hasFocus
+                                      ? Colors.blue
+                                      : Colors.grey,
+                            ),
                             labelText: "Mật khẩu",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -132,6 +160,10 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
                             contentPadding: EdgeInsets.symmetric(
                               vertical: isMobile ? 14 : 16,
                               horizontal: 12,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Colors.blue),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -235,6 +267,8 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
 
   @override
   void dispose() {
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();

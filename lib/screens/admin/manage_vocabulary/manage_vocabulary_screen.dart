@@ -2,11 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/lesson_model.dart';
 import 'package:mobile/data/models/vocabulary_model.dart';
-
 import 'package:mobile/screens/admin/manage_vocabulary/manage_vocabulary_view_model.dart';
 import 'package:mobile/screens/admin/manage_vocabulary/widgets/manage_vocabulary_content.dart';
 import 'package:mobile/screens/admin/manage_vocabulary/widgets/vocabulary_form_dialog.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
+import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
+import 'package:mobile/shared_widgets/admin/confirm_restore_dialog.dart';
 import 'package:mobile/shared_widgets/admin/pagination_controls.dart';
 import 'package:provider/provider.dart';
 
@@ -75,68 +76,38 @@ class _ManageVocabularyScreenState extends State<ManageVocabularyScreen> {
   void _confirmDelete(VocabularyModel vocab) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Chuyển vào thùng rác?'),
-          content: Text(
-            'Bạn có chắc muốn ẩn từ vựng "${vocab.referenceText}"?',
+      builder:
+          (_) => ConfirmDeleteDialog(
+            title: 'Chuyển vào thùng rác',
+            content:
+                'Bạn có chắc muốn chuyển từ vựng này vào thùng rác? Bạn có thể khôi phục lại sau.',
+            itemName: vocab.referenceText,
+            onConfirm: () async {
+              await context.read<ManageVocabularyViewModel>().deleteVocabulary(
+                vocab.id,
+                vocab.lessonId,
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-              ),
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                await context
-                    .read<ManageVocabularyViewModel>()
-                    .deleteVocabulary(vocab.id, vocab.lessonId);
-              },
-              child: const Text(
-                'Đồng ý',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
   void _confirmRestore(VocabularyModel vocab) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Khôi phục từ vựng'),
-          content: Text(
-            'Bạn muốn khôi phục "${vocab.referenceText}" trở lại danh sách bài học?',
+      builder:
+          (_) => ConfirmRestoreDialog(
+            title: 'Khôi phục từ vựng',
+            content:
+                'Bạn muốn khôi phục từ vựng này trở lại danh sách bài học?',
+            itemName: vocab.referenceText,
+            onConfirm: () async {
+              await context.read<ManageVocabularyViewModel>().restoreVocabulary(
+                vocab.id,
+                vocab.lessonId,
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                await context
-                    .read<ManageVocabularyViewModel>()
-                    .restoreVocabulary(vocab.id, vocab.lessonId);
-              },
-              child: const Text(
-                'Khôi phục',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 

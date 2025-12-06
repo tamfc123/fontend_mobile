@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.RECOGNIZE_SPEECH" />
 
     <application
-        android:label="mobile"
+        android:label="English Learning"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

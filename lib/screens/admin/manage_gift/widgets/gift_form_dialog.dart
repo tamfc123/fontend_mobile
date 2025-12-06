@@ -61,22 +61,40 @@ class _GiftFormDialogState extends State<GiftFormDialog> {
         withData: true,
       );
 
-      if (result != null && result.files.single.bytes != null) {
+      if (result != null) {
         setState(() => _isUploading = true);
 
-        final bytes = result.files.single.bytes!;
-        final fileName = result.files.single.name;
+        final file = result.files.single;
 
-        final url = await context.read<UploadRepository>().uploadImage(
-          bytes,
-          fileName,
-        );
+        // Kiểm tra platform: Web (bytes) hoặc Mobile (path)
+        if (file.bytes != null) {
+          // ✅ WEB: Dùng bytes
+          final url = await context.read<UploadRepository>().uploadImage(
+            file.bytes!,
+            file.name,
+          );
 
-        setState(() {
-          _imageUrl = url;
-          _isUploading = false;
-        });
-        ToastHelper.showSuccess('Upload ảnh thành công');
+          setState(() {
+            _imageUrl = url;
+            _isUploading = false;
+          });
+          ToastHelper.showSuccess('Upload ảnh thành công');
+        } else if (file.path != null) {
+          // ✅ MOBILE: Đọc file từ path
+          final bytes = await file.xFile.readAsBytes();
+          final url = await context.read<UploadRepository>().uploadImage(
+            bytes,
+            file.name,
+          );
+
+          setState(() {
+            _imageUrl = url;
+            _isUploading = false;
+          });
+          ToastHelper.showSuccess('Upload ảnh thành công');
+        } else {
+          throw Exception('Không thể đọc file (không có bytes hoặc path)');
+        }
       }
     } catch (e) {
       setState(() => _isUploading = false);

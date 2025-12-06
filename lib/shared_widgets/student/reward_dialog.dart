@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
 
-class LevelUpRewardDialog extends StatefulWidget {
+class RewardDialog extends StatefulWidget {
   final int exp;
   final int coins;
-  final String message; // Thêm message động
+  final String message;
+  final String buttonText;
   final VoidCallback? onClose;
+  final String expLabel;
 
-  const LevelUpRewardDialog({
+  const RewardDialog({
     super.key,
     required this.exp,
     required this.coins,
     this.message = "Bạn đã làm rất tốt!",
+    this.buttonText = "Tiếp tục",
     this.onClose,
+    this.expLabel = 'EXP',
   });
 
   @override
-  State<LevelUpRewardDialog> createState() => _LevelUpRewardDialogState();
+  State<RewardDialog> createState() => _RewardDialogState();
 }
 
-class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
+class _RewardDialogState extends State<RewardDialog>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
-  // Định nghĩa màu cục bộ nếu chưa có AppColors
   static const Color primaryColor = Color(0xFF3B82F6);
   static const Color primaryLightColor = Color(0xFFEFF6FF);
 
@@ -87,8 +90,6 @@ class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
                 style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
-
-              // Khung chứa XP và Coin
               Container(
                 padding: const EdgeInsets.symmetric(
                   vertical: 16,
@@ -101,7 +102,6 @@ class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    // Cột XP
                     Column(
                       children: [
                         const Icon(
@@ -111,7 +111,7 @@ class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "+${widget.exp} XP",
+                          "+${widget.exp} ${widget.expLabel}",
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.amber,
@@ -124,7 +124,6 @@ class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
                       height: 40,
                       color: Colors.grey.shade300,
                     ),
-                    // Cột Coin
                     Column(
                       children: [
                         const Icon(
@@ -161,7 +160,7 @@ class _LevelUpRewardDialogState extends State<LevelUpRewardDialog>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text("Tiếp tục"),
+                  child: Text(widget.buttonText),
                 ),
               ),
             ],

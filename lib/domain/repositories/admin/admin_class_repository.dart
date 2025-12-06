@@ -16,7 +16,7 @@ class AdminClassRepository {
     try {
       // 2. Thêm queryParameters vào request
       final response = await _apiClient.dio.get(
-        ApiConfig.classes,
+        ApiConfig.adminClasses,
         queryParameters: {
           'search': search,
           'pageNumber': pageNumber,
@@ -59,7 +59,7 @@ class AdminClassRepository {
   ) async {
     try {
       await _apiClient.dio.post(
-        ApiConfig.classes,
+        ApiConfig.adminClasses,
         data: {
           'name': name,
           'courseId': courseId,
@@ -82,7 +82,7 @@ class AdminClassRepository {
   ) async {
     try {
       await _apiClient.dio.put(
-        ApiConfig.classById(id),
+        ApiConfig.adminClassById(id),
         data: {
           'name': name,
           'courseId': courseId,
@@ -100,7 +100,7 @@ class AdminClassRepository {
   // Xóa lớp học
   Future<bool> deleteClass(String id) async {
     try {
-      await _apiClient.dio.delete(ApiConfig.classById(id));
+      await _apiClient.dio.delete(ApiConfig.adminClassById(id));
       return true;
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi khi xóa lớp học');

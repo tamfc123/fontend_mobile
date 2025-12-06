@@ -30,23 +30,25 @@ class AdminScheduleRepository {
   final ApiClient _apiClient;
   AdminScheduleRepository(this._apiClient);
 
-  // 1. Lấy tất cả lịch học
+  // 1. Lấy tất cả lịch học (Đã thêm sort)
   Future<List<ClassScheduleModel>> getAllSchedules({
-    String? classId,
-    String? courseName,
     String? teacherName,
     int? dayOfWeek,
+    String? sortBy = 'time',
+    String? sortOrder = 'asc',
   }) async {
     try {
       final queryParams = <String, String>{};
-      if (classId != null) queryParams['classId'] = classId.toString();
-      if (courseName != null && courseName.isNotEmpty) {
-        queryParams['courseName'] = courseName;
-      }
       if (teacherName != null && teacherName.isNotEmpty) {
         queryParams['teacherName'] = teacherName;
       }
       if (dayOfWeek != null) queryParams['dayOfWeek'] = dayOfWeek.toString();
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParams['sortBy'] = sortBy;
+      }
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParams['sortOrder'] = sortOrder;
+      }
 
       final response = await _apiClient.dio.get(
         ApiConfig.adminSchedules,

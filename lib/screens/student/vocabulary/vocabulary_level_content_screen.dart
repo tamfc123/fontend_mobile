@@ -257,7 +257,7 @@ class _VocabularyLevelContentScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Tiến độ Module',
+                'Tiến độ',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 14,
@@ -346,7 +346,10 @@ class _VocabularyLevelContentScreenState
                   child:
                       isFirst
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
+                          : Container(
+                            width: 2,
+                            color: color.withValues(alpha: 0.3),
+                          ),
                 ),
 
                 _buildTimelineNode(number, isCompleted, color, nodeSize),
@@ -355,7 +358,10 @@ class _VocabularyLevelContentScreenState
                   child:
                       isLast
                           ? const SizedBox()
-                          : Container(width: 2, color: color.withValues(alpha: 0.3)),
+                          : Container(
+                            width: 2,
+                            color: color.withValues(alpha: 0.3),
+                          ),
                 ),
               ],
             ),

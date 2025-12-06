@@ -71,6 +71,72 @@ class ScheduleFilterBar extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(width: 16),
+
+        // Sort by Dropdown
+        Expanded(
+          flex: 1,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: viewModel.sortBy,
+                isExpanded: true,
+                icon: const Icon(Icons.sort, color: Colors.blue),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'time',
+                    child: Text('Sắp xếp: Thời gian'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'class',
+                    child: Text('Sắp xếp: Lớp học'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'teacher',
+                    child: Text('Sắp xếp: Giảng viên'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'room',
+                    child: Text('Sắp xếp: Phòng học'),
+                  ),
+                  DropdownMenuItem(value: 'day', child: Text('Sắp xếp: Ngày')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    context.read<ManageScheduleViewModel>().updateSort(value);
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // Sort Order Toggle Button
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: IconButton(
+            onPressed: () {
+              context.read<ManageScheduleViewModel>().toggleSortOrder();
+            },
+            icon: Icon(
+              viewModel.sortOrder == 'asc'
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
+              color: Colors.blue,
+            ),
+            tooltip: viewModel.sortOrder == 'asc' ? 'Tăng dần' : 'Giảm dần',
+          ),
+        ),
       ],
     );
   }

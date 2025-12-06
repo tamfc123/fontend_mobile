@@ -233,38 +233,6 @@ class _ConfirmDeleteDialogState extends State<ConfirmDeleteDialog>
                               ),
                             ),
                           ],
-
-                          const SizedBox(height: 20),
-
-                          // Warning message
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.amber.shade200),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: Colors.amber.shade700,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.amber.shade800,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),

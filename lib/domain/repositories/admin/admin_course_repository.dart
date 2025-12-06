@@ -15,7 +15,7 @@ class AdminCourseRepository {
   }) async {
     try {
       final response = await _apiClient.dio.get(
-        ApiConfig.courses,
+        ApiConfig.adminCourses,
         queryParameters: {'search': search, 'pageNumber': pageNumber},
       );
 
@@ -52,7 +52,7 @@ class AdminCourseRepository {
   Future<CourseModel> createCourse(CourseModel course) async {
     try {
       final response = await _apiClient.dio.post(
-        ApiConfig.courses,
+        ApiConfig.adminCourses,
         data: course.toJson(includeId: false),
       );
 
@@ -68,7 +68,7 @@ class AdminCourseRepository {
   Future<CourseModel> updateCourse(String id, CourseModel course) async {
     try {
       final response = await _apiClient.dio.put(
-        ApiConfig.courseById(id),
+        ApiConfig.adminCourseById(id),
         data: course.toJson(),
       );
 
@@ -85,7 +85,7 @@ class AdminCourseRepository {
   // Xóa khóa học
   Future<bool> deleteCourse(String id) async {
     try {
-      await _apiClient.dio.delete(ApiConfig.courseById(id));
+      await _apiClient.dio.delete(ApiConfig.adminCourseById(id));
       return true;
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Lỗi khi xóa khóa học');

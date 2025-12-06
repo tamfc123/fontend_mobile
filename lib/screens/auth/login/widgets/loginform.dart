@@ -19,6 +19,23 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   bool _obscurePassword = true;
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener(() => setState(() {}));
+    _passwordFocusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -28,10 +45,14 @@ class _LoginFormState extends State<LoginForm> {
           const SizedBox(height: 10),
           TextFormField(
             controller: widget.emailController,
+            focusNode: _emailFocusNode,
             decoration: InputDecoration(
               labelText: 'Email',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.email, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.email,
+                color: _emailFocusNode.hasFocus ? Colors.blue : Colors.grey,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -55,11 +76,15 @@ class _LoginFormState extends State<LoginForm> {
           const SizedBox(height: 20),
           TextFormField(
             controller: widget.passwordController,
+            focusNode: _passwordFocusNode,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Mật khẩu',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.lock,
+                color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.grey,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_off : Icons.visibility,

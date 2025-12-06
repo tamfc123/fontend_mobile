@@ -76,23 +76,48 @@ class _VocabularyFormDialogState extends State<VocabularyFormDialog> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['mp3', 'wav', 'ogg'],
+        withData: true, // Cần set true để mobile có thể lấy bytes hoặc path
       );
 
-      if (result != null && result.files.single.bytes != null) {
+      if (result != null) {
         final file = result.files.single;
         final uploadRepo = context.read<UploadRepository>();
-        final response = await uploadRepo.uploadAudioFileWeb(
-          file.bytes!,
-          file.name,
-        );
 
-        if (response?.url != null) {
-          setState(() => _audioUrlController.text = response!.url!);
-          if (mounted) {
-            ToastHelper.showSuccess('Tải lên thành công!');
+        // Kiểm tra platform: Web (bytes) hoặc Mobile (path)
+        if (file.bytes != null) {
+          // ✅ WEB: Dùng bytes
+          final response = await uploadRepo.uploadAudioFileWeb(
+            file.bytes!,
+            file.name,
+          );
+
+          if (response?.url != null) {
+            setState(() => _audioUrlController.text = response!.url!);
+            if (mounted) {
+              ToastHelper.showSuccess('Tải lên thành công!');
+            }
+          } else {
+            throw Exception('Không nhận được URL');
+          }
+        } else if (file.path != null) {
+          // ✅ MOBILE: Dùng path
+          // Đọc file từ path và convert sang bytes
+          final bytes = await file.xFile.readAsBytes();
+          final response = await uploadRepo.uploadAudioFileWeb(
+            bytes,
+            file.name,
+          );
+
+          if (response?.url != null) {
+            setState(() => _audioUrlController.text = response!.url!);
+            if (mounted) {
+              ToastHelper.showSuccess('Tải lên thành công!');
+            }
+          } else {
+            throw Exception('Không nhận được URL');
           }
         } else {
-          throw Exception('Không nhận được URL');
+          throw Exception('Không thể đọc file (không có bytes hoặc path)');
         }
       }
     } catch (e) {

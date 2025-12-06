@@ -13,10 +13,65 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation1;
+  late Animation<Offset> _slideAnimation2;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Fade animation cho logo
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
+
+    // Slide animations với stagger effect
+    _slideAnimation1 = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.25, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _slideAnimation2 = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.4, 0.75, curve: Curves.easeOut),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,58 +88,78 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 50),
-                    //image welcome
-                    Image.asset(
-                      'assets/images/Welcome.png',
-                      width: double.infinity,
-                      height: 300,
-                      fit: BoxFit.cover,
-                    ),
-                    const Text(
-                      'Đăng nhập',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
+
+                    // Animated logo with fade
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Image.asset(
+                        'assets/images/Welcome.png',
+                        width: double.infinity,
+                        height: 300,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    //form login
-                    Form(
-                      key: _formKey,
-                      child: LoginForm(
-                        emailController: _emailController,
-                        passwordController: _passwordController,
-                        isLoading: viewModel.isLoading,
-                        onLoginPressed: () async {
-                          if (!(_formKey.currentState?.validate() ?? false)) {
-                            return;
-                          }
 
-                          final success = await viewModel.login(
-                            _emailController.text.trim(),
-                            _passwordController.text.trim(),
-                          );
+                    // Animated title
+                    SlideTransition(
+                      position: _slideAnimation1,
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: const Text(
+                          'Đăng nhập',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                      ),
+                    ),
 
-                          if (!mounted) return;
+                    // Animated form
+                    SlideTransition(
+                      position: _slideAnimation2,
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Form(
+                          key: _formKey,
+                          child: LoginForm(
+                            emailController: _emailController,
+                            passwordController: _passwordController,
+                            isLoading: viewModel.isLoading,
+                            onLoginPressed: () async {
+                              if (!(_formKey.currentState?.validate() ??
+                                  false)) {
+                                return;
+                              }
 
-                          if (success) {
-                            final authService = context.read<AuthService>();
-                            final userRole =
-                                authService.currentUser?.role.toLowerCase();
-
-                            if (userRole == 'student') {
-                              context.go('/student');
-                            } else if (userRole == 'teacher' ||
-                                userRole == 'admin') {
-                              ToastHelper.showError(
-                                'Tài khoản này chỉ sử dụng trên website. Vui lòng đăng nhập trên trình duyệt.',
+                              final success = await viewModel.login(
+                                _emailController.text.trim(),
+                                _passwordController.text.trim(),
                               );
-                            } else {
-                              ToastHelper.showError(
-                                'Vai trò không hợp lệ. Vui lòng liên hệ quản trị viên.',
-                              );
-                            }
-                          }
-                        },
+
+                              if (!mounted) return;
+
+                              if (success) {
+                                final authService = context.read<AuthService>();
+                                final userRole =
+                                    authService.currentUser?.role.toLowerCase();
+
+                                if (userRole == 'student') {
+                                  context.go('/student');
+                                } else if (userRole == 'teacher' ||
+                                    userRole == 'admin') {
+                                  ToastHelper.showError(
+                                    'Tài khoản này chỉ sử dụng trên website. Vui lòng đăng nhập trên trình duyệt.',
+                                  );
+                                } else {
+                                  ToastHelper.showError(
+                                    'Vai trò không hợp lệ. Vui lòng liên hệ quản trị viên.',
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -95,12 +170,5 @@ class _LoginScreenState extends State<LoginScreen> {
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mobile/data/models/student_quiz_models.dart';
 import 'package:mobile/screens/student/quiz/student_quiz_view_model.dart';
+import 'package:mobile/shared_widgets/student/confirm_exit_quiz_dialog.dart';
+import 'package:mobile/shared_widgets/student/confirm_submit_quiz_dialog.dart';
+import 'package:mobile/shared_widgets/student/reward_dialog.dart';
 import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -140,32 +143,19 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   Future<bool> _onWillPop() async {
     if (_isSubmitting) return false;
 
-    final shouldPop = await showDialog<bool>(
+    bool shouldExit = false;
+
+    await showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: const Text('Thoát bài thi?'),
-            content: const Text(
-              'Thời gian vẫn đang chạy. Nếu thoát bây giờ, bài làm của bạn sẽ KHÔNG được tính.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Ở lại làm tiếp'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text(
-                  'Thoát ngay',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+          (context) => ConfirmExitQuizDialog(
+            onConfirmExit: () {
+              shouldExit = true;
+            },
           ),
     );
 
-    return shouldPop ?? false;
+    return shouldExit;
   }
 
   // --- LOGIC NỘP BÀI ---
@@ -173,29 +163,19 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
     if (_isSubmitting) return;
 
     if (!isTimeOut) {
-      final confirm = await showDialog<bool>(
+      bool shouldSubmit = false;
+
+      await showDialog(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: const Text('Nộp bài?'),
-              content: const Text('Bạn có chắc chắn muốn nộp bài không?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Kiểm tra lại'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryBlue),
-                  child: const Text(
-                    'Nộp ngay',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+            (ctx) => ConfirmSubmitQuizDialog(
+              onConfirmSubmit: () {
+                shouldSubmit = true;
+              },
             ),
       );
-      if (confirm != true) return;
+
+      if (!shouldSubmit) return;
     }
 
     setState(() => _isSubmitting = true);
@@ -276,7 +256,7 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
   }
 
   Future<void> _handleRewardPopup(Map<String, dynamic> result) async {
-    final reward = result['reward']; // Backend trả về object này
+    final reward = result['reward'];
 
     if (reward != null) {
       final int xp = reward['xp'] ?? 0;
@@ -284,87 +264,18 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
       final String msg = reward['msg'] ?? "";
 
       if (xp > 0) {
-        // Chỉ hiện popup nếu có thưởng
         await showDialog(
           context: context,
           barrierDismissible: false,
           builder:
-              (ctx) => AlertDialog(
-                title: const Row(
-                  children: [
-                    Icon(Icons.emoji_events, color: Colors.amber, size: 32),
-                    SizedBox(width: 12),
-                    Text('Chúc mừng!'),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (msg.isNotEmpty)
-                      Text(
-                        msg,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          children: [
-                            const Icon(
-                              Icons.stars,
-                              color: Colors.blue,
-                              size: 32,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '+$xp XP',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            const Icon(
-                              Icons.monetization_on,
-                              color: Colors.amber,
-                              size: 32,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '+$coins Coins',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryBlue,
-                      minimumSize: const Size(double.infinity, 44),
-                    ),
-                    child: const Text(
-                      'Tiếp tục',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
+              (ctx) => RewardDialog(
+                exp: xp,
+                coins: coins,
+                message: msg.isNotEmpty ? msg : "Bạn đã làm rất tốt!",
+                expLabel: 'XP',
               ),
         );
       } else {
-        // Nếu không có thưởng (điểm thấp), hiện Toast động viên
         final score = result['score'];
         ToastHelper.showWarning(msg.isNotEmpty ? msg : "Điểm số: $score");
       }

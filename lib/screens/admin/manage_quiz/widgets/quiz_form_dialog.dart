@@ -8,6 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:mobile/dart_helpers/html_helper.dart'
     if (dart.library.html) 'dart:html'
     as html;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class AdminQuizFormDialog extends StatefulWidget {
   final String courseId;
@@ -30,7 +33,10 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
   PlatformFile? _selectedFile;
   bool _isCreating = false;
 
-  static const Color primaryBlue = Colors.blue;
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color lightBlue = Color(0xFF42A5F5);
+  static const Color backgroundBlue = Color(0xFFF3F8FF);
+  static const Color surfaceBlue = Color(0xFFE3F2FD);
 
   @override
   void dispose() {
@@ -66,21 +72,55 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
         break;
     }
 
-    if (kIsWeb) {
-      try {
-        final ByteData data = await rootBundle.load(assetPath);
-        final List<int> bytes = data.buffer.asUint8List();
+    try {
+      final ByteData data = await rootBundle.load(assetPath);
+      final List<int> bytes = data.buffer.asUint8List();
+
+      if (kIsWeb) {
+        // Web: Download using blob
         final blob = html.Blob([bytes]);
         final url = html.Url.createObjectUrlFromBlob(blob);
         html.AnchorElement(href: url)
           ..setAttribute("download", fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
-      } catch (e) {
-        ToastHelper.showError('Lỗi tải mẫu: $e');
+        ToastHelper.showSuccess('Đã tải file: $fileName');
+      } else {
+        // Mobile: Save to Downloads folder
+        if (Platform.isAndroid) {
+          // Request storage permission for Android
+          var status = await Permission.storage.status;
+          if (!status.isGranted) {
+            status = await Permission.storage.request();
+            if (!status.isGranted) {
+              ToastHelper.showError('Cần quyền truy cập bộ nhớ để tải file');
+              return;
+            }
+          }
+        }
+
+        // Get Downloads directory
+        Directory? directory;
+        if (Platform.isAndroid) {
+          directory = Directory('/storage/emulated/0/Download');
+          if (!await directory.exists()) {
+            directory = await getExternalStorageDirectory();
+          }
+        } else if (Platform.isIOS) {
+          directory = await getApplicationDocumentsDirectory();
+        }
+
+        if (directory != null) {
+          final filePath = '${directory.path}/$fileName';
+          final file = File(filePath);
+          await file.writeAsBytes(bytes);
+          ToastHelper.showSuccess('Đã lưu file vào: ${directory.path}');
+        } else {
+          ToastHelper.showError('Không thể truy cập thư mục Downloads');
+        }
       }
-    } else {
-      ToastHelper.showError('Tính năng tải mẫu chỉ hỗ trợ trên Web');
+    } catch (e) {
+      ToastHelper.showError('Lỗi tải mẫu: $e');
     }
   }
 
@@ -140,257 +180,301 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titlePadding: EdgeInsets.zero,
-      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      title: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        decoration: const BoxDecoration(
-          color: primaryBlue,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.add_task_rounded, color: Colors.white),
-            SizedBox(width: 12),
-            Text(
-              'Tạo Bài Tập Mới',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 650),
+        decoration: BoxDecoration(
+          color: backgroundBlue,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-      ),
-      content: SizedBox(
-        width: 600,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildSectionTitle('1. Thông tin chung'),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, lightBlue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: const Column(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildTextField(
-                        controller: _titleController,
-                        label: 'Tiêu đề bài tập',
-                        hint: 'VD: Unit 1 Listening',
-                        icon: Icons.title,
-                        validator:
-                            (v) => v == null || v.isEmpty ? 'Bắt buộc' : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: _buildTextField(
-                        controller: _timeLimitController,
-                        label: 'Thời gian (phút)',
-                        hint: '0 = Không GH',
-                        icon: Icons.timer,
-                        isNumber: true,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Bắt buộc';
-                          if (int.tryParse(v) == null) return 'Sai số';
-                          return null;
-                        },
+                    Icon(Icons.quiz_outlined, color: Colors.white, size: 32),
+                    SizedBox(height: 8),
+                    Text(
+                      'Tạo bài tập mới',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _descriptionController,
-                  label: 'Mô tả (Tùy chọn)',
-                  hint: 'Hướng dẫn làm bài...',
-                  icon: Icons.description_outlined,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('2. Cấu hình nội dung'),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _selectedSkillType,
-                  decoration: InputDecoration(
-                    labelText: 'Loại kỹ năng',
-                    prefixIcon: const Icon(
-                      Icons.category_outlined,
-                      color: primaryBlue,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'READING',
-                      child: Text('Reading - Đọc hiểu'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'GRAMMAR',
-                      child: Text('Grammar - Ngữ pháp'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'LISTENING',
-                      child: Text('Listening - Nghe'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'WRITING',
-                      child: Text('Writing - Viết'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'ESSAY',
-                      child: Text('Essay - Viết luận'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedSkillType = value);
-                    }
-                  },
-                ),
-                if (_selectedSkillType == 'READING') ...[
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _readingPassageController,
-                    label: 'Đoạn văn (Reading Passage)',
-                    hint: 'Dán đoạn văn vào đây...',
-                    icon: Icons.article_outlined,
-                    maxLines: 5,
-                  ),
-                ],
-                const SizedBox(height: 24),
-                _buildSectionTitle('3. Ngân hàng câu hỏi'),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
+              ),
+
+              // Form Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildSectionTitle('1. Thông tin chung'),
+                      const SizedBox(height: 12),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _downloadTemplate,
-                              icon: const Icon(
-                                Icons.download_rounded,
-                                size: 18,
-                              ),
-                              label: const Text('Tải file mẫu Excel'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                              ),
+                            flex: 2,
+                            child: _buildModernInputField(
+                              controller: _titleController,
+                              label: 'Tiêu đề bài tập',
+                              hint: 'VD: Unit 1 Listening',
+                              icon: Icons.title,
+                              validator:
+                                  (v) =>
+                                      v == null || v.isEmpty
+                                          ? 'Bắt buộc'
+                                          : null,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _pickFile,
-                              icon: const Icon(Icons.upload_file, size: 18),
-                              label: const Text('Chọn file tải lên'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryBlue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                              ),
+                            flex: 1,
+                            child: _buildModernInputField(
+                              controller: _timeLimitController,
+                              label: 'Thời gian (phút)',
+                              hint: '0 = Không GH',
+                              icon: Icons.timer,
+                              isNumber: true,
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Bắt buộc';
+                                if (int.tryParse(v) == null) return 'Sai số';
+                                return null;
+                              },
                             ),
                           ),
                         ],
                       ),
-                      if (_selectedFile != null) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Đã chọn: ${_selectedFile!.name}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: Colors.grey,
-                                size: 18,
-                              ),
-                              onPressed:
-                                  () => setState(() => _selectedFile = null),
-                            ),
-                          ],
+                      const SizedBox(height: 16),
+                      _buildModernInputField(
+                        controller: _descriptionController,
+                        label: 'Mô tả (Tùy chọn)',
+                        hint: 'Hướng dẫn làm bài...',
+                        icon: Icons.description_outlined,
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('2. Cấu hình nội dung'),
+                      const SizedBox(height: 12),
+                      _buildModernDropdown(),
+                      if (_selectedSkillType == 'READING') ...[
+                        const SizedBox(height: 16),
+                        _buildModernInputField(
+                          controller: _readingPassageController,
+                          label: 'Đoạn văn (Reading Passage)',
+                          hint: 'Dán đoạn văn vào đây...',
+                          icon: Icons.article_outlined,
+                          maxLines: 5,
                         ),
                       ],
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('3. Ngân hàng câu hỏi'),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: surfaceBlue),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _downloadTemplate,
+                                    icon: const Icon(
+                                      Icons.download_rounded,
+                                      size: 18,
+                                    ),
+                                    label: const Text('Tải file mẫu'),
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: primaryBlue.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _pickFile,
+                                    icon: const Icon(
+                                      Icons.upload_file,
+                                      size: 18,
+                                    ),
+                                    label: const Text('Chọn file'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryBlue,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_selectedFile != null) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: surfaceBlue,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Đã chọn: ${_selectedFile!.name}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryBlue,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.close, size: 18),
+                                      onPressed:
+                                          () => setState(
+                                            () => _selectedFile = null,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+
+              // Action Buttons
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: primaryBlue.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed:
+                            _isCreating ? null : () => Navigator.pop(context),
+                        child: const Text(
+                          'Hủy',
+                          style: TextStyle(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _isCreating ? null : _submit,
+                        child:
+                            _isCreating
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Tạo bài tập',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      actions: [
-        TextButton(
-          onPressed: _isCreating ? null : () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
-          child: const Text('Hủy bỏ'),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: _isCreating ? null : _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryBlue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child:
-              _isCreating
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                  : const Text('Tạo bài tập'),
-        ),
-      ],
     );
   }
 
@@ -398,14 +482,14 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.bold,
         color: primaryBlue,
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildModernInputField({
     required TextEditingController controller,
     required String label,
     String? hint,
@@ -414,28 +498,115 @@ class _AdminQuizFormDialogState extends State<AdminQuizFormDialog> {
     bool isNumber = false,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon:
-            icon != null
-                ? Icon(icon, color: Colors.grey.shade600, size: 22)
-                : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+              prefixIcon: icon != null ? Icon(icon, color: lightBlue) : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
         ),
-      ),
-      validator: validator,
+      ],
+    );
+  }
+
+  Widget _buildModernDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Loại kỹ năng',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: surfaceBlue),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedSkillType,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.category_outlined, color: lightBlue),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'READING',
+                child: Text('Reading - Đọc hiểu'),
+              ),
+              DropdownMenuItem(
+                value: 'GRAMMAR',
+                child: Text('Grammar - Ngữ pháp'),
+              ),
+              DropdownMenuItem(
+                value: 'LISTENING',
+                child: Text('Listening - Nghe'),
+              ),
+              DropdownMenuItem(value: 'WRITING', child: Text('Writing - Viết')),
+              DropdownMenuItem(
+                value: 'ESSAY',
+                child: Text('Essay - Viết luận'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedSkillType = value);
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }

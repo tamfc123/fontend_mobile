@@ -23,6 +23,29 @@ class ResetPasswWordForm extends StatefulWidget {
 class _ResetPasswWordFormState extends State<ResetPasswWordForm> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _confirmPasswordFocusNode = FocusNode();
+  final FocusNode _codeFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener(() => setState(() {}));
+    _passwordFocusNode.addListener(() => setState(() {}));
+    _confirmPasswordFocusNode.addListener(() => setState(() {}));
+    _codeFocusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
+    _codeFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -31,10 +54,14 @@ class _ResetPasswWordFormState extends State<ResetPasswWordForm> {
         children: [
           TextFormField(
             controller: widget.emailController,
+            focusNode: _emailFocusNode,
             decoration: InputDecoration(
               labelText: 'Email',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.email, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.email,
+                color: _emailFocusNode.hasFocus ? Colors.blue : Colors.grey,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -59,10 +86,14 @@ class _ResetPasswWordFormState extends State<ResetPasswWordForm> {
           const SizedBox(height: 20),
           TextFormField(
             controller: widget.codeController,
+            focusNode: _codeFocusNode,
             decoration: InputDecoration(
               labelText: 'Mã xác thực',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.vpn_key, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.vpn_key,
+                color: _codeFocusNode.hasFocus ? Colors.blue : Colors.grey,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -85,10 +116,14 @@ class _ResetPasswWordFormState extends State<ResetPasswWordForm> {
           const SizedBox(height: 20),
           TextFormField(
             controller: widget.newPassController,
+            focusNode: _passwordFocusNode,
             decoration: InputDecoration(
               labelText: 'Mật khẩu mới',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.lock,
+                color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.grey,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -123,10 +158,17 @@ class _ResetPasswWordFormState extends State<ResetPasswWordForm> {
           const SizedBox(height: 20),
           TextFormField(
             controller: widget.confirmPassController,
+            focusNode: _confirmPasswordFocusNode,
             decoration: InputDecoration(
               labelText: 'Nhập lại mật khẩu mới',
               floatingLabelStyle: const TextStyle(color: Colors.blue),
-              prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+              prefixIcon: Icon(
+                Icons.lock,
+                color:
+                    _confirmPasswordFocusNode.hasFocus
+                        ? Colors.blue
+                        : Colors.grey,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
