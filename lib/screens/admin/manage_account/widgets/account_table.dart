@@ -5,13 +5,13 @@ import 'package:mobile/screens/admin/manage_account/widgets/comfirm_toggle_statu
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
 import 'package:mobile/shared_widgets/admin/base_admin_table.dart';
 import 'package:mobile/shared_widgets/admin/common_table_cell.dart';
-import 'package:mobile/screens/admin/manage_account/widgets/user_redemption_dialog.dart';
 
 class AccountTable extends StatelessWidget {
   final List<UserModel> users;
   final double maxWidth;
   final Function(UserModel) onEdit;
   final Function(UserModel) onToggleStatus;
+  final String? currentUserRole;
 
   const AccountTable({
     super.key,
@@ -19,6 +19,7 @@ class AccountTable extends StatelessWidget {
     required this.maxWidth,
     required this.onEdit,
     required this.onToggleStatus,
+    this.currentUserRole,
   });
 
   @override
@@ -111,8 +112,9 @@ class AccountTable extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Only show edit button for non-admin users
-                    if (user.role.toLowerCase() != 'admin') ...[
+                    // Only show edit button for non-admin users AND if current user is admin
+                    if (user.role.toLowerCase() != 'admin' &&
+                        currentUserRole == 'admin') ...[
                       ActionIconButton(
                         icon: Icons.edit_note_rounded,
                         color: Colors.blue.shade600,
@@ -121,33 +123,28 @@ class AccountTable extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                     ],
-                    ActionIconButton(
-                      icon:
-                          user.isActive ? Icons.lock_outline : Icons.lock_open,
-                      color: Colors.orange.shade600,
-                      tooltip: user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
-                      onPressed: () async {
-                        final confirmed = await showToggleUserDialog(
-                          context: context,
-                          user: user,
-                        );
-                        if (confirmed == true) {
-                          onToggleStatus(user);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    ActionIconButton(
-                      icon: Icons.card_giftcard,
-                      color: Colors.pink,
-                      tooltip: 'Trao quà',
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => UserRedemptionDialog(user: user),
-                        );
-                      },
-                    ),
+                    // Only show lock/unlock button if current user is admin AND target user is NOT admin
+                    if (currentUserRole == 'admin' &&
+                        user.role.toLowerCase() != 'admin') ...[
+                      ActionIconButton(
+                        icon:
+                            user.isActive
+                                ? Icons.lock_outline
+                                : Icons.lock_open,
+                        color: Colors.orange.shade600,
+                        tooltip: user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
+                        onPressed: () async {
+                          final confirmed = await showToggleUserDialog(
+                            context: context,
+                            user: user,
+                          );
+                          if (confirmed == true) {
+                            onToggleStatus(user);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ],
                 ),
               ),

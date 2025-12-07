@@ -137,13 +137,19 @@ class _SidebarMenu extends StatelessWidget {
                   path: '/admin',
                   exact: true,
                 ),
-                // Chỉ Admin mới được quản lý tài khoản
+                // Chỉ Admin được quản lý tài khoản
                 if (context.watch<AuthService>().currentUser?.role == 'admin')
                   item(
                     icon: Icons.people,
                     label: 'Tài khoản',
                     path: '/admin/users',
                   ),
+                // Trao quà - tất cả user trong admin panel đều được truy cập
+                item(
+                  icon: Icons.card_giftcard_rounded,
+                  label: 'Trao Quà',
+                  path: '/admin/gift-redemption',
+                ),
                 item(
                   icon: Icons.menu_book_rounded,
                   label: 'Khóa học',

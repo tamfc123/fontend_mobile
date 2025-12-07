@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/data/models/student_detail_model.dart';
 import 'package:mobile/screens/teacher/manage_class/teacher_class_view_model.dart';
@@ -167,7 +168,7 @@ class StudentInfoDialog extends StatelessWidget {
                       backgroundColor: Colors.blue.shade50,
                       backgroundImage:
                           user.avatarUrl != null
-                              ? NetworkImage(user.avatarUrl!)
+                              ? CachedNetworkImageProvider(user.avatarUrl!)
                               : null,
                       child:
                           user.avatarUrl == null

@@ -92,9 +92,10 @@ class _ManageLessonScreenState extends State<ManageLessonScreen> {
   }
 
   void _goToVocabulary(LessonModel lesson) {
-    final router = GoRouter.of(context);
-    final currentLocation = GoRouterState.of(context).uri.toString();
-    router.push('$currentLocation/${lesson.id}/vocabularies', extra: lesson);
+    context.go(
+      '/admin/courses/${widget.module.courseId}/modules/${widget.module.id}/lessons/${lesson.id}/vocabularies',
+      extra: lesson,
+    );
   }
 
   @override

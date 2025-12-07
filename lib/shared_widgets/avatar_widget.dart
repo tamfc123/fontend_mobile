@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 // Một widget Avatar cơ bản để hiển thị ảnh mạng hoặc chữ cái đầu của tên
 class AvatarWidget extends StatelessWidget {
@@ -26,7 +27,7 @@ class AvatarWidget extends StatelessWidget {
 
     ImageProvider? backgroundImage;
     if (hasValidUrl) {
-      backgroundImage = NetworkImage(avatarUrl!);
+      backgroundImage = CachedNetworkImageProvider(avatarUrl!);
     }
 
     return CircleAvatar(

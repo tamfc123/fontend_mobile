@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/screens/student/leaderboard/student_leaderboard_view_model.dart';
 import 'package:mobile/services/auth/auth_service.dart';
@@ -359,7 +360,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                             backgroundImage:
                                 user.avatarUrl != null &&
                                         user.avatarUrl!.isNotEmpty
-                                    ? NetworkImage(user.avatarUrl!)
+                                    ? CachedNetworkImageProvider(user.avatarUrl!)
                                     : const AssetImage(
                                           "assets/images/avatar.png",
                                         )

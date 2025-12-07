@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:mobile/data/models/lesson_model.dart';
@@ -347,7 +348,7 @@ class _QuillViewerState extends State<_QuillViewer> {
           ...FlutterQuillEmbeds.editorBuilders(
             imageEmbedConfig: QuillEditorImageEmbedConfig(
               imageProviderBuilder: (context, imageUrl) {
-                if (imageUrl.startsWith('http')) return NetworkImage(imageUrl);
+                if (imageUrl.startsWith('http')) return CachedNetworkImageProvider(imageUrl);
                 if (imageUrl.startsWith('assets/')) return AssetImage(imageUrl);
                 return null;
               },

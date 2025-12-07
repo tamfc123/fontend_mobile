@@ -88,9 +88,10 @@ class _ManageModuleScreenState extends State<ManageModuleScreen> {
   }
 
   void _goToLessons(ModuleModel module) {
-    final router = GoRouter.of(context);
-    final currentLocation = GoRouterState.of(context).uri.toString();
-    router.push('$currentLocation/${module.id}/lessons', extra: module);
+    context.go(
+      '/admin/courses/${widget.course.id}/modules/${module.id}/lessons',
+      extra: module,
+    );
   }
 
   @override

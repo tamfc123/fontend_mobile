@@ -14,15 +14,17 @@ import 'package:mobile/domain/repositories/admin/admin_vocabulary_repository.dar
 import 'package:mobile/domain/repositories/admin/admin_quiz_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_media_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_gift_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_gift_redemption_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_redemption_repository.dart';
 
 // ViewModels
 import 'package:mobile/screens/admin/dashboard/admin_dashboard_view_model.dart';
 import 'package:mobile/screens/admin/manage_account/manage_account_view_model.dart';
-import 'package:mobile/screens/admin/manage_account/user_redemption_view_model.dart';
 import 'package:mobile/screens/admin/manage_class/manage_class_view_model.dart';
 import 'package:mobile/screens/admin/manage_course/manage_course_view_model.dart';
 import 'package:mobile/screens/admin/manage_gift/manage_gift_view_model.dart';
+import 'package:mobile/screens/admin/gift_redemption/gift_redemption_view_model.dart';
+import 'package:mobile/screens/admin/gift_redemption/user_redemption_view_model.dart';
 import 'package:mobile/screens/admin/manage_lesson/manage_lesson_view_model.dart';
 import 'package:mobile/screens/admin/manage_media/manage_media_view_model.dart';
 import 'package:mobile/screens/admin/manage_module/manage_module_view_model.dart';
@@ -42,12 +44,9 @@ final adminProviders = [
     create: (_) => AdminDashboardViewModel(getIt<AdminDashboardRepository>()),
   ),
 
-  // Account & Redemption
+  // Account
   ChangeNotifierProvider<ManageAccountViewModel>(
     create: (_) => ManageAccountViewModel(getIt<AdminUserRepository>()),
-  ),
-  ChangeNotifierProvider<UserRedemptionViewModel>(
-    create: (_) => UserRedemptionViewModel(getIt<AdminRedemptionRepository>()),
   ),
 
   // Course & Class
@@ -110,5 +109,15 @@ final adminProviders = [
   ),
   ChangeNotifierProvider<ManageGiftViewModel>(
     create: (_) => ManageGiftViewModel(getIt<AdminGiftRepository>()),
+  ),
+  ChangeNotifierProvider<GiftRedemptionViewModel>(
+    create:
+        (_) => GiftRedemptionViewModel(
+          getIt<AdminUserRepository>(),
+          getIt<AdminGiftRedemptionRepository>(),
+        ),
+  ),
+  ChangeNotifierProvider<UserRedemptionViewModel>(
+    create: (_) => UserRedemptionViewModel(getIt<AdminRedemptionRepository>()),
   ),
 ];

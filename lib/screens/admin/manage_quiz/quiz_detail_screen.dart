@@ -4,6 +4,7 @@ import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/data/models/quiz_models.dart';
 import 'package:mobile/screens/admin/manage_quiz/quiz_detail_view_model.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
+import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
 import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:provider/provider.dart';
 
@@ -71,12 +72,33 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               icon: const Icon(Icons.arrow_back_ios_new, color: primaryBlue),
               onPressed: () => context.pop(),
             ),
-            title: Text(
-              isLoading ? 'Đang tải...' : (quiz?.title ?? 'Chi tiết bài tập'),
-              style: const TextStyle(
-                color: Color(0xFF1E3A8A),
-                fontWeight: FontWeight.bold,
-              ),
+            title: Row(
+              children: [
+                const Icon(Icons.quiz, color: primaryBlue, size: 24),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Chi tiết Bài tập',
+                      style: TextStyle(
+                        color: Color(0xFF1E3A8A),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    if (quiz != null)
+                      Text(
+                        quiz.title,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile/data/models/gift_model.dart';
 import 'package:mobile/screens/admin/manage_gift/manage_gift_view_model.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
@@ -140,7 +141,7 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
                       image:
                           gift.imageUrl != null
                               ? DecorationImage(
-                                image: NetworkImage(gift.imageUrl!),
+                                image: CachedNetworkImageProvider(gift.imageUrl!),
                                 fit: BoxFit.cover,
                               )
                               : null,

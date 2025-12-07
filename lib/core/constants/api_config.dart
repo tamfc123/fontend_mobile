@@ -98,6 +98,7 @@ class ApiConfig {
 
   // --- TEACHER: CLASSES ---
   static const String teacherClasses = "/teacher/classes";
+  static String teacherClassById(String id) => "/teacher/classes/$id";
   static String getStudentsInClass(String classId) =>
       "/teacher/classes/$classId/students";
   static String teacherClassSkills(String classId) =>

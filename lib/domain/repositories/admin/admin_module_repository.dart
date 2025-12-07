@@ -41,6 +41,21 @@ class AdminModuleRepository {
     }
   }
 
+  // Lấy module theo ID
+  Future<ModuleModel> getModuleById(String id) async {
+    try {
+      final response = await _apiClient.dio.get(ApiConfig.adminModuleById(id));
+
+      final data = response.data;
+      final json = (data is Map && data['data'] != null) ? data['data'] : data;
+      return ModuleModel.fromJson(json);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Không thể tải thông tin chương học',
+      );
+    }
+  }
+
   Future<void> createModule(ModuleCreateModel module) async {
     try {
       await _apiClient.dio.post(ApiConfig.adminModules, data: module.toJson());

@@ -103,8 +103,10 @@ class _ManageQuizScreenState extends State<ManageQuizScreen> {
   }
 
   void _goToDetail(String quizId) {
-    final location = GoRouterState.of(context).uri.toString();
-    context.push('$location/$quizId', extra: {'course': widget.course});
+    context.go(
+      '/admin/courses/${widget.course.id}/quizzes/$quizId',
+      extra: widget.course,
+    );
   }
 
   @override

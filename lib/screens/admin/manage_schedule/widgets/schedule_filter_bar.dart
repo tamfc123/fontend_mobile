@@ -23,7 +23,7 @@ class ScheduleFilterBar extends StatelessWidget {
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: const Color(0xFFE3F2FD), // Blue theme
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             onChanged: (value) {
@@ -41,7 +41,7 @@ class ScheduleFilterBar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: const Color(0xFFE3F2FD), // Blue theme
               borderRadius: BorderRadius.circular(12),
             ),
             child: DropdownButtonHideUnderline(
@@ -79,7 +79,7 @@ class ScheduleFilterBar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: const Color(0xFFE3F2FD), // Blue theme
               borderRadius: BorderRadius.circular(12),
             ),
             child: DropdownButtonHideUnderline(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/services/auth/auth_service.dart';
 
 import 'package:mobile/screens/admin/manage_account/manage_account_view_model.dart';
 import 'package:mobile/screens/admin/manage_account/widgets/account_filter.dart';
@@ -202,9 +203,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         builder: (context, constraints) {
           final double tableWidth =
               constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth;
+          final currentUserRole =
+              context.watch<AuthService>().currentUser?.role;
           return AccountTable(
             users: viewModel.users,
             maxWidth: tableWidth,
+            currentUserRole: currentUserRole,
             onEdit: (user) async {
               final res = await context.pushNamed<bool>(
                 'adminUpdateUser',
@@ -285,6 +289,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         const SizedBox(height: 12),
         Consumer<ManageAccountViewModel>(
           builder: (context, viewModel, child) {
+            final currentUserRole =
+                context.watch<AuthService>().currentUser?.role;
+            // Only show Add Account button for admin
+            if (currentUserRole != 'admin') {
+              return const SizedBox.shrink();
+            }
             return ElevatedButton.icon(
               onPressed: () async {
                 final res = await context.pushNamed<bool>('adminCreateUser');
@@ -365,6 +375,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         SizedBox(width: isTablet ? 8 : 16),
         Consumer<ManageAccountViewModel>(
           builder: (context, viewModel, child) {
+            final currentUserRole =
+                context.watch<AuthService>().currentUser?.role;
+            // Only show Add Account button for admin
+            if (currentUserRole != 'admin') {
+              return const SizedBox.shrink();
+            }
             return ElevatedButton.icon(
               onPressed: () async {
                 final res = await context.pushNamed<bool>('adminCreateUser');

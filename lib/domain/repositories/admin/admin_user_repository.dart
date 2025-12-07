@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile/core/api/api_client.dart';
 import 'package:mobile/core/constants/api_config.dart';
 import 'package:mobile/data/models/user_model.dart';
@@ -53,6 +54,7 @@ class AdminUserRepository {
         "totalPages": data["totalPages"],
       };
     } on DioException catch (e) {
+      debugPrint(e.response?.data['message']);
       throw Exception(
         e.response?.data['message'] ?? 'Không thể tải danh sách người dùng',
       );
@@ -71,18 +73,6 @@ class AdminUserRepository {
     } on DioException catch (e) {
       throw Exception(
         e.response?.data['message'] ?? 'Lỗi khi thay đổi trạng thái',
-      );
-    }
-  }
-
-  // Lấy user theo vai trò
-  Future<List<UserModel>> getUsersByRole(String role) async {
-    try {
-      final response = await _apiClient.dio.get(ApiConfig.usersByRole(role));
-      return (response.data as List).map((e) => UserModel.fromJson(e)).toList();
-    } on DioException catch (e) {
-      throw Exception(
-        e.response?.data['message'] ?? 'Lỗi khi tải người dùng theo vai trò',
       );
     }
   }

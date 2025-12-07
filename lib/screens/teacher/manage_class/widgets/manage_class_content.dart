@@ -130,7 +130,7 @@ class ManageTeacherClassContent extends StatelessWidget {
                       color: Colors.purple,
                       tooltip: 'Xem bài tập',
                       onPressed: () {
-                        context.push(
+                        context.go(
                           '/teacher/teacherClasses/${c.id}/quizzes',
                           extra: c,
                         );

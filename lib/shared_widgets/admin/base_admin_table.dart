@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class BaseAdminTable extends StatefulWidget {
@@ -35,14 +36,28 @@ class _BaseAdminTableState extends State<BaseAdminTable> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: constraints.maxHeight),
+        // Calculate total table width from column widths
+        double totalWidth = widget.columnWidths.values.fold(
+          0.0,
+          (sum, col) => sum + col.value,
+        );
+
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+            },
+            scrollbars: true,
+          ),
           child: Scrollbar(
             controller: _verticalController,
             thumbVisibility: true,
             trackVisibility: true,
             child: SingleChildScrollView(
               controller: _verticalController,
+              scrollDirection: Axis.vertical,
               child: Scrollbar(
                 controller: _horizontalController,
                 thumbVisibility: true,
@@ -51,7 +66,8 @@ class _BaseAdminTableState extends State<BaseAdminTable> {
                 child: SingleChildScrollView(
                   controller: _horizontalController,
                   scrollDirection: Axis.horizontal,
-                  child: IntrinsicWidth(
+                  child: SizedBox(
+                    width: totalWidth,
                     child: Table(
                       columnWidths: widget.columnWidths,
                       border: TableBorder(

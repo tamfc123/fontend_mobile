@@ -48,6 +48,21 @@ class AdminCourseRepository {
     }
   }
 
+  // Lấy khóa học theo ID
+  Future<CourseModel> getCourseById(String id) async {
+    try {
+      final response = await _apiClient.dio.get(ApiConfig.adminCourseById(id));
+
+      final data = response.data;
+      final json = (data is Map && data['data'] != null) ? data['data'] : data;
+      return CourseModel.fromJson(json);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Không thể tải thông tin khóa học',
+      );
+    }
+  }
+
   // Tạo khóa học
   Future<CourseModel> createCourse(CourseModel course) async {
     try {

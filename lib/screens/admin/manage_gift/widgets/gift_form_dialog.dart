@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile/data/models/gift_model.dart';
 import 'package:mobile/domain/repositories/common/upload_repository.dart';
 import 'package:mobile/utils/toast_helper.dart';
@@ -201,7 +202,7 @@ class _GiftFormDialogState extends State<GiftFormDialog> {
                             image:
                                 _imageUrl != null
                                     ? DecorationImage(
-                                      image: NetworkImage(_imageUrl!),
+                                      image: CachedNetworkImageProvider(_imageUrl!),
                                       fit: BoxFit.cover,
                                     )
                                     : null,

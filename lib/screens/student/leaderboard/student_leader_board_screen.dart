@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile/screens/student/leaderboard/student_leaderboard_view_model.dart';
 import 'package:mobile/services/auth/auth_service.dart';
 import 'package:mobile/data/models/leaderboard_model.dart';
@@ -331,7 +332,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
                 radius: rank == 1 ? 32 : 26,
                 backgroundImage:
                     user.avatarUrl != null
-                        ? NetworkImage(user.avatarUrl!)
+                        ? CachedNetworkImageProvider(user.avatarUrl!)
                         : null,
                 child: user.avatarUrl == null ? Text(user.name[0]) : null,
               ),
@@ -430,7 +431,7 @@ class _StudentLeaderboardScreenState extends State<StudentLeaderboardScreen> {
           CircleAvatar(
             radius: 20,
             backgroundImage:
-                user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                user.avatarUrl != null ? CachedNetworkImageProvider(user.avatarUrl!) : null,
             child: user.avatarUrl == null ? Text(user.name[0]) : null,
           ),
           const SizedBox(width: 12),

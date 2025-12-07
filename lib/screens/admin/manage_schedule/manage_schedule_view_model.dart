@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/class_model.dart';
 import 'package:mobile/data/models/class_schedule_model.dart';
@@ -32,6 +33,9 @@ class ManageScheduleViewModel extends ChangeNotifier {
   String _sortBy = 'time';
   String _sortOrder = 'asc';
 
+  // Debounce timer for search
+  Timer? _debounce;
+
   List<ClassScheduleModel> get schedules => _schedules;
   List<RoomModel> get activeRooms => _activeRooms;
   List<ClassModel> get classes => _classes;
@@ -41,6 +45,12 @@ class ManageScheduleViewModel extends ChangeNotifier {
   int? get filterDayOfWeek => _filterDayOfWeek;
   String get sortBy => _sortBy;
   String get sortOrder => _sortOrder;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
 
   Future<void> loadData() async {
     _isLoading = true;
@@ -81,10 +91,13 @@ class ManageScheduleViewModel extends ChangeNotifier {
   }
 
   void updateSearchTeacher(String value) {
-    if (_searchTeacher != value) {
-      _searchTeacher = value;
-      _refreshSchedules();
-    }
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchTeacher != value) {
+        _searchTeacher = value;
+        _refreshSchedules();
+      }
+    });
   }
 
   void updateFilterDay(int? dayOfWeek) {

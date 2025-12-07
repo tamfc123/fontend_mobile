@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile/screens/teacher/manage_class/teacher_class_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -86,7 +87,7 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
                     radius: 24,
                     backgroundImage:
                         widget.avatarUrl != null
-                            ? NetworkImage(widget.avatarUrl!)
+                            ? CachedNetworkImageProvider(widget.avatarUrl!)
                             : null,
                     child:
                         widget.avatarUrl == null

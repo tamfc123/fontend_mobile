@@ -90,4 +90,17 @@ class TeacherClassRepository {
       throw Exception(e.response?.data['message'] ?? 'Lỗi tải thông tin');
     }
   }
+
+  Future<TeacherClassModel> getClassById(String classId) async {
+    try {
+      final response = await _apiClient.dio.get(
+        ApiConfig.teacherClassById(classId),
+      );
+      return TeacherClassModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Lỗi tải thông tin lớp học',
+      );
+    }
+  }
 }

@@ -10,13 +10,13 @@ class BaseAdminScreen extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData headerIcon;
-  final VoidCallback onAddPressed;
+  final VoidCallback? onAddPressed;
   final String addLabel;
   final VoidCallback? onBackPressed; // Null nếu không có nút back
 
   // --- Search ---
-  final TextEditingController searchController;
-  final String searchHint;
+  final TextEditingController? searchController;
+  final String? searchHint;
   final bool isLoading;
   final int totalCount;
   final String countLabel; // "chương", "bài", "từ"...
@@ -33,8 +33,8 @@ class BaseAdminScreen extends StatelessWidget {
     required this.onAddPressed,
     required this.addLabel,
     this.onBackPressed,
-    required this.searchController,
-    required this.searchHint,
+    this.searchController,
+    this.searchHint,
     required this.isLoading,
     required this.totalCount,
     required this.countLabel,
@@ -281,30 +281,31 @@ class BaseAdminScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Add button
-        ElevatedButton.icon(
-          onPressed: onAddPressed,
-          icon: Icon(
-            Icons.add_circle_outline,
-            size: _getButtonIconSize(context),
-          ),
-          label: Text(
-            addLabel,
-            style: TextStyle(
-              fontSize: _getButtonFontSize(context),
-              fontWeight: FontWeight.w600,
+        // Add button (only show if onAddPressed is provided)
+        if (onAddPressed != null)
+          ElevatedButton.icon(
+            onPressed: onAddPressed,
+            icon: Icon(
+              Icons.add_circle_outline,
+              size: _getButtonIconSize(context),
+            ),
+            label: Text(
+              addLabel,
+              style: TextStyle(
+                fontSize: _getButtonFontSize(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: _getButtonPadding(context),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryBlue,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: _getButtonPadding(context),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -378,37 +379,43 @@ class BaseAdminScreen extends StatelessWidget {
           ),
         ),
 
-        // NÚT THÊM
-        SizedBox(width: isTablet ? 8 : 16),
-        ElevatedButton.icon(
-          onPressed: onAddPressed,
-          icon: Icon(
-            Icons.add_circle_outline,
-            size: _getButtonIconSize(context),
-          ),
-          label: Text(
-            addLabel,
-            style: TextStyle(
-              fontSize: _getButtonFontSize(context),
-              fontWeight: FontWeight.w600,
+        // NÚT THÊM (only show if onAddPressed is provided)
+        if (onAddPressed != null) ...[
+          SizedBox(width: isTablet ? 8 : 16),
+          ElevatedButton.icon(
+            onPressed: onAddPressed,
+            icon: Icon(
+              Icons.add_circle_outline,
+              size: _getButtonIconSize(context),
+            ),
+            label: Text(
+              addLabel,
+              style: TextStyle(
+                fontSize: _getButtonFontSize(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: _getButtonPadding(context),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryBlue,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: _getButtonPadding(context),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
+        ],
       ],
     );
   }
 
   // Mobile Search (Stacked)
   Widget _buildMobileSearch(BuildContext context) {
+    if (searchController == null || searchHint == null) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -429,14 +436,14 @@ class BaseAdminScreen extends StatelessWidget {
                 size: 20,
               ),
               suffixIcon:
-                  searchController.text.isNotEmpty
+                  (searchController?.text.isNotEmpty ?? false)
                       ? IconButton(
                         icon: Icon(
                           Icons.clear,
                           color: Colors.grey.shade600,
                           size: 20,
                         ),
-                        onPressed: searchController.clear,
+                        onPressed: () => searchController?.clear(),
                       )
                       : null,
               border: InputBorder.none,
@@ -478,10 +485,10 @@ class BaseAdminScreen extends StatelessWidget {
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 prefixIcon: const Icon(Icons.search, color: primaryBlue),
                 suffixIcon:
-                    searchController.text.isNotEmpty
+                    (searchController?.text.isNotEmpty ?? false)
                         ? IconButton(
                           icon: Icon(Icons.clear, color: Colors.grey.shade600),
-                          onPressed: searchController.clear,
+                          onPressed: () => searchController?.clear(),
                         )
                         : null,
                 border: InputBorder.none,

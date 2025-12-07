@@ -8,6 +8,7 @@ import 'package:mobile/domain/repositories/admin/admin_class_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_course_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_dashboard_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_gift_repository.dart';
+import 'package:mobile/domain/repositories/admin/admin_gift_redemption_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_lesson_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_media_repository.dart';
 import 'package:mobile/domain/repositories/admin/admin_module_repository.dart';
@@ -74,6 +75,9 @@ void setupLocator() {
   getIt.registerLazySingleton(() => AdminGiftRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(
     () => AdminRedemptionRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton(
+    () => AdminGiftRedemptionRepository(getIt<ApiClient>()),
   );
 
   // ===========================================================================

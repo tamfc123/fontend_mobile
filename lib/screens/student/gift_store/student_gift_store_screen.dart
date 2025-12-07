@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart'; // Để format ngày tháng
 import 'package:mobile/data/models/gift_model.dart';
 import 'package:mobile/screens/student/gift_store/student_gift_view_model.dart';
+import 'package:mobile/screens/student/gift_store/widgets/confirm_redeem_dialog.dart';
 import 'package:mobile/services/auth/auth_service.dart';
 import 'package:mobile/shared_widgets/admin/common_empty_state.dart';
 import 'package:provider/provider.dart';
@@ -104,7 +106,7 @@ class _StudentGiftStoreScreenState extends State<StudentGiftStoreScreen>
 class _StoreTab extends StatelessWidget {
   const _StoreTab();
 
-  void _confirmRedeem(BuildContext context, GiftModel gift) {
+  void _confirmRedeem(BuildContext context, GiftModel gift) async {
     final userCoins = context.read<AuthService>().currentUser?.coins ?? 0;
 
     if (userCoins < gift.coinPrice) {
@@ -119,61 +121,8 @@ class _StoreTab extends StatelessWidget {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Xác nhận đổi quà'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Bạn muốn dùng ${gift.coinPrice} xu để đổi lấy:'),
-                const SizedBox(height: 8),
-                Text(
-                  gift.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Lưu ý: Sau khi đổi, hãy đến quầy lễ tân và đọc tên/email để nhận quà.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final success = await context
-                      .read<StudentGiftViewModel>()
-                      .redeemGift(gift.id);
-                  if (success) {
-                    // ✅ [ĐÃ SỬA] Gọi AuthService để cập nhật số dư cho Consumer ở trên
-                    // ignore: use_build_context_synchronously
-                    context.read<AuthService>().fetchCurrentUser();
-                  }
-                },
-                child: const Text(
-                  'Đổi ngay',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-    );
+    // Show modern dialog
+    await showRedeemGiftDialog(context, gift);
   }
 
   @override
@@ -226,7 +175,9 @@ class _StoreTab extends StatelessWidget {
                       image:
                           gift.imageUrl != null
                               ? DecorationImage(
-                                image: NetworkImage(gift.imageUrl!),
+                                image: CachedNetworkImageProvider(
+                                  gift.imageUrl!,
+                                ),
                                 fit: BoxFit.cover,
                               )
                               : null,
@@ -371,7 +322,9 @@ class _MyRedemptionTab extends StatelessWidget {
                       image:
                           item.giftImage != null
                               ? DecorationImage(
-                                image: NetworkImage(item.giftImage!),
+                                image: CachedNetworkImageProvider(
+                                  item.giftImage!,
+                                ),
                                 fit: BoxFit.cover,
                               )
                               : null,
