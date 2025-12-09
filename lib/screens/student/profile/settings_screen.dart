@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/shared_widgets/logout_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -9,11 +10,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Sample states for switches
-  bool _notificationsEnabled = true;
-  bool _soundEnabled = true;
-  bool _darkModeEnabled = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,110 +66,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // Notifications Section
-          _buildSectionHeader("Thông báo"),
-          const SizedBox(height: 12),
-
-          _buildSettingCard(
-            context,
-            items: [
-              _SettingItem(
-                icon: Icons.notifications_outlined,
-                title: "Thông báo push",
-                subtitle: "Nhận thông báo về lớp học",
-                color: Colors.purple,
-                trailing: Switch(
-                  value: _notificationsEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _notificationsEnabled = value;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                ),
-              ),
-              _SettingItem(
-                icon: Icons.volume_up_rounded,
-                title: "Âm thanh",
-                subtitle: "Bật/tắt âm thanh thông báo",
-                color: Colors.green,
-                trailing: Switch(
-                  value: _soundEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _soundEnabled = value;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Appearance Section
-          _buildSectionHeader("Giao diện"),
-          const SizedBox(height: 12),
-
-          _buildSettingCard(
-            context,
-            items: [
-              _SettingItem(
-                icon: Icons.dark_mode_outlined,
-                title: "Chế độ tối",
-                subtitle: "Bật chế độ tối cho ứng dụng",
-                color: Colors.indigo,
-                trailing: Switch(
-                  value: _darkModeEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _darkModeEnabled = value;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                ),
-              ),
-              _SettingItem(
-                icon: Icons.language_rounded,
-                title: "Ngôn ngữ",
-                subtitle: "Tiếng Việt",
-                color: Colors.teal,
-                onTap: () {
-                  _showLanguageDialog(context);
-                },
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Learning Section
-          _buildSectionHeader("Học tập"),
-          const SizedBox(height: 12),
-
-          _buildSettingCard(
-            context,
-            items: [
-              _SettingItem(
-                icon: Icons.book_rounded,
-                title: "Từ vựng đã lưu",
-                subtitle: "Xem lại các từ vựng đã học",
-                color: Colors.pink,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Tính năng đang phát triển'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
           // Support Section
           _buildSectionHeader("Hỗ trợ"),
           const SizedBox(height: 12),
@@ -205,6 +97,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
             ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Logout Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap:
+                    () => showLogoutDialog(
+                      context,
+                      message: 'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?',
+                    ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.red.shade100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.logout_rounded,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Đăng xuất',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: Colors.red.shade200,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
 
           const SizedBox(height: 40),
@@ -306,82 +263,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               // Trailing widget
-              if (item.trailing != null)
-                item.trailing!
-              else
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: Colors.grey.shade400,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Language selection dialog
-  void _showLanguageDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text(
-              'Chọn ngôn ngữ',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildLanguageOption('Tiếng Việt', true),
-                const SizedBox(height: 8),
-                _buildLanguageOption('English', false),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.grey.shade400,
               ),
             ],
           ),
-    );
-  }
-
-  // Language option widget
-  Widget _buildLanguageOption(String language, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color:
-            isSelected
-                ? Colors.blue.withValues(alpha: 0.1)
-                : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected ? Colors.blue : Colors.grey.shade300,
-          width: 1.5,
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              language,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? Colors.blue : const Color(0xFF1F2937),
-              ),
-            ),
-          ),
-          if (isSelected)
-            const Icon(Icons.check_circle, color: Colors.blue, size: 20),
-        ],
       ),
     );
   }
@@ -442,7 +331,6 @@ class _SettingItem {
   final String? subtitle;
   final Color color;
   final VoidCallback? onTap;
-  final Widget? trailing;
 
   _SettingItem({
     required this.icon,
@@ -450,6 +338,5 @@ class _SettingItem {
     this.subtitle,
     required this.color,
     this.onTap,
-    this.trailing,
   });
 }

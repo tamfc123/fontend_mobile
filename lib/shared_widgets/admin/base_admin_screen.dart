@@ -11,7 +11,7 @@ class BaseAdminScreen extends StatelessWidget {
   final String? subtitle;
   final IconData headerIcon;
   final VoidCallback? onAddPressed;
-  final String addLabel;
+  final String? addLabel;
   final VoidCallback? onBackPressed; // Null nếu không có nút back
 
   // --- Search ---
@@ -30,8 +30,8 @@ class BaseAdminScreen extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.headerIcon,
-    required this.onAddPressed,
-    required this.addLabel,
+    this.onAddPressed,
+    this.addLabel,
     this.onBackPressed,
     this.searchController,
     this.searchHint,
@@ -290,7 +290,7 @@ class BaseAdminScreen extends StatelessWidget {
               size: _getButtonIconSize(context),
             ),
             label: Text(
-              addLabel,
+              addLabel!,
               style: TextStyle(
                 fontSize: _getButtonFontSize(context),
                 fontWeight: FontWeight.w600,
@@ -389,7 +389,7 @@ class BaseAdminScreen extends StatelessWidget {
               size: _getButtonIconSize(context),
             ),
             label: Text(
-              addLabel,
+              addLabel!,
               style: TextStyle(
                 fontSize: _getButtonFontSize(context),
                 fontWeight: FontWeight.w600,

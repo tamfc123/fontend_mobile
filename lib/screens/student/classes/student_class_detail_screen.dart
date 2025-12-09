@@ -78,36 +78,22 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
 
                 const SizedBox(height: 20),
 
-                // 2. QUICK ACTIONS (Điểm danh, Bài tập) - Có hiệu ứng nhún
+                // 2. BÀI TẬP BUTTON - Full width, nổi bật
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _AnimatedActionCard(
-                          icon: Icons.how_to_reg_rounded,
-                          title: 'Điểm danh',
-                          color: const Color(0xFF10B981), // Green
-                          delay: 100, // Xuất hiện sau header chút xíu
-                          onTap: () {},
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _AnimatedActionCard(
-                          icon: Icons.assignment_rounded,
-                          title: 'Bài tập',
-                          color: const Color(0xFFF59E0B), // Orange
-                          delay: 200,
-                          onTap: () {
-                            context.pushNamed(
-                              'student-quiz-list',
-                              extra: widget.studentClassModel,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  child: _AnimatedActionCard(
+                    icon: Icons.assignment_rounded,
+                    title: 'Xem bài tập',
+                    subtitle: 'Danh sách bài tập của lớp',
+                    color: const Color(0xFFF59E0B), // Orange
+                    delay: 100,
+                    isFullWidth: true,
+                    onTap: () {
+                      context.pushNamed(
+                        'student-quiz-list',
+                        extra: widget.studentClassModel,
+                      );
+                    },
                   ),
                 ),
 
@@ -353,16 +339,20 @@ class _AnimatedListItem extends StatelessWidget {
 class _AnimatedActionCard extends StatefulWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Color color;
   final VoidCallback onTap;
   final int delay;
+  final bool isFullWidth;
 
   const _AnimatedActionCard({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.color,
     required this.onTap,
     this.delay = 0,
+    this.isFullWidth = false,
   });
 
   @override
@@ -429,28 +419,86 @@ class _AnimatedActionCardState extends State<_AnimatedActionCard>
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(widget.icon, color: widget.color, size: 28),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B).withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
+            padding: EdgeInsets.symmetric(
+              vertical: widget.isFullWidth ? 20 : 20,
+              horizontal: widget.isFullWidth ? 20 : 16,
             ),
+            child:
+                widget.isFullWidth
+                    ? Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: widget.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            widget.icon,
+                            color: widget.color,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.title,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              if (widget.subtitle != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.subtitle!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: widget.color,
+                          size: 20,
+                        ),
+                      ],
+                    )
+                    : Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: widget.color.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.icon,
+                            color: widget.color,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(
+                              0xFF1E293B,
+                            ).withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
           ),
         ),
       ),

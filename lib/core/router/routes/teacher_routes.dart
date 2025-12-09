@@ -27,7 +27,7 @@ class TeacherRoutes {
                 path: ':classId/students',
                 builder: (context, state) {
                   final classId = state.pathParameters['classId']!;
-                  final className = state.extra as String;
+                  final className = state.extra as String? ?? 'Lớp học';
 
                   return StudentListScreen(
                     classId: classId,

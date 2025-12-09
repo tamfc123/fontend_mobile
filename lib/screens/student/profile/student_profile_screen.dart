@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/screens/student/profile/student_profile_view_model.dart';
-import 'package:mobile/shared_widgets/logout_dialog.dart';
 import 'package:mobile/utils/color_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -26,13 +25,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StudentProfileViewModel>().loadProfile();
     });
-  }
-
-  void _handleLogout(BuildContext context) async {
-    await showLogoutDialog(
-      context,
-      message: 'Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?',
-    );
   }
 
   Future<void> _pickAndUploadAvatar(BuildContext context) async {
@@ -107,7 +99,9 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                                     backgroundImage:
                                         user.avatarUrl != null &&
                                                 user.avatarUrl!.isNotEmpty
-                                            ? CachedNetworkImageProvider(user.avatarUrl!)
+                                            ? CachedNetworkImageProvider(
+                                              user.avatarUrl!,
+                                            )
                                             : const AssetImage(
                                                   "assets/images/avatar.png",
                                                 )
@@ -335,31 +329,20 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.grey.shade200),
                         ),
-                        child: Column(
-                          children: [
-                            _buildActionRow(
-                              Icons.settings_rounded,
-                              "Cài đặt tài khoản",
-                              () async {
-                                final result = await context.push(
-                                  '/student/profile/settings',
-                                );
-                                // Reload only if profile was updated
-                                if (mounted && result == true) {
-                                  await context
-                                      .read<StudentProfileViewModel>()
-                                      .loadProfile();
-                                }
-                              },
-                            ),
-                            const Divider(height: 1, indent: 50),
-                            _buildActionRow(
-                              Icons.logout_rounded,
-                              "Đăng xuất",
-                              () => _handleLogout(context),
-                              isDestructive: true,
-                            ),
-                          ],
+                        child: _buildActionRow(
+                          Icons.settings_rounded,
+                          "Cài đặt tài khoản",
+                          () async {
+                            final result = await context.push(
+                              '/student/profile/settings',
+                            );
+                            // Reload only if profile was updated
+                            if (mounted && result == true) {
+                              await context
+                                  .read<StudentProfileViewModel>()
+                                  .loadProfile();
+                            }
+                          },
                         ),
                       ),
                       const SizedBox(height: 40),

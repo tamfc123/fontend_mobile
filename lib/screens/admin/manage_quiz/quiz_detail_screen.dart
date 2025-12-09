@@ -4,7 +4,6 @@ import 'package:mobile/data/models/course_model.dart';
 import 'package:mobile/data/models/quiz_models.dart';
 import 'package:mobile/screens/admin/manage_quiz/quiz_detail_view_model.dart';
 import 'package:mobile/shared_widgets/admin/action_icon_button.dart';
-import 'package:mobile/shared_widgets/admin/base_admin_screen.dart';
 import 'package:mobile/shared_widgets/admin/comfirm_delete_dialog.dart';
 import 'package:provider/provider.dart';
 

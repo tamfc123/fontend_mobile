@@ -71,44 +71,70 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
       ),
       body: Column(
         children: [
+          // Modern Filter Section
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            height: 64,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final filter = _filters[index];
-                final isSelected = filter['value'] == currentFilter;
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list_rounded,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Lọc theo kỹ năng',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: _filters.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final filter = _filters[index];
+                      final isSelected = filter['value'] == currentFilter;
 
-                return ChoiceChip(
-                  label: Text(filter['label']!),
-                  selected: isSelected,
-                  showCheckmark: false,
-                  selectedColor: primaryColor.withValues(alpha: 0.1),
-                  backgroundColor: Colors.white,
-                  side: BorderSide(
-                    color: isSelected ? primaryColor : Colors.grey.shade300,
-                    width: 1.5,
-                  ),
-                  labelStyle: TextStyle(
-                    color: isSelected ? primaryColor : Colors.grey.shade700,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  ),
-                  onSelected: (selected) {
-                    if (selected) {
-                      // Gọi Service để lọc lại danh sách
-                      context.read<StudentQuizViewModel>().loadQuizList(
-                        widget.classId,
-                        filter: filter['value']!,
+                      return _ModernFilterChip(
+                        label: filter['label']!,
+                        isSelected: isSelected,
+                        onTap: () {
+                          context.read<StudentQuizViewModel>().loadQuizList(
+                            widget.classId,
+                            filter: filter['value']!,
+                          );
+                        },
                       );
-                    }
-                  },
-                );
-              },
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -537,6 +563,104 @@ class _SlideInAnimationState extends State<SlideInAnimation>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(position: _slideAnimation, child: widget.child),
+    );
+  }
+}
+
+// ✅ MODERN FILTER CHIP WIDGET
+class _ModernFilterChip extends StatefulWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ModernFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_ModernFilterChip> createState() => _ModernFilterChipState();
+}
+
+class _ModernFilterChipState extends State<_ModernFilterChip>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _scaleController.forward(),
+      onTapUp: (_) {
+        _scaleController.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _scaleController.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            gradient:
+                widget.isSelected
+                    ? const LinearGradient(
+                      colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                    : null,
+            color: widget.isSelected ? null : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color:
+                  widget.isSelected
+                      ? Colors.transparent
+                      : const Color(0xFFE2E8F0),
+              width: 1.5,
+            ),
+            boxShadow:
+                widget.isSelected
+                    ? [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                    : [],
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.w600,
+              color: widget.isSelected ? Colors.white : const Color(0xFF64748B),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

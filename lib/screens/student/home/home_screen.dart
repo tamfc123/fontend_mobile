@@ -360,7 +360,9 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                             backgroundImage:
                                 user.avatarUrl != null &&
                                         user.avatarUrl!.isNotEmpty
-                                    ? CachedNetworkImageProvider(user.avatarUrl!)
+                                    ? CachedNetworkImageProvider(
+                                      user.avatarUrl!,
+                                    )
                                     : const AssetImage(
                                           "assets/images/avatar.png",
                                         )
@@ -679,7 +681,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                                 child: _buildAchievementCard(
                                   icon: Icons.leaderboard_rounded,
                                   title: rankTitle,
-                                  subtitle: 'XH tuần',
+                                  subtitle: 'Xếp hạng',
                                   color: AppColors.secondary,
                                   progress: rankProgress,
                                 ),

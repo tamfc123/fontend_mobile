@@ -13,7 +13,7 @@ class ScheduleDataSource extends CalendarDataSource {
     resources =
         rooms.map((room) {
           return CalendarResource(
-            id: room.id, // ✅ Dùng GUID String trực tiếp, không cần parse int
+            id: room.id,
             displayName: room.name,
             color: const Color(0xFFE3F2FD), // Màu nền cột resource
           );
@@ -33,20 +33,10 @@ class ScheduleDataSource extends CalendarDataSource {
     // Tạo Set ID phòng để check nhanh xem lịch có thuộc phòng hợp lệ không
     final validRoomIds = rooms.map((r) => r.id).toSet();
 
-    debugPrint("📅 Bắt đầu expand ${source.length} schedules");
-
     for (var schedule in source) {
-      debugPrint(
-        "\n🔍 Xử lý: ${schedule.className} - ${schedule.teacherName} - ${schedule.dayOfWeek}",
-      );
-      debugPrint("   Range: ${schedule.startDate} → ${schedule.endDate}");
-
       // 1. Kiểm tra xem lịch có gắn với phòng nào đang hiển thị không
       // Nếu roomId của lịch không nằm trong danh sách rooms active -> Bỏ qua
       if (!validRoomIds.contains(schedule.roomId)) {
-        debugPrint(
-          "   ❌ SKIP: Phòng ${schedule.roomId} không trong danh sách active",
-        );
         continue;
       }
 
@@ -69,11 +59,8 @@ class ScheduleDataSource extends CalendarDataSource {
       // Convert "Thứ 2" -> int (1..7)
       final targetWeekday = _dayStringToInt(schedule.dayOfWeek);
       if (targetWeekday == -1) {
-        debugPrint("   ❌ SKIP: dayOfWeek không hợp lệ");
         continue;
       }
-
-      int appointmentCount = 0;
 
       // 3. Vòng lặp tạo Appointment cho từng ngày
       while (!current.isAfter(endLoop)) {
@@ -121,7 +108,6 @@ class ScheduleDataSource extends CalendarDataSource {
                   ], // ✅ Map vào cột Phòng bằng GUID
                 ),
               );
-              appointmentCount++;
             }
           } catch (e) {
             debugPrint("Lỗi parse giờ cho lịch ${schedule.id}: $e");
@@ -130,13 +116,7 @@ class ScheduleDataSource extends CalendarDataSource {
         // Tăng 1 ngày
         current = current.add(const Duration(days: 1));
       }
-
-      debugPrint("   ✅ Tạo được $appointmentCount appointments");
     }
-
-    debugPrint(
-      "\n📊 Tổng kết: ${expanded.length} appointments được tạo từ ${source.length} schedules",
-    );
     return expanded;
   }
 

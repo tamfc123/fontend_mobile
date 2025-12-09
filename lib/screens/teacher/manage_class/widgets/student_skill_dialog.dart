@@ -29,7 +29,10 @@ class _StudentSkillDialogState extends State<StudentSkillDialog> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Delay API call until after build completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {

@@ -85,9 +85,6 @@ class _TeacherQuizListScreenState extends State<TeacherQuizListScreen> {
       subtitle: 'Lớp: ${widget.classModel.name}', // Hiển thị tên lớp
       headerIcon: Icons.quiz_rounded,
 
-      addLabel: 'Làm mới',
-      onAddPressed: () => _fetchData(search: _searchController.text),
-
       onBackPressed: () => Navigator.of(context).pop(),
 
       searchController: _searchController,

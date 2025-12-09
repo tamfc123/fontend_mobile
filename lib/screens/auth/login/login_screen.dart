@@ -79,93 +79,133 @@ class _LoginScreenState extends State<LoginScreen>
       create: (_) => LoginViewModel(context.read<AuthService>()),
       child: Consumer<LoginViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            backgroundColor: Colors.white,
-            body: SingleChildScrollView(
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 50),
+          return Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.white,
+                body: SingleChildScrollView(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 50),
 
-                    // Animated logo with fade
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Image.asset(
-                        'assets/images/Welcome.png',
-                        width: double.infinity,
-                        height: 300,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-
-                    // Animated title
-                    SlideTransition(
-                      position: _slideAnimation1,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: const Text(
-                          'Đăng nhập',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
+                        // Animated logo with fade
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Image.asset(
+                            'assets/images/Welcome.png',
+                            width: double.infinity,
+                            height: 300,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      ),
-                    ),
 
-                    // Animated form
-                    SlideTransition(
-                      position: _slideAnimation2,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: Form(
-                          key: _formKey,
-                          child: LoginForm(
-                            emailController: _emailController,
-                            passwordController: _passwordController,
-                            isLoading: viewModel.isLoading,
-                            onLoginPressed: () async {
-                              if (!(_formKey.currentState?.validate() ??
-                                  false)) {
-                                return;
-                              }
-
-                              final success = await viewModel.login(
-                                _emailController.text.trim(),
-                                _passwordController.text.trim(),
-                              );
-
-                              if (!mounted) return;
-
-                              if (success) {
-                                final authService = context.read<AuthService>();
-                                final userRole =
-                                    authService.currentUser?.role.toLowerCase();
-
-                                if (userRole == 'student') {
-                                  context.go('/student');
-                                } else if (userRole == 'teacher' ||
-                                    userRole == 'admin') {
-                                  ToastHelper.showError(
-                                    'Tài khoản này chỉ sử dụng trên website. Vui lòng đăng nhập trên trình duyệt.',
-                                  );
-                                } else {
-                                  ToastHelper.showError(
-                                    'Vai trò không hợp lệ. Vui lòng liên hệ quản trị viên.',
-                                  );
-                                }
-                              }
-                            },
+                        // Animated title
+                        SlideTransition(
+                          position: _slideAnimation1,
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: const Text(
+                              'Đăng nhập',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+
+                        // Animated form
+                        SlideTransition(
+                          position: _slideAnimation2,
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: Form(
+                              key: _formKey,
+                              child: LoginForm(
+                                emailController: _emailController,
+                                passwordController: _passwordController,
+                                isLoading: viewModel.isLoading,
+                                onLoginPressed: () async {
+                                  if (!(_formKey.currentState?.validate() ??
+                                      false)) {
+                                    return;
+                                  }
+
+                                  final success = await viewModel.login(
+                                    _emailController.text.trim(),
+                                    _passwordController.text.trim(),
+                                  );
+
+                                  if (!mounted) return;
+
+                                  if (success) {
+                                    final authService =
+                                        context.read<AuthService>();
+                                    final userRole =
+                                        authService.currentUser?.role
+                                            .toLowerCase();
+
+                                    if (userRole == 'student') {
+                                      context.go('/student');
+                                    } else if (userRole == 'teacher' ||
+                                        userRole == 'admin') {
+                                      ToastHelper.showError(
+                                        'Tài khoản này chỉ sử dụng trên website. Vui lòng đăng nhập trên trình duyệt.',
+                                      );
+                                    } else {
+                                      ToastHelper.showError(
+                                        'Vai trò không hợp lệ. Vui lòng liên hệ quản trị viên.',
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+
+              // Full-screen loading overlay
+              if (viewModel.isLoading)
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(
+                            width: 70,
+                            height: 70,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Đang đăng nhập...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),

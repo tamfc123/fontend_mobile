@@ -57,39 +57,86 @@ class _LessonFlashcardsScreenState extends State<LessonFlashcardsScreen> {
   Widget build(BuildContext context) {
     final service = context.watch<StudentFlashcardViewModel>();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          widget.lesson.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: AppColors.textPrimary,
+    return Stack(
+      children: [
+        PopScope(
+          canPop: !service.isAssessing,
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              title: Text(
+                widget.lesson.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              centerTitle: true,
+              backgroundColor: AppColors.cardBackground,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            body: _buildBody(service),
+            bottomNavigationBar: _buildRecordingControls(service),
           ),
         ),
-        centerTitle: true,
-        backgroundColor: AppColors.cardBackground,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.1),
-                  Colors.transparent,
-                ],
+
+        // Full-screen overlay during assessment
+        if (service.isAssessing)
+          Positioned.fill(
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.85),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 4,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Đang chấm điểm...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Vui lòng đợi trong giây lát',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
-      body: _buildBody(service),
-      bottomNavigationBar: _buildRecordingControls(service),
+      ],
     );
   }
 
