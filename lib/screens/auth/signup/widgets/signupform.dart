@@ -271,7 +271,7 @@ class _SignupFormState extends State<SignupForm> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: widget.onSignupPressed,
+            onPressed: widget.isLoading ? null : widget.onSignupPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
@@ -281,16 +281,10 @@ class _SignupFormState extends State<SignupForm> {
               ),
               elevation: 5,
             ),
-            child:
-                widget.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                      'Đăng ký',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            child: const Text(
+              'Đăng ký',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],

@@ -75,10 +75,17 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
           quiz.mediaUrl != null &&
           quiz.mediaUrl!.isNotEmpty) {
         try {
+          debugPrint("🔊 Loading quiz audio: ${quiz.mediaUrl}");
           await _mainAudioPlayer.setUrl(quiz.mediaUrl!);
           setState(() => _isMainAudioLoaded = true);
+          debugPrint("✅ Quiz audio loaded successfully");
         } catch (e) {
-          debugPrint("Lỗi load audio chung: $e");
+          debugPrint("❌ Lỗi load audio chung: $e");
+          if (mounted) {
+            ToastHelper.showError(
+              "Không thể tải file nghe. Vui lòng kiểm tra kết nối.",
+            );
+          }
         }
       }
 
@@ -246,7 +253,10 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
 
         // Chuyển trang sau khi đóng popup
         if (mounted) {
-          context.pushReplacementNamed(
+          // Pop màn hình làm bài trước
+          context.pop();
+          // Sau đó push màn hình review
+          context.pushNamed(
             'student-quiz-review',
             extra: {'classId': widget.classId, 'quizId': widget.quizId},
           );
@@ -550,14 +560,20 @@ class _StudentQuizTakingScreenState extends State<StudentQuizTakingScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () async {
-                  if (playing) {
-                    await player.pause();
-                  } else {
-                    _stopAllOtherPlayers(questionId); // Dừng cái khác
-                    if (player.processingState == ProcessingState.idle) {
-                      await player.setUrl(url);
+                  try {
+                    if (playing) {
+                      await player.pause();
+                    } else {
+                      _stopAllOtherPlayers(questionId); // Dừng cái khác
+                      if (player.processingState == ProcessingState.idle) {
+                        debugPrint("🔊 Loading question audio: $url");
+                        await player.setUrl(url);
+                      }
+                      await player.play();
                     }
-                    await player.play();
+                  } catch (e) {
+                    debugPrint("❌ Question audio error: $e");
+                    ToastHelper.showError("Không thể phát audio câu hỏi");
                   }
                 },
               );

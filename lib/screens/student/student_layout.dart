@@ -24,60 +24,122 @@ class _StudentLayoutState extends State<StudentLayout> {
     final isEditProfile = location.contains('/edit-profile');
     final isChangePassword = location.contains('/change-password');
     final isVocabularyLevel = location.contains('/vocabulary/level');
+    final isClassList = location.contains('/student-class');
+    final isSchedule = location.contains('/student-schedule');
+    final isGrades = location.contains('/grades');
+    final isLeaderboard = location.contains('/leader-board');
+    final isGiftStore = location.contains('/gift-store');
+
     final shouldHideBottomNav =
         isQuizTaking ||
         isQuizReview ||
         isEditProfile ||
         isChangePassword ||
-        isVocabularyLevel;
+        isVocabularyLevel ||
+        isClassList ||
+        isSchedule ||
+        isGrades ||
+        isLeaderboard ||
+        isGiftStore;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: widget.child, // GoRouter sẽ render child
+      body: widget.child,
       bottomNavigationBar:
           shouldHideBottomNav
-              ? null // Hide bottom nav during quiz
-              : BottomNavigationBar(
-                backgroundColor: Colors.white,
-                currentIndex: widget.currentIndex,
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: Colors.blueAccent,
-                unselectedItemColor: Colors.grey,
-                onTap: (index) {
-                  switch (index) {
-                    case 0:
-                      context.go('/student');
-                      break;
-                    case 1:
-                      context.go('/student/courses');
-                      break;
-                    case 2:
-                      context.go('/student/vocabulary');
-                      break;
-                    case 3:
-                      context.go('/student/profile');
-                      break;
-                  }
-                },
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_rounded),
-                    label: "Trang chủ",
+              ? null
+              : Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: BottomNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  currentIndex: widget.currentIndex,
+                  type: BottomNavigationBarType.fixed,
+                  selectedItemColor: const Color(0xFF3B82F6),
+                  unselectedItemColor: Colors.grey.shade400,
+                  selectedFontSize: 12,
+                  unselectedFontSize: 11,
+                  elevation: 0,
+                  selectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
                   ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.menu_book_rounded),
-                    label: "Khóa học",
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.translate_rounded),
-                    label: "Từ vựng",
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_rounded),
-                    label: "Tôi",
-                  ),
-                ],
+                  onTap: (index) {
+                    switch (index) {
+                      case 0:
+                        context.go('/student');
+                        break;
+                      case 1:
+                        context.go('/student/courses');
+                        break;
+                      case 2:
+                        context.go('/student/vocabulary');
+                        break;
+                      case 3:
+                        context.go('/student/profile');
+                        break;
+                    }
+                  },
+                  items: [
+                    _buildNavItem(
+                      icon: Icons.home_rounded,
+                      label: "Trang chủ",
+                      isSelected: widget.currentIndex == 0,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.menu_book_rounded,
+                      label: "Khóa học",
+                      isSelected: widget.currentIndex == 1,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.translate_rounded,
+                      label: "Từ vựng",
+                      isSelected: widget.currentIndex == 2,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.person_rounded,
+                      label: "Tôi",
+                      isSelected: widget.currentIndex == 3,
+                    ),
+                  ],
+                ),
               ),
+    );
+  }
+
+  BottomNavigationBarItem _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+  }) {
+    return BottomNavigationBarItem(
+      icon: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient:
+              isSelected
+                  ? const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                  : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          size: isSelected ? 26 : 24,
+          color: isSelected ? Colors.white : Colors.grey.shade400,
+        ),
+      ),
+      label: label,
     );
   }
 }

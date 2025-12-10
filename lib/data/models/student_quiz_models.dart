@@ -173,6 +173,8 @@ class StudentQuizReviewModel {
   final DateTime submittedAt;
   final String? skillAnalysisJson;
   final String? readingPassage;
+  final String? skillType; // ✅ Added for listening quiz
+  final String? mediaUrl; // ✅ Added for listening audio
 
   final List<StudentQuestionReviewModel> questions;
 
@@ -183,6 +185,8 @@ class StudentQuizReviewModel {
     required this.submittedAt,
     this.skillAnalysisJson,
     this.readingPassage,
+    this.skillType,
+    this.mediaUrl,
     required this.questions,
   });
 
@@ -218,6 +222,8 @@ class StudentQuizReviewModel {
               : DateTime.now(),
       skillAnalysisJson: json['skillAnalysisJson'] ?? json['SkillAnalysisJson'],
       readingPassage: json['readingPassage'],
+      skillType: json['skillType'], // ✅ Map skillType
+      mediaUrl: json['mediaUrl'], // ✅ Map mediaUrl
       questions: questionsList,
     );
   }

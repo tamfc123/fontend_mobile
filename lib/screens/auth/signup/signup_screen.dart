@@ -69,116 +69,154 @@ class _SignupScreenState extends State<SignupScreen>
       create: (_) => SignupViewModel(context.read<AuthService>()),
       child: Consumer<SignupViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              elevation: 2,
-              shadowColor: Colors.black.withValues(alpha: 0.1),
-              leading: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
-                      width: 1,
+          return Stack(
+            children: [
+              Scaffold(
+                appBar: AppBar(
+                  backgroundColor: Colors.white,
+                  elevation: 2,
+                  shadowColor: Colors.black.withValues(alpha: 0.1),
+                  leading: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          context.go('/login');
+                        },
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Color(0xFF3B82F6),
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
-                  child: IconButton(
-                    onPressed: () {
-                      context.go('/login');
-                    },
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Color(0xFF3B82F6),
+                  title: const Text(
+                    'Đăng ký tài khoản',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937),
+                      letterSpacing: 0.3,
                     ),
-                    padding: EdgeInsets.zero,
                   ),
+                  centerTitle: true,
                 ),
-              ),
-              title: const Text(
-                'Đăng ký tài khoản',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F2937),
-                  letterSpacing: 0.3,
-                ),
-              ),
-              centerTitle: true,
-            ),
-            backgroundColor: Colors.white,
-            body: SingleChildScrollView(
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    //Form sign up with animation
-                    SlideTransition(
-                      position: _slideAnimation,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Form(
-                            key: _formKey,
-                            child: SignupForm(
-                              nameController: _nameController,
-                              dateController: _dateController,
-                              emailController: _emailController,
-                              phoneController: _phoneController,
-                              passwordController: _passwordController,
-                              confirmPasswordController:
-                                  _confirmPasswordController,
-                              onDatePicked: (pickedDate) {
-                                final utcDate = DateTime.utc(
-                                  pickedDate.year,
-                                  pickedDate.month,
-                                  pickedDate.day,
-                                );
+                backgroundColor: Colors.white,
+                body: SingleChildScrollView(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        //Form sign up with animation
+                        SlideTransition(
+                          position: _slideAnimation,
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Form(
+                                key: _formKey,
+                                child: SignupForm(
+                                  nameController: _nameController,
+                                  dateController: _dateController,
+                                  emailController: _emailController,
+                                  phoneController: _phoneController,
+                                  passwordController: _passwordController,
+                                  confirmPasswordController:
+                                      _confirmPasswordController,
+                                  onDatePicked: (pickedDate) {
+                                    final utcDate = DateTime.utc(
+                                      pickedDate.year,
+                                      pickedDate.month,
+                                      pickedDate.day,
+                                    );
 
-                                setState(() {
-                                  _selectedDate = utcDate;
-                                  _dateController.text =
-                                      "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
-                                });
-                              },
-                              isLoading: viewModel.isLoading,
-                              onSignupPressed: () async {
-                                if (!(_formKey.currentState?.validate() ??
-                                    false)) {
-                                  return;
-                                }
+                                    setState(() {
+                                      _selectedDate = utcDate;
+                                      _dateController.text =
+                                          "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
+                                    });
+                                  },
+                                  isLoading: viewModel.isLoading,
+                                  onSignupPressed: () async {
+                                    if (!(_formKey.currentState?.validate() ??
+                                        false)) {
+                                      return;
+                                    }
 
-                                final success = await viewModel.register(
-                                  name: _nameController.text.trim(),
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text.trim(),
-                                  phone: _phoneController.text.trim(),
-                                  birthday: _selectedDate!,
-                                );
+                                    final success = await viewModel.register(
+                                      name: _nameController.text.trim(),
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text.trim(),
+                                      phone: _phoneController.text.trim(),
+                                      birthday: _selectedDate!,
+                                    );
 
-                                if (!mounted) return;
+                                    if (!mounted) return;
 
-                                if (success) {
-                                  await Future.delayed(
-                                    const Duration(seconds: 2),
-                                  );
-                                  if (!mounted) return;
-                                  context.go('/login');
-                                }
-                              },
+                                    if (success) {
+                                      await Future.delayed(
+                                        const Duration(seconds: 2),
+                                      );
+                                      if (!mounted) return;
+                                      context.go('/login');
+                                    }
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+
+              // Full-screen loading overlay
+              if (viewModel.isLoading)
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(
+                            width: 70,
+                            height: 70,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Đang đăng ký...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),

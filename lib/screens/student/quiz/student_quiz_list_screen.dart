@@ -260,14 +260,22 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap:
               isSubmitted
-                  ? () {
-                    context.pushNamed(
+                  ? () async {
+                    await context.pushNamed(
                       'student-quiz-review',
                       extra: {'classId': widget.classId, 'quizId': quiz.id},
                     );
+                    // Reload quiz list after returning from review
+                    if (context.mounted) {
+                      context.read<StudentQuizViewModel>().loadQuizList(
+                        widget.classId,
+                        filter:
+                            context.read<StudentQuizViewModel>().currentFilter,
+                      );
+                    }
                   }
-                  : () {
-                    context.pushNamed(
+                  : () async {
+                    await context.pushNamed(
                       'student-quiz-taking',
                       extra: {
                         'classId': widget.classId,
@@ -275,6 +283,14 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
                         'quizTitle': quiz.title,
                       },
                     );
+                    // Reload quiz list after returning from taking
+                    if (context.mounted) {
+                      context.read<StudentQuizViewModel>().loadQuizList(
+                        widget.classId,
+                        filter:
+                            context.read<StudentQuizViewModel>().currentFilter,
+                      );
+                    }
                   },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -409,6 +425,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
                 'quizTitle': quiz.title,
               },
             );
+            // Reload quiz list after returning from taking
+            if (context.mounted) {
+              context.read<StudentQuizViewModel>().loadQuizList(
+                widget.classId,
+                filter: context.read<StudentQuizViewModel>().currentFilter,
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF3B82F6), // Primary Blue
@@ -438,6 +461,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
               'student-quiz-review',
               extra: {'classId': widget.classId, 'quizId': quiz.id},
             );
+            // Reload quiz list after returning from review
+            if (context.mounted) {
+              context.read<StudentQuizViewModel>().loadQuizList(
+                widget.classId,
+                filter: context.read<StudentQuizViewModel>().currentFilter,
+              );
+            }
           },
           borderRadius: BorderRadius.circular(8),
           child: Container(
@@ -461,9 +491,9 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
 
         // Nút Làm lại (Nổi bật hơn chút)
         InkWell(
-          onTap: () {
+          onTap: () async {
             // Chuyển hướng sang làm bài (như mới)
-            context.pushNamed(
+            await context.pushNamed(
               'student-quiz-taking',
               extra: {
                 'classId': widget.classId,
@@ -471,6 +501,13 @@ class _StudentQuizListScreenState extends State<StudentQuizListScreen> {
                 'quizTitle': quiz.title,
               },
             );
+            // Reload quiz list after returning from retaking
+            if (context.mounted) {
+              context.read<StudentQuizViewModel>().loadQuizList(
+                widget.classId,
+                filter: context.read<StudentQuizViewModel>().currentFilter,
+              );
+            }
           },
           borderRadius: BorderRadius.circular(8),
           child: Container(

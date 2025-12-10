@@ -314,6 +314,39 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: () => context.go('/student/gift-store'),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: const Icon(
+                Icons.card_giftcard_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          )
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scale(
+            duration: 1200.ms,
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.1, 1.1),
+          ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -428,7 +461,7 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                           ),
                         ),
 
-                        // 3. CỤM STATS BÊN PHẢI (Coin + Streak)
+                        // 3. CỤM STATS BÊN PHẢI (Chỉ Coin)
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -468,27 +501,6 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Streak Badge (Lửa)
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.local_fire_department_rounded,
-                                  color: Colors.orangeAccent,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "${user.currentStreak} ngày",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
@@ -559,6 +571,143 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                   ),
                 ).animate().fadeIn(duration: 500.ms),
 
+                // ✨ NEW: Continue Learning Section
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withValues(alpha: 0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => context.go('/student/vocabulary'),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.school_rounded,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Luyện phát âm',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            SizedBox(height: 2),
+                                            Text(
+                                              'Học từ vựng với AI',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: AppColors.primary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.lightbulb_outline_rounded,
+                                          color: Colors.amberAccent,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Expanded(
+                                          child: Text(
+                                            'Luyện phát âm chuẩn giọng bản xứ!',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms, delay: 200.ms)
+                      .slideY(begin: 0.1, end: 0),
+                ),
+
                 // Quick Access Section
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -594,13 +743,6 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
                         subtitle: 'Xem điểm và đánh giá',
                         color: AppColors.success,
                         onTap: () => context.go('/student/grades'),
-                      ),
-                      _buildQuickActionButton(
-                        icon: Icons.store_rounded,
-                        title: 'Đổi quà',
-                        subtitle: 'Đổi xu thành vật phẩm',
-                        color: Colors.pink.shade600,
-                        onTap: () => context.go('/student/gift-store'),
                       ),
                       _buildQuickActionButton(
                         icon: Icons.leaderboard_rounded,

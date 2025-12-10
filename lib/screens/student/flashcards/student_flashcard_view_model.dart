@@ -109,11 +109,20 @@ class StudentFlashcardViewModel extends ChangeNotifier {
     if (currentCard?.sampleAudioUrl != null &&
         currentCard!.sampleAudioUrl!.isNotEmpty) {
       try {
+        debugPrint("🔊 Playing audio: ${currentCard!.sampleAudioUrl}");
+        // Stop any currently playing audio first
+        await _audioPlayer.stop();
+        // Set the URL and wait for it to load
         await _audioPlayer.setUrl(currentCard!.sampleAudioUrl!);
+        // Play the audio
         await _audioPlayer.play();
       } catch (e) {
-        ToastHelper.showError("Không thể phát âm thanh.");
+        debugPrint("❌ Audio playback error: $e");
+        ToastHelper.showError("Không thể phát âm thanh: $e");
       }
+    } else {
+      debugPrint("⚠️ No audio URL available for current card");
+      ToastHelper.showWarning("Không có file âm thanh cho từ này.");
     }
   }
 

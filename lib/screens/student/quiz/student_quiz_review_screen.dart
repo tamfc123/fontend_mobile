@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mobile/data/models/student_quiz_models.dart';
 import 'package:mobile/screens/student/quiz/student_quiz_view_model.dart';
+import 'package:mobile/utils/toast_helper.dart';
 import 'package:provider/provider.dart';
 
 class StudentQuizReviewScreen extends StatefulWidget {
@@ -73,29 +74,52 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
           }
 
           final review = service.currentReview!;
+
           final hasPassage =
               review.readingPassage != null &&
               review.readingPassage!.isNotEmpty;
+          final hasListeningAudio =
+              review.skillType == 'LISTENING' &&
+              review.mediaUrl != null &&
+              review.mediaUrl!.isNotEmpty;
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            // +1 cho header (điểm số + biểu đồ)
-            itemCount: review.questions.length + 1 + (hasPassage ? 1 : 0),
+            // +1 cho header, +1 nếu có passage, +1 nếu có listening audio
+            itemCount:
+                review.questions.length +
+                1 +
+                (hasPassage ? 1 : 0) +
+                (hasListeningAudio ? 1 : 0),
             itemBuilder: (context, index) {
-              if (index == 0) return _buildReviewHeader(review);
+              int currentIndex = 0;
+
+              // Header luôn ở vị trí 0
+              if (index == currentIndex) {
+                return _buildReviewHeader(review);
+              }
+              currentIndex++;
+
+              // Listening audio section (nếu có)
+              if (hasListeningAudio) {
+                if (index == currentIndex) {
+                  return _buildListeningAudioSection(review.mediaUrl!);
+                }
+                currentIndex++;
+              }
+
+              // Reading passage (nếu có)
               if (hasPassage) {
-                if (index == 1) {
+                if (index == currentIndex) {
                   return _buildReadingPassageCard(review.readingPassage!);
                 }
-                // Nếu index > 1 thì là câu hỏi (index thực của câu hỏi bị lùi 2)
-                final question = review.questions[index - 2];
-                return _buildQuestionCard(
-                  question,
-                  index - 1,
-                ); // index - 1 vì trừ header+passage, cộng lại 1 cho số thứ tự
+                currentIndex++;
               }
-              final question = review.questions[index - 1];
-              return _buildQuestionCard(question, index);
+
+              // Câu hỏi
+              final questionIndex = index - currentIndex;
+              final question = review.questions[questionIndex];
+              return _buildQuestionCard(question, questionIndex + 1);
             },
           );
         },
@@ -547,17 +571,77 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
   }
 
   Widget _buildAudioPlayer(StudentQuestionReviewModel question) {
-    // (Giữ nguyên code cũ của bạn)
     if (question.audioUrl == null || question.audioUrl!.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return IconButton(
-      icon: const Icon(Icons.volume_up, color: Colors.purple),
-      onPressed: () async {
-        await _audioPlayer.setUrl(question.audioUrl!);
-        _audioPlayer.play();
-      },
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.purple.shade100),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.volume_up, size: 20, color: Colors.purple),
+          const SizedBox(width: 8),
+          const Text(
+            "Nghe câu hỏi",
+            style: TextStyle(
+              color: Colors.purple,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          const Spacer(),
+          StreamBuilder<PlayerState>(
+            stream: _audioPlayer.playerStateStream,
+            builder: (context, snapshot) {
+              final playing = snapshot.data?.playing ?? false;
+              final processingState = snapshot.data?.processingState;
+
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                return const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                );
+              }
+
+              return IconButton(
+                icon: Icon(
+                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                  color: Colors.purple,
+                  size: 32,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () async {
+                  try {
+                    if (playing) {
+                      await _audioPlayer.pause();
+                    } else {
+                      if (processingState == ProcessingState.idle) {
+                        debugPrint(
+                          "🔊 Loading review question audio: ${question.audioUrl}",
+                        );
+                        await _audioPlayer.setUrl(question.audioUrl!);
+                      }
+                      await _audioPlayer.play();
+                    }
+                  } catch (e) {
+                    debugPrint("❌ Review question audio error: $e");
+                    ToastHelper.showError("Không thể phát audio câu hỏi");
+                  }
+                },
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -621,6 +705,75 @@ class _StudentQuizReviewScreenState extends State<StudentQuizReviewScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildListeningAudioSection(String mediaUrl) {
+    const Color primaryBlue = Color(0xFF3B82F6);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.headphones, size: 40, color: primaryBlue),
+          const SizedBox(height: 8),
+          const Text("File nghe chung", style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 8),
+          StreamBuilder<PlayerState>(
+            stream: _audioPlayer.playerStateStream,
+            builder: (context, snapshot) {
+              final playerState = snapshot.data;
+              final playing = playerState?.playing ?? false;
+              final processingState = playerState?.processingState;
+
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                return const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+                );
+              }
+
+              return IconButton(
+                icon: Icon(
+                  playing ? Icons.pause_circle : Icons.play_circle,
+                  size: 48,
+                  color: primaryBlue,
+                ),
+                onPressed: () async {
+                  try {
+                    if (playing) {
+                      await _audioPlayer.pause();
+                    } else {
+                      if (processingState == ProcessingState.idle) {
+                        debugPrint("🔊 Loading review audio: $mediaUrl");
+                        await _audioPlayer.setUrl(mediaUrl);
+                      }
+                      await _audioPlayer.play();
+                    }
+                  } catch (e) {
+                    debugPrint("❌ Review audio error: $e");
+                    ToastHelper.showError("Không thể phát audio");
+                  }
+                },
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
