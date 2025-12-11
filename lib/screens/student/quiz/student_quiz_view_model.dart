@@ -16,6 +16,10 @@ class StudentQuizViewModel extends ChangeNotifier {
   bool get isLoadingList => _isLoadingList;
   String? get listError => _listError;
 
+  // Quiz Submission State
+  bool _isSubmitting = false;
+  bool get isSubmitting => _isSubmitting;
+
   String _currentFilter = 'ALL';
   String get currentFilter => _currentFilter;
 
@@ -68,7 +72,8 @@ class StudentQuizViewModel extends ChangeNotifier {
     String quizId,
     List<StudentAnswerInputModel> answers,
   ) async {
-    _isLoadingDetail = true;
+    _isSubmitting = true;
+    notifyListeners();
 
     try {
       final result = await _quizRepository.submitQuiz(classId, quizId, answers);
@@ -78,7 +83,7 @@ class StudentQuizViewModel extends ChangeNotifier {
       ToastHelper.showError(msg);
       return null;
     } finally {
-      _isLoadingDetail = false;
+      _isSubmitting = false;
       notifyListeners();
     }
   }
@@ -88,7 +93,7 @@ class StudentQuizViewModel extends ChangeNotifier {
     String quizId,
     String content,
   ) async {
-    _isLoadingDetail = true;
+    _isSubmitting = true;
     notifyListeners();
 
     try {
@@ -103,7 +108,7 @@ class StudentQuizViewModel extends ChangeNotifier {
       ToastHelper.showError(msg);
       return null;
     } finally {
-      _isLoadingDetail = false;
+      _isSubmitting = false;
       notifyListeners();
     }
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mobile/screens/student/leaderboard/student_leaderboard_view_model.dart';
 import 'package:mobile/services/auth/auth_service.dart';
 import 'package:provider/provider.dart';
@@ -315,18 +316,16 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       floatingActionButton: Container(
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  spreadRadius: 3,
+                  offset: const Offset(0, 0),
                 ),
               ],
             ),
@@ -334,14 +333,19 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
               onPressed: () => context.go('/student/gift-store'),
               backgroundColor: Colors.transparent,
               elevation: 0,
-              child: const Icon(
-                Icons.card_giftcard_rounded,
-                color: Colors.white,
-                size: 28,
+              child: Lottie.asset(
+                'assets/animations/Gift.json',
+                width: 70,
+                height: 70,
+                fit: BoxFit.contain,
               ),
             ),
           )
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .shimmer(
+            duration: 2000.ms,
+            color: AppColors.primary.withValues(alpha: 0.4),
+          )
           .scale(
             duration: 1200.ms,
             begin: const Offset(1.0, 1.0),

@@ -61,6 +61,7 @@ dependencies:
   path_provider: ^2.1.5
   http_parser: ^4.1.1
   cached_network_image: ^3.3.1
+  lottie: ^3.1.3
 
 dev_dependencies:
   flutter_test:
@@ -89,9 +90,9 @@ flutter:
     - assets/images/Welcome.png
     - packages/timezone/data/latest_all.tzf
     - assets/images/avatar.png
-    - assets/images/butbi.png
     - assets/images/banner.jpg
     - assets/images/banner2.jpg
+    - assets/animations/Gift.json
     - assets/templates/quiz_template_listening.xlsx
     - assets/templates/quiz_template_reading.xlsx
     - assets/templates/quiz_template_writing.xlsx

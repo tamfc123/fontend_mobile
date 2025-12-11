@@ -11,10 +11,12 @@ class StudentProfileViewModel extends ChangeNotifier {
 
   UserModel? _profile;
   bool _isLoading = false;
+  bool _isUploading = false;
   String? _error;
 
   UserModel? get profile => _profile;
   bool get isLoading => _isLoading;
+  bool get isUploading => _isUploading;
   String? get error => _error;
 
   Future<void> loadProfile() async {
@@ -63,7 +65,7 @@ class StudentProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> updateAvatar(File file) async {
-    _isLoading = true;
+    _isUploading = true;
     _error = null;
     notifyListeners();
 
@@ -77,7 +79,7 @@ class StudentProfileViewModel extends ChangeNotifier {
       _error = e.toString().replaceFirst('Exception: ', '');
       ToastHelper.showError(_error!);
     } finally {
-      _isLoading = false;
+      _isUploading = false;
       notifyListeners();
     }
   }
