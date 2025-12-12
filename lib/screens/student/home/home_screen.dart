@@ -316,16 +316,16 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       floatingActionButton: Container(
-            width: 70,
-            height: 70,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 3,
-                  offset: const Offset(0, 0),
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -335,8 +335,8 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
               elevation: 0,
               child: Lottie.asset(
                 'assets/animations/Gift.json',
-                width: 70,
-                height: 70,
+                width: 50,
+                height: 50,
                 fit: BoxFit.contain,
               ),
             ),
@@ -344,12 +344,12 @@ class _HomeStudentScreenState extends State<HomeStudentScreen> {
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
           .shimmer(
             duration: 2000.ms,
-            color: AppColors.primary.withValues(alpha: 0.4),
+            color: AppColors.primary.withValues(alpha: 0.3),
           )
           .scale(
             duration: 1200.ms,
             begin: const Offset(1.0, 1.0),
-            end: const Offset(1.1, 1.1),
+            end: const Offset(1.06, 1.06),
           ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
