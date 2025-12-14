@@ -176,7 +176,8 @@ class BaseAdminScreen extends StatelessWidget {
                 SizedBox(height: isMobile ? 16 : 24),
 
                 // === NỘI DUNG CHÍNH (BẢNG) ===
-                Expanded(
+                Flexible(
+                  fit: FlexFit.loose,
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -190,9 +191,13 @@ class BaseAdminScreen extends StatelessWidget {
                       ],
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Bảng
-                        Expanded(child: ClipRect(child: body)),
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: ClipRect(child: body),
+                        ),
                         // Thanh phân trang
                         paginationControls,
                       ],

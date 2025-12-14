@@ -137,7 +137,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                 SizedBox(height: isMobile ? 16 : 24),
 
                 // === BẢNG TÀI KHOẢN ===
-                Expanded(
+                Flexible(
+                  fit: FlexFit.loose,
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -155,8 +156,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       child: Consumer<ManageAccountViewModel>(
                         builder: (context, viewModel, child) {
                           return Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Expanded(
+                              Flexible(
+                                fit: FlexFit.loose,
                                 child: _buildBodyContent(context, viewModel),
                               ),
                               PaginationControls(

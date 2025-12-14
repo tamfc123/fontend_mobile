@@ -49,6 +49,7 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -78,7 +79,7 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
             ],
           ),
         ),
-        Expanded(child: mainContent),
+        Flexible(fit: FlexFit.loose, child: mainContent),
       ],
     );
   }
@@ -141,7 +142,9 @@ class _ManageGiftContentState extends State<ManageGiftContent> {
                       image:
                           gift.imageUrl != null
                               ? DecorationImage(
-                                image: CachedNetworkImageProvider(gift.imageUrl!),
+                                image: CachedNetworkImageProvider(
+                                  gift.imageUrl!,
+                                ),
                                 fit: BoxFit.cover,
                               )
                               : null,

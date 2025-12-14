@@ -48,6 +48,7 @@ class ManageQuizContent extends StatelessWidget {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -79,7 +80,7 @@ class ManageQuizContent extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(child: mainContent),
+        Flexible(fit: FlexFit.loose, child: mainContent),
       ],
     );
   }

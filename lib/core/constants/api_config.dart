@@ -1,5 +1,21 @@
 class ApiConfig {
-  static const String baseUrl = 'https://backend-english-app.onrender.com/api';
+  // ============================================
+  // ENVIRONMENT CONFIGURATION
+  // ============================================
+  // Set to true for local development (ngrok)
+  // Set to false for production (Render)
+  static const bool useLocalBackend = true;
+
+  // Production URL
+  static const String _productionUrl =
+      'https://backend-english-app.onrender.com/api';
+
+  // Local development URL (ngrok)
+  static const String _localUrl =
+      'https://semibiographic-unnaove-chelsey.ngrok-free.dev/api';
+
+  // Active base URL based on environment
+  static String get baseUrl => useLocalBackend ? _localUrl : _productionUrl;
 
   // upload
   static const String upload = "/upload";
@@ -62,16 +78,16 @@ class ApiConfig {
   static String adminScheduleById(String id) => "/admin/schedules/$id";
 
   // --- ADMIN MODULE ---
-  static const String adminModules = '$baseUrl/admin/modules';
+  static String get adminModules => '$baseUrl/admin/modules';
   static String adminModuleById(String id) => '$baseUrl/admin/modules/$id';
 
   // --- ADMIN LESSON
-  static const String adminLessons = '$baseUrl/admin/lessons';
+  static String get adminLessons => '$baseUrl/admin/lessons';
   static String adminLessonById(String id) => '$baseUrl/admin/lessons/$id';
-  static const String uploadContentImage = '$baseUrl/upload-content-image';
+  static String get uploadContentImage => '$baseUrl/upload-content-image';
 
   // --- ADMIN VOCABULARY
-  static const String adminVocabularies = '$baseUrl/admin/vocabularies';
+  static String get adminVocabularies => '$baseUrl/admin/vocabularies';
   static String adminVocabularyById(String id) =>
       '$baseUrl/admin/vocabularies/$id';
   static String adminRestoreVocabulary(String id) =>
@@ -118,13 +134,13 @@ class ApiConfig {
   static const String studentSchedules = "/student/schedules";
 
   // --- STUDENT: MODULES ---
-  static const String studentModules = '$baseUrl/student/modules';
+  static String get studentModules => '$baseUrl/student/modules';
 
   // --- STUDENT: LESSONS ---
-  static const String studentLessons = '$baseUrl/student/lessons';
+  static String get studentLessons => '$baseUrl/student/lessons';
 
   // --- STUDENT: VOCABULARIES ---
-  static const String studentVocabularies = '$baseUrl/student/vocabularies';
+  static String get studentVocabularies => '$baseUrl/student/vocabularies';
 
   // --- STUDENT: COURSES ---
   static const String studentAvailableCourses = "/studentcourses/courses";
@@ -157,8 +173,8 @@ class ApiConfig {
   static String getQuizResult(String classId, String quizId) =>
       '/student/classes/$classId/quizzes/$quizId/result';
 
-  static const String uploadRawFile = '$baseUrl/uploadAudioFileWeb';
-  static const String studentVocabularyLevels =
+  static String get uploadRawFile => '$baseUrl/uploadAudioFileWeb';
+  static String get studentVocabularyLevels =>
       '$baseUrl/student/vocabulary-levels';
   static String studentVocabularyModules(String levelId) {
     return '/student/vocabulary-levels/$levelId/topics';

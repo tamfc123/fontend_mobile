@@ -88,6 +88,7 @@ class _ManageVocabularyContentState extends State<ManageVocabularyContent> {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -119,7 +120,7 @@ class _ManageVocabularyContentState extends State<ManageVocabularyContent> {
             ],
           ),
         ),
-        Expanded(child: mainContent),
+        Flexible(fit: FlexFit.loose, child: mainContent),
       ],
     );
   }
